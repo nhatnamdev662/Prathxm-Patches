@@ -141,9 +141,22 @@ public class ArrowInjector {
             else if (p[i] == Float.class) args[i] = opacity;
             else if (p[i] == Boolean.class) args[i] = null;               // isKnight (auto)
             else if (p[i] == boolean.class) args[i] = (bools++ == 1);     // persistent=false, animated=true
-            else args[i] = AppTypes.defaultFor(p[i]);
+            else args[i] = defaultFor(p[i]);
         }
         return best.newInstance(args);
+    }
+
+    private static Object defaultFor(Class<?> t) {
+        if (!t.isPrimitive()) return null;
+        if (t == boolean.class) return Boolean.FALSE;
+        if (t == byte.class) return (byte) 0;
+        if (t == short.class) return (short) 0;
+        if (t == int.class) return 0;
+        if (t == long.class) return 0L;
+        if (t == float.class) return 0f;
+        if (t == double.class) return 0.0;
+        if (t == char.class) return '\0';
+        return null;
     }
 
     public static boolean isEngineArrow(Object arrow) {

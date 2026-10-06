@@ -176,37 +176,6 @@ public class StockfishBridge {
         return r;
     }
 
-    /**
-     * Full-strength analysis used by the game review (never Elo-limited).
-     *
-     * @param baseFen     starting FEN of the game
-     * @param moves       game moves leading to the position (may be null)
-     * @param positionFen FEN of the analysed position (used for caching / fallback)
-     */
-    public static synchronized StockfishProcess.AnalysisResult analyzeForReview(
-            String baseFen, List<String> moves, String positionFen, int depth, int multiPV, int movetimeMs) {
-        Context ctx = getApplicationContext();
-        if (ctx == null) return StockfishProcess.AnalysisResult.empty();
-
-        StockfishProcess.AnalysisResult cached = getCached(positionFen, depth, multiPV, 0);
-        if (cached != null) return cached;
-
-        if (!ensureRunning(ctx)) return StockfishProcess.AnalysisResult.empty();
-
-        StockfishProcess.AnalysisResult r = StockfishProcess.AnalysisResult.empty();
-        if (baseFen != null && moves != null) {
-            r = engine.analyze(ctx, baseFen, moves, depth, multiPV, movetimeMs, false);
-        }
-        if (!r.isValid()) {
-            // Move history rejected (or not supplied) – fall back to the plain FEN.
-            if (!engine.isReady()) ensureRunning(ctx);
-            if (positionFen != null && engine.isReady()) {
-                r = engine.analyze(ctx, positionFen, null, depth, multiPV, movetimeMs, false);
-            }
-        }
-        putCache(positionFen, r, depth, multiPV, 0);
-        return r;
-    }
 
     /** Clears the engine hash before reviewing a new game. */
     public static synchronized void newGame() {

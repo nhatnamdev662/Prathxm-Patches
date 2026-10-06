@@ -166,49 +166,6 @@ public class StockfishSettingsDialog {
         CheckBox blunderCb = addStyledCheckbox(advancedLayout, I18n.get(activity, "vibrate_blunder"), StockfishSettings.isBlunderAlertsEnabled(activity), density, activity);
         addHint(advancedLayout, I18n.get(activity, "vibrate_hint"), density, activity);
 
-        // Performance
-        addSectionHeader(advancedLayout, I18n.get(activity, "performance"), density, activity);
-        final int cpuCount = StockfishSettings.getCpuCount();
-        final int autoThreads = StockfishSettings.getAutoThreads();
-        int currentThreads = StockfishSettings.getThreads(activity);
-        final String threadsPrefix = I18n.get(activity, "cpu_threads");
-        boolean isAuto = (currentThreads == autoThreads);
-        String initialTag = isAuto ? " (" + I18n.get(activity, "auto_optimal") + ")" : "";
-        TextView threadsLabel = addStyledLabel(advancedLayout, threadsPrefix + ": " + currentThreads + " / " + cpuCount + initialTag, density, activity);
-        SeekBar threadsSeekBar = addStyledSeekBar(advancedLayout, threadsLabel, threadsPrefix, currentThreads - 1, Math.max(0, cpuCount - 1), 1, density, activity);
-        final String threadsSuffix = " / " + cpuCount;
-        threadsSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar sb, int prog, boolean fromUser) {
-                int val = prog + 1;
-                String tag = (val == autoThreads) ? " (" + I18n.get(activity, "auto_optimal") + ")" : "";
-                threadsLabel.setText(threadsPrefix + ": " + val + threadsSuffix + tag);
-            }
-            @Override
-            public void onStartTrackingTouch(SeekBar sb) {}
-            @Override
-            public void onStopTrackingTouch(SeekBar sb) {}
-        });
-        addHint(advancedLayout, I18n.get(activity, "cpu_hint"), density, activity);
-
-        // Game Review
-        addSectionHeader(advancedLayout, I18n.get(activity, "game_review"), density, activity);
-        int currentBoost = StockfishSettings.getReviewDepthBoost(activity);
-        final String boostPrefix = I18n.get(activity, "extra_review_depth");
-        TextView boostLabel = addStyledLabel(advancedLayout, boostPrefix + ": +" + currentBoost, density, activity);
-        SeekBar boostSeekBar = addStyledSeekBar(advancedLayout, boostLabel, boostPrefix, currentBoost, 10, 0, density, activity);
-        boostSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar sb, int prog, boolean fromUser) {
-                boostLabel.setText(boostPrefix + ": +" + prog);
-            }
-            @Override
-            public void onStartTrackingTouch(SeekBar sb) {}
-            @Override
-            public void onStopTrackingTouch(SeekBar sb) {}
-        });
-        addHint(advancedLayout, I18n.get(activity, "review_hint"), density, activity);
-
         // Engine strength
         addSectionHeader(advancedLayout, I18n.get(activity, "engine_strength"), density, activity);
         CheckBox eloCb = addStyledCheckbox(advancedLayout, I18n.get(activity, "limit_strength"), StockfishSettings.isLimitStrength(activity), density, activity);
@@ -387,9 +344,6 @@ public class StockfishSettingsDialog {
             StockfishSettings.setEngineEnabled(activity, enabledCb.isChecked());
             StockfishSettings.setDepth(activity, Math.max(1, depthSeekBar.getProgress() + 1));
             StockfishSettings.setMultiPV(activity, Math.max(1, pvSeekBar.getProgress() + 1));
-            int threads = Math.max(1, threadsSeekBar.getProgress() + 1);
-            StockfishSettings.setThreads(activity, threads);
-            StockfishSettings.setReviewDepthBoost(activity, boostSeekBar.getProgress());
             StockfishSettings.setMySideOnly(activity, sideCb.isChecked());
             StockfishSettings.setLimitStrength(activity, eloCb.isChecked());
             StockfishSettings.setElo(activity, 1320 + eloSeekBar.getProgress());

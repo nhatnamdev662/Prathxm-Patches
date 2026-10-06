@@ -51,20 +51,6 @@ public class I18n {
                 return isVi ? "Rung khi mắc sai lầm & Blunder" : "Vibrate on mistakes & blunders";
             case "vibrate_hint":
                 return isVi ? "Cần bật \"Đánh giá từng nước đi\"." : "Needs \"Rate each move\" to be on.";
-            case "performance":
-                return isVi ? "Hiệu năng" : "Performance";
-            case "cpu_threads":
-                return isVi ? "Số luồng CPU" : "CPU threads";
-            case "auto_optimal":
-                return isVi ? "Tự động tối ưu" : "Auto Optimal";
-            case "cpu_hint":
-                return isVi ? "Tất cả các nhân cho tốc độ phân tích nhanh nhất. Giảm xuống nếu máy bị nóng." : "All cores gives the fastest analysis. Lower it if your phone gets hot.";
-            case "game_review":
-                return isVi ? "Game Review" : "Game Review";
-            case "extra_review_depth":
-                return isVi ? "Độ sâu review bổ sung" : "Extra review depth";
-            case "review_hint":
-                return isVi ? "Cộng thêm vào mức thiết lập Game Review của Chess.com. Mỗi +1 sẽ chính xác hơn nhưng mất thời gian hơn." : "Added on top of the Fast / Standard / Deep / Maximum preset you choose in Game Review. Each +1 is more accurate and takes longer.";
             case "engine_strength":
                 return isVi ? "Sức mạnh Engine" : "Engine strength";
             case "limit_strength":
@@ -72,13 +58,13 @@ public class I18n {
             case "engine_elo":
                 return isVi ? "Elo Engine" : "Engine Elo";
             case "elo_hint":
-                return isVi ? "Chỉ áp dụng cho mũi tên trực tiếp. Game Review luôn phân tích với toàn bộ sức mạnh." : "Only changes the live arrows. Game Review always runs at full strength.";
+                return isVi ? "Điều chỉnh trình độ gợi ý của Engine theo mức Elo." : "Adjusts the engine strength to a specific Elo rating.";
             case "reset_defaults":
                 return isVi ? "Đặt lại cài đặt engine về mặc định" : "Reset engine settings to defaults";
             case "reset_title":
                 return isVi ? "Đặt lại cài đặt engine?" : "Reset engine settings?";
             case "reset_message":
-                return isVi ? "Độ sâu, mũi tên, lớp phủ, luồng CPU, review và Elo sẽ trở về mặc định." : "Depth, arrows, overlays, threads, review depth and strength go back to their defaults.";
+                return isVi ? "Độ sâu, mũi tên, lớp phủ và Elo sẽ trở về mặc định." : "Depth, arrows, overlays and strength go back to their defaults.";
             case "reset_toast":
                 return isVi ? "Đã đặt lại cài đặt engine" : "Engine settings reset";
             case "cancel":

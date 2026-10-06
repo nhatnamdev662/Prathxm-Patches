@@ -57,39 +57,37 @@ public class StockfishSettings {
 
     // ── Engine power ─────────────────────────────────────────────────────────
 
-    private static final String KEY_THREADS = "engine_threads";
-
     public static int getCpuCount() {
         return Math.max(1, Runtime.getRuntime().availableProcessors());
     }
 
-    /** Auto threads: cpus - 1 (leaving 1 core for UI responsiveness), minimum 1. */
-    public static int getAutoThreads() {
-        int cpus = getCpuCount();
-        return cpus >= 4 ? cpus - 1 : cpus;
+    /** Live search threads; defaults to 1 for battery and thermal efficiency. */
+    public static int getLiveThreads(Context context) {
+        return 1;
     }
 
-    /** Search threads; defaults to auto (all available cores - 1). */
+    /** Live search threads alias. */
     public static int getThreads(Context context) {
-        int t = getPrefs(context).getInt(KEY_THREADS, 0);
-        int auto = getAutoThreads();
-        if (t <= 0) return auto;
-        return Math.min(t, getCpuCount());
+        return 1;
     }
 
     public static void setThreads(Context context, int threads) {
-        getPrefs(context).edit().putInt(KEY_THREADS, Math.max(0, threads)).apply();
+        // Kept for backward compatibility
     }
 
-    private static final String KEY_REVIEW_BOOST = "review_depth_boost";
+    /** Game review threads: automatically uses 7 threads (or cpus if < 7, min 1). */
+    public static int getReviewThreads(Context context) {
+        int cpus = getCpuCount();
+        return Math.max(1, Math.min(cpus, 7));
+    }
 
-    /** Extra depth added on top of the Chess.com game review depth preset. */
+    /** Extra depth added on top of the Chess.com game review depth preset (0 = auto). */
     public static int getReviewDepthBoost(Context context) {
-        return Math.max(0, Math.min(10, getPrefs(context).getInt(KEY_REVIEW_BOOST, 0)));
+        return 0;
     }
 
     public static void setReviewDepthBoost(Context context, int boost) {
-        getPrefs(context).edit().putInt(KEY_REVIEW_BOOST, Math.max(0, Math.min(10, boost))).apply();
+        // Kept for backward compatibility
     }
 
     public static void setDepth(Context context, int depth) {
