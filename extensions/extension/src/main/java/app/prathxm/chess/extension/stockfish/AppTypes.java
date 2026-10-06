@@ -146,11 +146,23 @@ final class AppTypes {
     /** Public constructor with the most parameters (the primary data-class constructor). */
     static Constructor<?> primaryCtor(Class<?> cls) {
         Constructor<?> best = null;
-        for (Constructor<?> k : cls.getConstructors()) {
+        for (Constructor<?> k : cls.getDeclaredConstructors()) {
+            if (k.isSynthetic() || (k.getModifiers() & 0x1000) != 0) continue;
             Class<?>[] p = k.getParameterTypes();
-            if (p.length > 0 && p[p.length - 1].getName().equals("kotlin.jvm.internal.DefaultConstructorMarker")) continue;
+            if (p.length > 0) {
+                String lastName = p[p.length - 1].getName();
+                if (lastName.equals("kotlin.jvm.internal.DefaultConstructorMarker")
+                        || lastName.contains("SerializationConstructorMarker")
+                        || lastName.startsWith("com.google.android.")) {
+                    continue;
+                }
+            }
+            if (p.length > 1 && p[0] == int.class && p[p.length - 1] != int.class && !cls.getName().endsWith("MovesTally")) {
+                continue;
+            }
             if (best == null || p.length > best.getParameterTypes().length) best = k;
         }
+        if (best != null) best.setAccessible(true);
         return best;
     }
 
