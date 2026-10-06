@@ -174,15 +174,23 @@ public class CrashActivity extends Activity {
         });
         buttonsLayout.addView(btnCopy);
 
-        // Report Telegram button
+        // Report Telegram button with official logo
         Button btnReport = new Button(this);
         LinearLayout.LayoutParams reportParams = new LinearLayout.LayoutParams(0, dpToPx(48), 1.2f);
         reportParams.leftMargin = dpToPx(8);
         btnReport.setLayoutParams(reportParams);
-        btnReport.setText("✈ Telegram Support");
+        btnReport.setText(" Telegram Support");
         btnReport.setTextColor(Color.WHITE);
         btnReport.setTextSize(14);
         btnReport.setTypeface(Typeface.DEFAULT_BOLD);
+        
+        android.graphics.drawable.Drawable tgDraw = app.prathxm.chess.extension.stockfish.TelegramIconHelper.getTelegramDrawable(this);
+        if (tgDraw != null) {
+            int iconPx = dpToPx(20);
+            tgDraw.setBounds(0, 0, iconPx, iconPx);
+            btnReport.setCompoundDrawables(tgDraw, null, null, null);
+            btnReport.setPadding(dpToPx(12), 0, dpToPx(12), 0);
+        }
         
         GradientDrawable reportBg = new GradientDrawable();
         reportBg.setColor(Color.parseColor("#229ED9")); // Telegram brand blue
@@ -196,7 +204,7 @@ public class CrashActivity extends Activity {
             }
 
             Toast.makeText(this,
-                    "Logs copied! Sending to Nhat Nam (@nncutett)...",
+                    "Logs copied! Sending to NNVC (@nncutett)...",
                     Toast.LENGTH_LONG).show();
 
             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://t.me/nncutett"));

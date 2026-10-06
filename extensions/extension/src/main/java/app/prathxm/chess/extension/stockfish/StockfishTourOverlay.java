@@ -19,6 +19,7 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -187,7 +188,7 @@ public class StockfishTourOverlay extends Dialog {
         );
         card.addView(row2);
         
-        // Telegram contact button
+        // Telegram contact button with official logo
         LinearLayout telegramTourBtn = new LinearLayout(getContext());
         telegramTourBtn.setOrientation(LinearLayout.HORIZONTAL);
         telegramTourBtn.setGravity(Gravity.CENTER);
@@ -200,14 +201,14 @@ public class StockfishTourOverlay extends Dialog {
         tgTourBg.setCornerRadius(8 * density);
         telegramTourBtn.setBackground(tgTourBg);
 
-        TextView tgTourIcon = new TextView(getContext());
-        tgTourIcon.setText("✈ ");
-        tgTourIcon.setTextColor(Color.WHITE);
-        tgTourIcon.setTextSize(14);
+        ImageView tgTourIcon = TelegramIconHelper.createTelegramLogoView(getContext(), (int) (18 * density));
+        LinearLayout.LayoutParams tgTourIconParams = new LinearLayout.LayoutParams((int) (18 * density), (int) (18 * density));
+        tgTourIconParams.rightMargin = (int) (8 * density);
+        tgTourIcon.setLayoutParams(tgTourIconParams);
         telegramTourBtn.addView(tgTourIcon);
 
         TextView tgTourText = new TextView(getContext());
-        tgTourText.setText("Telegram: @nncutett (Nhat Nam)");
+        tgTourText.setText("Telegram: @nncutett (NNVC)");
         tgTourText.setTextColor(Color.WHITE);
         tgTourText.setTextSize(13);
         tgTourText.setTypeface(Typeface.create("sans-serif-medium", Typeface.BOLD));

@@ -4,10 +4,10 @@
   <img src="https://img.shields.io/badge/Telegram-@nncutett-229ED9?style=for-the-badge&logo=telegram&logoColor=white" />
 </p>
 
-<h1 align="center">♟️ Nhat Nam Patches</h1>
+<h1 align="center">♟️ NNVC Patches</h1>
 
 <p align="center">
-  Bản mod tùy chỉnh dành cho <b>Chess.com</b> trên Android. Hỗ trợ phân tích ngoại tuyến với Stockfish 19 NNUE, gỡ quảng cáo, mở khóa bot, song ngữ Anh - Việt và bài tập Lichess.
+  Bản mod tùy chỉnh dành cho <b>Chess.com</b> trên Android của <b>NNVC</b>. Hỗ trợ phân tích ngoại tuyến với Stockfish 19 NNUE, gỡ quảng cáo, mở khóa bot, song ngữ Anh - Việt và bài tập Lichess.
 </p>
 
 <p align="center">
@@ -84,7 +84,7 @@ Access features by interacting with the Chess.com logo on the main screen:
 ## 💬 Liên Hệ & Hỗ Trợ (Community & Support)
 
 Mọi thắc mắc, phản hồi hoặc cần hỗ trợ:
-- [**Telegram: @nncutett (Nhat Nam)**](https://t.me/nncutett)
+- [**Telegram: @nncutett (NNVC)**](https://t.me/nncutett)
 - [**GitHub Discussions**](https://github.com/nhatnamdev662/Prathxm-Patches/discussions)
 
 ## 📜 Attribution & Credits

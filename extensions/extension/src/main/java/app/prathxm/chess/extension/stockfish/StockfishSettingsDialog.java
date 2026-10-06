@@ -17,6 +17,7 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
@@ -225,7 +226,7 @@ public class StockfishSettingsDialog {
         creditsCard.setPadding(0, (int) (16 * density), 0, (int) (8 * density));
 
         TextView devTv = new TextView(activity);
-        devTv.setText("Nhat Nam Patches");
+        devTv.setText("NNVC Patches");
         devTv.setTextColor(0xFF81B64C); // Chess.com Green accent
         devTv.setTextSize(15);
         devTv.setGravity(Gravity.CENTER);
@@ -240,9 +241,9 @@ public class StockfishSettingsDialog {
         });
         creditsCard.addView(devTv);
 
-        addDialogSpacer(creditsCard, 4, density);
+        addDialogSpacer(creditsCard, 6, density);
 
-        // Telegram Button with beautiful styling
+        // Telegram Button with beautiful styling and official logo
         LinearLayout telegramBtn = new LinearLayout(activity);
         telegramBtn.setOrientation(LinearLayout.HORIZONTAL);
         telegramBtn.setGravity(Gravity.CENTER);
@@ -255,10 +256,10 @@ public class StockfishSettingsDialog {
         tgBg.setCornerRadius(18 * density);
         telegramBtn.setBackground(tgBg);
 
-        TextView tgIcon = new TextView(activity);
-        tgIcon.setText("✈ ");
-        tgIcon.setTextColor(0xFFFFFFFF);
-        tgIcon.setTextSize(14);
+        ImageView tgIcon = TelegramIconHelper.createTelegramLogoView(activity, (int) (18 * density));
+        LinearLayout.LayoutParams tgIconParams = new LinearLayout.LayoutParams((int) (18 * density), (int) (18 * density));
+        tgIconParams.rightMargin = (int) (8 * density);
+        tgIcon.setLayoutParams(tgIconParams);
         telegramBtn.addView(tgIcon);
 
         TextView tgText = new TextView(activity);
@@ -297,7 +298,7 @@ public class StockfishSettingsDialog {
         String versionText = "v" + BuildConfig.PATCH_VERSION;
 
         TextView patchTv = new TextView(activity);
-        patchTv.setText("Patches " + versionText + " · by Nhat Nam (@nncutett)");
+        patchTv.setText("NNVC Patches " + versionText + " · by @nncutett");
         patchTv.setTextColor(0xFF8B8985);
         patchTv.setTextSize(11);
         patchTv.setGravity(Gravity.CENTER);

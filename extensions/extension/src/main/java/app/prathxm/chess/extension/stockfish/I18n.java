@@ -78,7 +78,7 @@ public class I18n {
             case "engine_name":
                 return isVi ? "Engine: Stockfish 19 NNUE · ngoại tuyến" : "Engine: Stockfish 19 NNUE · offline";
             case "dev_name":
-                return "Nhat Nam";
+                return "NNVC";
             case "contact_telegram":
                 return isVi ? "Liên hệ Telegram: @nncutett" : "Telegram: @nncutett";
             case "open_telegram":
