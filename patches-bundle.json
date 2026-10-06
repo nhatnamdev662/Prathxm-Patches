@@ -1,6 +1,6 @@
 {
-  "created_at": "2026-10-06T19:12:00",
-  "description": "## [1.0.0] (2026-10-06)\n\n### ⚡ NNVC Patches — Stable Release\n\n* **Thương hiệu NNVC:** Đổi tên thương hiệu chính thức thành NNVC Patches.\n* **Official Telegram Logo:** Tích hợp logo chuẩn Telegram (vector icon độ phân giải cao).\n* **Gỡ bỏ hoàn toàn Game Review:** Loại bỏ toàn bộ hook và mã nguồn liên quan đến game review sau ván đấu, bảo toàn phân tích máy chủ gốc.\n* **Cố định 1 luồng CPU:** Phân tích trực tiếp (Live analysis) chạy mượt mà trên 1 luồng CPU tối ưu năng lượng và nhiệt độ.\n* **Author:** NNVC (@nncutett)",
+  "created_at": "2026-10-06T19:20:00",
+  "description": "## [1.0.0] (2026-10-06)\n\n### ⚡ NNVC — Stable Release\n\n* **Thương hiệu NNVC:** Đổi tên thương hiệu chính thức thành NNVC.\n* **Official Telegram Logo:** Tích hợp logo chuẩn Telegram (vector icon độ phân giải cao).\n* **Gỡ bỏ hoàn toàn Game Review:** Loại bỏ toàn bộ hook và mã nguồn liên quan đến game review sau ván đấu, bảo toàn phân tích máy chủ gốc.\n* **Cố định 1 luồng CPU:** Phân tích trực tiếp (Live analysis) chạy mượt mà trên 1 luồng CPU tối ưu năng lượng và nhiệt độ.\n* **Author:** NNVC (@nncutett)",
   "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v1.0.0/patches-1.0.0.mpp",
   "signature_download_url": "",
   "version": "1.0.0"

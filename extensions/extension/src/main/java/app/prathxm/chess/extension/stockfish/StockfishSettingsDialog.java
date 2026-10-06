@@ -226,7 +226,7 @@ public class StockfishSettingsDialog {
         creditsCard.setPadding(0, (int) (16 * density), 0, (int) (8 * density));
 
         TextView devTv = new TextView(activity);
-        devTv.setText("NNVC Patches");
+        devTv.setText("NNVC");
         devTv.setTextColor(0xFF81B64C); // Chess.com Green accent
         devTv.setTextSize(15);
         devTv.setGravity(Gravity.CENTER);
@@ -298,7 +298,7 @@ public class StockfishSettingsDialog {
         String versionText = "v" + BuildConfig.PATCH_VERSION;
 
         TextView patchTv = new TextView(activity);
-        patchTv.setText("NNVC Patches " + versionText + " · by @nncutett");
+        patchTv.setText("NNVC " + versionText + " · by @nncutett");
         patchTv.setTextColor(0xFF8B8985);
         patchTv.setTextSize(11);
         patchTv.setGravity(Gravity.CENTER);

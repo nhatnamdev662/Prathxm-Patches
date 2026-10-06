@@ -5,7 +5,7 @@ group = "app.prathxm.chess"
 
 patches {
     about {
-        name = "NNVC Patches"
+        name = "NNVC"
         description = "Bản mod tùy chỉnh Chess.com — Stockfish 19 NNUE, gỡ quảng cáo, mở khóa bot, song ngữ Anh - Việt"
         source = "https://github.com/nhatnamdev662/Prathxm-Patches.git"
         author = "NNVC"
