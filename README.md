@@ -67,52 +67,25 @@ Access features by interacting with the Chess.com logo on the main screen:
 
 ---
 
-## 🛠️ Installation
+## 🛠️ Cài Đặt (Installation)
 
-### Option 1 · Morphe Manager <sup>Recommended</sup>
+### Cách 1 · Morphe Manager <sup>Khuyên dùng</sup>
 
-1. Install [**Morphe Manager**](https://morphe.software) on your Android device.
-2. Add this repository as a patch source:
+1. Cài đặt [**Morphe Manager**](https://morphe.software) trên điện thoại Android của bạn.
+2. Thêm kho nguồn patch này vào Morphe:
    <p align="center">
-     <a href="https://morphe.software/add-source?github=PrathxmOp/Prathxm-Patches"><b>➕ Add Patches to Morphe Manager</b></a>
+     <a href="https://morphe.software/add-source?github=nhatnamdev662/Prathxm-Patches"><b>➕ Thêm Nguồn Vào Morphe Manager</b></a>
    </p>
-   Or manually add `https://github.com/PrathxmOp/Prathxm-Patches` under **Patch Sources**.
-3. Select **Chess.com**, choose your patches, and tap **Patch**.
-
-### Option 2 · Morphe CLI <sup>Advanced</sup>
-
-1. Clone the repository and compile the patches bundle:
-   ```bash
-   ./gradlew patches:assemble
-   ```
-2. Apply the compiled patch bundle to your Chess.com APK using `morphe-cli`:
-   ```bash
-   java -jar morphe-cli.jar patch \
-     -p patches/build/libs/patches-X.X.X.mpp \
-     -o patched-chess.apk \
-     "com.chess.apk"
-   ```
+   Hoặc thêm thủ công `https://github.com/nhatnamdev662/Prathxm-Patches` tại mục **Patch Sources** trong Morphe Manager.
+3. Chọn **Chess.com**, chọn các patch cần dùng và nhấn **Patch**.
 
 ---
 
-## 💖 Support the Project
+## 💬 Liên Hệ & Hỗ Trợ (Community & Support)
 
-If you like these patches, consider supporting development!
-- **🏅 Donate for a Custom Title**: Donors receive a custom title displayed on their profile. DM **PrathxmOp** after donating to claim yours.
-
-<p align="center">
-  <b>UPI:</b> <code>prathammishraop@ybl</code><br><br>
-  <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=upi://pay?pa=prathammishraop@ybl%26pn=Prathxm%26cu=INR" alt="UPI QR Code" width="140" height="140" /><br>
-  <a href="upi://pay?pa=prathammishraop@ybl&pn=Prathxm&cu=INR"><b>⚡ Tap to Donate via UPI</b></a>
-</p>
-
----
-
-## 💬 Community
-
-Questions, feedback, or title claims? Reach out:
-- [**GitHub Discussions**](https://github.com/PrathxmOp/Prathxm-Patches/discussions)
-- [**Signal Private Message**](https://signal.me/#eu/5hn89XV1PsUQlPRc0WhEoUEh197WioxzFJj-CTXOGe1Boymy0-FCub3zwWXa_L3a)
+Mọi thắc mắc, phản hồi hoặc cần hỗ trợ:
+- [**Telegram: @nncutett (Nhat Nam)**](https://t.me/nncutett)
+- [**GitHub Discussions**](https://github.com/nhatnamdev662/Prathxm-Patches/discussions)
 
 ## 📜 Attribution & Credits
 
