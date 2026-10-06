@@ -436,11 +436,39 @@ public class LocalAnalysisFlow {
 
             // Tallies Construction
             Class<?> mtClass = types.agd("$Tallies$MovesTally");
-            Constructor<?> mtConstructor = mtClass.getConstructor(
-                int.class, int.class, int.class, int.class, int.class, int.class, int.class, int.class, int.class, int.class, int.class
-            );
-            Object whiteTally = mtConstructor.newInstance(wT[0], wT[1], wT[2], wT[3], wT[4], wT[5], wT[6], wT[7], wT[8], wT[9], wT[10]);
-            Object blackTally = mtConstructor.newInstance(bT[0], bT[1], bT[2], bT[3], bT[4], bT[5], bT[6], bT[7], bT[8], bT[9], bT[10]);
+            Constructor<?> mtConstructor = AppTypes.primaryCtor(mtClass);
+            if (mtConstructor == null) {
+                throw new NoSuchMethodException("No primary constructor found for " + mtClass);
+            }
+            int mtParamCount = mtConstructor.getParameterTypes().length;
+            Object whiteTally;
+            Object blackTally;
+            if (mtParamCount == 12) {
+                // Chess.com 4.10.20+: (book, brilliant, greatFind, tricky, best, excellent, good, inaccuracy, mistake, blunder, forced, miss)
+                whiteTally = mtConstructor.newInstance(
+                    wT[0], wT[1], wT[2], 0, wT[3], wT[4], wT[5], wT[6], wT[7], wT[8], wT[9], wT[10]
+                );
+                blackTally = mtConstructor.newInstance(
+                    bT[0], bT[1], bT[2], 0, bT[3], bT[4], bT[5], bT[6], bT[7], bT[8], bT[9], bT[10]
+                );
+            } else if (mtParamCount == 11) {
+                // Chess.com <= 4.10.17: (book, brilliant, greatFind, best, excellent, good, inaccuracy, mistake, blunder, forced, miss)
+                whiteTally = mtConstructor.newInstance(
+                    wT[0], wT[1], wT[2], wT[3], wT[4], wT[5], wT[6], wT[7], wT[8], wT[9], wT[10]
+                );
+                blackTally = mtConstructor.newInstance(
+                    bT[0], bT[1], bT[2], bT[3], bT[4], bT[5], bT[6], bT[7], bT[8], bT[9], bT[10]
+                );
+            } else {
+                Object[] wArgs = new Object[mtParamCount];
+                Object[] bArgs = new Object[mtParamCount];
+                for (int p = 0; p < mtParamCount; p++) {
+                    wArgs[p] = p < wT.length ? wT[p] : 0;
+                    bArgs[p] = p < bT.length ? bT[p] : 0;
+                }
+                whiteTally = mtConstructor.newInstance(wArgs);
+                blackTally = mtConstructor.newInstance(bArgs);
+            }
 
             Class<?> talliesClass = types.agd("$Tallies");
             Constructor<?> talliesConstructor = talliesClass.getConstructor(mtClass, mtClass, String.class, String.class);
@@ -557,6 +585,7 @@ public class LocalAnalysisFlow {
             // Emit RemoteAnalysisCompleted to trigger Review UI
             Constructor<?> compConstructor = types.completedCtor;
             Object completedResult = compConstructor.newInstance(gameData, fullPermissions, depthEnum);
+            Log.i(TAG, "Analysis completed successfully, emitting completedResult: " + completedResult);
             emitter.emit(completedResult);
 
         } catch (java.util.concurrent.CancellationException c) {

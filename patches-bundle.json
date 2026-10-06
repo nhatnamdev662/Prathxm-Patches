@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-10-06T16:30:00",
-  "description": "## [1.16.2] (2026-10-06)\n\n### ✨ New Features\n\n* **Nhat Nam Patches:** Hỗ trợ Chess.com 4.10.20 và 4.10.0, Lichess puzzle fix, Bot unlock fix, song ngữ Anh-Việt, bỏ giới hạn Live match, tác giả Nhat Nam (@nncutett)",
-  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v1.16.2/patches-1.16.2.mpp",
+  "created_at": "2026-10-06T17:15:00",
+  "description": "## [1.16.3] (2026-10-06)\n\n### 🐛 Bug Fixes\n\n* **Game Review:** Khắc phục lỗi phân tích Stockfish đạt 100% bị 'thử lại không thành công' trên Chess.com 4.10.20+ do cấu trúc MovesTally 12 tham số mới.\n* **Compatibility:** Tương thích hoàn toàn cả bản cũ (11 tham số) và bản mới (12 tham số có Tricky move).\n* **Author:** Nhat Nam (@nncutett)",
+  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v1.16.3/patches-1.16.3.mpp",
   "signature_download_url": "",
-  "version": "1.16.2"
+  "version": "1.16.3"
 }

@@ -32,6 +32,7 @@ public final class ReviewMath {
     public static final String BLUNDER = "blunder";
     public static final String MISS = "miss";
     public static final String FORCED = "forced";
+    public static final String TRICKY = "tricky";
 
     // Expected-points loss thresholds (Chess.com style)
     public static final float EXCELLENT_MAX = 0.02f;
