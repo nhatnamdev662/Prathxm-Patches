@@ -11,11 +11,10 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
-import android.widget.CheckBox;
-import android.widget.CompoundButton;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -29,15 +28,14 @@ public class StockfishSettingsDialog {
     private static final int COLOR_BG_PANEL       = 0xF00C0F16; // Deep Frosted Midnight Glass
     private static final int COLOR_CARD_BG        = 0xCC121722; // Layered Glass Card
     private static final int COLOR_CARD_BORDER    = 0x330A84FF; // Cyber Blue Glow Border (20%)
-    private static final int COLOR_CARD_SUB_BG    = 0x881A2130; // Inner Cell/Dash BG
     private static final int COLOR_ACCENT_BLUE    = 0xFF0A84FF; // NNVC Royal Blue
     private static final int COLOR_ACCENT_CYAN    = 0xFF64D2FF; // Cyber Cyan
-    private static final int COLOR_ACCENT_GOLD    = 0xFFF0B84B; // Amber Gold Accent
-    private static final int COLOR_TEXT_PRIMARY   = 0xFFF8FAFC; // White
+    private static final int COLOR_ACCENT_GOLD    = 0xFFFFD760; // Amber Gold Accent
+    private static final int COLOR_TEXT_PRIMARY   = 0xFFFFFFFF; // Pure White
     private static final int COLOR_TEXT_SECONDARY = 0xD0EBF0FF; // Muted White / Ice Blue
     private static final int COLOR_TEXT_MUTED     = 0x88A0B4D2; // Dim Subtitle
-    private static final int COLOR_GREEN_READY    = 0xFF30D158; // Ready / Active
-    private static final int COLOR_DANGER_RED     = 0xFFFF453A; // Danger / Urgent
+    private static final int COLOR_GREEN_READY    = 0xFF30D158; // Active Ready
+    private static final int COLOR_DANGER_RED     = 0xFFFF453A; // Danger / Red
 
     public static void showSettingsMenu(Activity activity) {
         final Dialog dialog = new Dialog(activity);
@@ -49,7 +47,7 @@ public class StockfishSettingsDialog {
         GradientDrawable dialogBg = new GradientDrawable();
         dialogBg.setColor(COLOR_BG_PANEL);
         dialogBg.setCornerRadius(22 * density);
-        dialogBg.setStroke((int) (1.2f * density), COLOR_CARD_BORDER);
+        dialogBg.setStroke((int) (1.4f * density), COLOR_ACCENT_BLUE);
         dialog.getWindow().setBackgroundDrawable(dialogBg);
 
         // Root container
@@ -61,7 +59,7 @@ public class StockfishSettingsDialog {
         ));
 
         // ══════════════════════════════════════════════════════════════════════
-        // 1. NNVC HEADER (.x3)
+        // 1. NNVC HEADER
         // ══════════════════════════════════════════════════════════════════════
         LinearLayout headerLayout = new LinearLayout(activity);
         headerLayout.setOrientation(LinearLayout.HORIZONTAL);
@@ -77,14 +75,14 @@ public class StockfishSettingsDialog {
         });
         headerLayout.setBackground(headerBg);
 
-        // Logo Icon (.ttl-icon .brand)
+        // Logo Icon
         ImageView logoView = NNVCLogoHelper.createLogoView(activity, (int) (34 * density));
         LinearLayout.LayoutParams logoParams = new LinearLayout.LayoutParams((int) (34 * density), (int) (34 * density));
         logoParams.rightMargin = (int) (10 * density);
         logoView.setLayoutParams(logoParams);
         headerLayout.addView(logoView);
 
-        // Title Column (.ttl-text)
+        // Title Column
         LinearLayout titleCol = new LinearLayout(activity);
         titleCol.setOrientation(LinearLayout.VERTICAL);
         LinearLayout.LayoutParams titleColParams = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1.0f);
@@ -98,7 +96,7 @@ public class StockfishSettingsDialog {
         TextView brandText = new TextView(activity);
         brandText.setText("NNVC");
         brandText.setTextColor(COLOR_TEXT_PRIMARY);
-        brandText.setTextSize(14.5f);
+        brandText.setTextSize(15f);
         brandText.setTypeface(Typeface.create("sans-serif-medium", Typeface.BOLD));
         brandText.setLetterSpacing(0.08f);
         brandRow.addView(brandText);
@@ -107,7 +105,7 @@ public class StockfishSettingsDialog {
         TextView vipPill = new TextView(activity);
         vipPill.setText("VIP");
         vipPill.setTextColor(0xFFFFF7D6);
-        vipPill.setTextSize(9);
+        vipPill.setTextSize(9.5f);
         vipPill.setTypeface(Typeface.create("monospace", Typeface.BOLD));
         vipPill.setLetterSpacing(0.12f);
         int pillPadH = (int) (7 * density);
@@ -116,7 +114,7 @@ public class StockfishSettingsDialog {
 
         GradientDrawable vipBg = new GradientDrawable();
         vipBg.setColor(0x40FFD760);
-        vipBg.setStroke((int) (1 * density), 0x88FFD760);
+        vipBg.setStroke((int) (1.2f * density), 0x99FFD760);
         vipBg.setCornerRadius(999 * density);
         vipPill.setBackground(vipBg);
 
@@ -147,7 +145,7 @@ public class StockfishSettingsDialog {
 
         headerLayout.addView(titleCol);
 
-        // Language Switch Button (.hdr-btn)
+        // Language Switch Button
         TextView langBtn = new TextView(activity);
         boolean isCurrentVi = "vi".equalsIgnoreCase(StockfishSettings.getLanguage(activity));
         langBtn.setText(isCurrentVi ? "VI" : "EN");
@@ -175,10 +173,10 @@ public class StockfishSettingsDialog {
 
         windowRoot.addView(headerLayout);
 
-        // Thin Cyber Divider Line (.think-bar / sep)
+        // Thin Cyber Divider Line
         View headerDivider = new View(activity);
         headerDivider.setLayoutParams(new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, (int) (1 * density)
+                ViewGroup.LayoutParams.MATCH_PARENT, (int) (1.2f * density)
         ));
         GradientDivider(headerDivider, COLOR_ACCENT_BLUE);
         windowRoot.addView(headerDivider);
@@ -228,12 +226,12 @@ public class StockfishSettingsDialog {
         tabContentRoot.setPadding(contentPadding, 0, contentPadding, (int) (8 * density));
         scrollView.addView(tabContentRoot);
 
-        // --- TAB 1: LIVE (Trực tiếp & Thế cờ) ---
+        // ─── TAB 1: LIVE (Trực tiếp & Thế cờ) ───
         final LinearLayout panelLive = new LinearLayout(activity);
         panelLive.setOrientation(LinearLayout.VERTICAL);
         tabContentRoot.addView(panelLive);
 
-        // Mini Dashboard Card (.dash)
+        // Mini Dashboard Card with Pulsing LED (.dash)
         LinearLayout dashCard = createGlassCard(activity, density);
         panelLive.addView(dashCard);
 
@@ -252,6 +250,13 @@ public class StockfishSettingsDialog {
         statusDot.setLayoutParams(dotParams);
         statusRow.addView(statusDot);
 
+        // LED Breathing Pulse Animation
+        AlphaAnimation pulseAnim = new AlphaAnimation(0.35f, 1.0f);
+        pulseAnim.setDuration(700);
+        pulseAnim.setRepeatMode(Animation.REVERSE);
+        pulseAnim.setRepeatCount(Animation.INFINITE);
+        statusDot.startAnimation(pulseAnim);
+
         TextView statusLabel = new TextView(activity);
         statusLabel.setText(StockfishSettings.isEngineEnabled(activity) ? "ENGINE READY (1 THREAD)" : "ENGINE OFF");
         statusLabel.setTextColor(COLOR_TEXT_SECONDARY);
@@ -261,21 +266,27 @@ public class StockfishSettingsDialog {
 
         addDialogSpacer(panelLive, 8, density);
 
-        // Live options in Glass Card
+        // Live options in Glass Card with Cyber Switches
         LinearLayout liveCard = createGlassCard(activity, density);
         panelLive.addView(liveCard);
 
-        final CheckBox enabledCb = addGlassCheckbox(liveCard, I18n.get(activity, "enable_stockfish"), StockfishSettings.isEngineEnabled(activity), density, activity);
-        addGlassHint(liveCard, I18n.get(activity, "panic_hint"), density, activity);
+        final CyberSwitchView enabledSwitch = addCyberSwitchRow(liveCard,
+                I18n.get(activity, "enable_stockfish"),
+                I18n.get(activity, "panic_hint"),
+                StockfishSettings.isEngineEnabled(activity),
+                density, activity);
+
         addCardSeparator(liveCard, density);
 
         int currentDepth = StockfishSettings.getDepth(activity);
         final String depthPrefix = I18n.get(activity, "depth");
-        TextView depthLabel = addGlassLabel(liveCard, depthPrefix + ": " + currentDepth, density, activity);
-        final SeekBar depthSeekBar = addGlassSeekBar(liveCard, depthLabel, depthPrefix, currentDepth - 1, StockfishSettings.MAX_DEPTH - 1, 1, density, activity);
-        addGlassHint(liveCard, I18n.get(activity, "depth_hint"), density, activity);
+        final SeekBar depthSeekBar = addGlassSeekBarWithBadge(liveCard, depthPrefix,
+                String.valueOf(currentDepth),
+                currentDepth - 1, StockfishSettings.MAX_DEPTH - 1, 1,
+                I18n.get(activity, "depth_hint"),
+                density, activity);
 
-        // --- TAB 2: VISUAL (Mũi tên & Giao diện) ---
+        // ─── TAB 2: VISUAL (Mũi tên & Giao diện) ───
         final LinearLayout panelVisual = new LinearLayout(activity);
         panelVisual.setOrientation(LinearLayout.VERTICAL);
         panelVisual.setVisibility(View.GONE);
@@ -284,24 +295,71 @@ public class StockfishSettingsDialog {
         LinearLayout visualCard = createGlassCard(activity, density);
         panelVisual.addView(visualCard);
 
-        final CheckBox arrowsCb = addGlassCheckbox(visualCard, I18n.get(activity, "best_move_arrows"), StockfishSettings.isArrowsVisible(activity), density, activity);
-        final CheckBox sideCb = addGlassCheckbox(visualCard, I18n.get(activity, "my_turn_only"), StockfishSettings.isMySideOnly(activity), density, activity);
+        final CyberSwitchView arrowsSwitch = addCyberSwitchRow(visualCard,
+                I18n.get(activity, "best_move_arrows"),
+                null,
+                StockfishSettings.isArrowsVisible(activity),
+                density, activity);
+
+        addCardSeparator(visualCard, density);
+
+        final CyberSwitchView sideSwitch = addCyberSwitchRow(visualCard,
+                I18n.get(activity, "my_turn_only"),
+                null,
+                StockfishSettings.isMySideOnly(activity),
+                density, activity);
+
         addCardSeparator(visualCard, density);
 
         int currentPV = StockfishSettings.getMultiPV(activity);
         final String pvPrefix = I18n.get(activity, "num_arrows");
-        TextView pvLabel = addGlassLabel(visualCard, pvPrefix + ": " + currentPV, density, activity);
-        final SeekBar pvSeekBar = addGlassSeekBar(visualCard, pvLabel, pvPrefix, currentPV - 1, 4, 1, density, activity);
-        addGlassHint(visualCard, I18n.get(activity, "arrows_hint"), density, activity);
+        final SeekBar pvSeekBar = addGlassSeekBarWithBadge(visualCard, pvPrefix,
+                currentPV + " PV",
+                currentPV - 1, 4, 1,
+                I18n.get(activity, "arrows_hint"),
+                density, activity);
+
         addCardSeparator(visualCard, density);
 
-        final CheckBox threatCb = addGlassCheckbox(visualCard, I18n.get(activity, "threat_arrow"), StockfishSettings.isThreatArrowsEnabled(activity), density, activity);
-        final CheckBox evalBarCb = addGlassCheckbox(visualCard, I18n.get(activity, "eval_bar"), StockfishSettings.isEvalBarEnabled(activity), density, activity);
-        final CheckBox wdlCb = addGlassCheckbox(visualCard, I18n.get(activity, "wdl_bar"), StockfishSettings.isWdlEnabled(activity), density, activity);
-        final CheckBox infoCb = addGlassCheckbox(visualCard, I18n.get(activity, "depth_score_above"), StockfishSettings.isEngineInfoEnabled(activity), density, activity);
-        final CheckBox mateCb = addGlassCheckbox(visualCard, I18n.get(activity, "forced_mates"), StockfishSettings.isMateAnnouncementEnabled(activity), density, activity);
+        final CyberSwitchView threatSwitch = addCyberSwitchRow(visualCard,
+                I18n.get(activity, "threat_arrow"),
+                null,
+                StockfishSettings.isThreatArrowsEnabled(activity),
+                density, activity);
 
-        // --- TAB 3: ENGINE (Sức mạnh & Phân loại) ---
+        addCardSeparator(visualCard, density);
+
+        final CyberSwitchView evalBarSwitch = addCyberSwitchRow(visualCard,
+                I18n.get(activity, "eval_bar"),
+                null,
+                StockfishSettings.isEvalBarEnabled(activity),
+                density, activity);
+
+        addCardSeparator(visualCard, density);
+
+        final CyberSwitchView wdlSwitch = addCyberSwitchRow(visualCard,
+                I18n.get(activity, "wdl_bar"),
+                null,
+                StockfishSettings.isWdlEnabled(activity),
+                density, activity);
+
+        addCardSeparator(visualCard, density);
+
+        final CyberSwitchView infoSwitch = addCyberSwitchRow(visualCard,
+                I18n.get(activity, "depth_score_above"),
+                null,
+                StockfishSettings.isEngineInfoEnabled(activity),
+                density, activity);
+
+        addCardSeparator(visualCard, density);
+
+        final CyberSwitchView mateSwitch = addCyberSwitchRow(visualCard,
+                I18n.get(activity, "forced_mates"),
+                null,
+                StockfishSettings.isMateAnnouncementEnabled(activity),
+                density, activity);
+
+        // ─── TAB 3: ENGINE (Sức mạnh & Phân loại) ───
         final LinearLayout panelEngine = new LinearLayout(activity);
         panelEngine.setOrientation(LinearLayout.VERTICAL);
         panelEngine.setVisibility(View.GONE);
@@ -310,26 +368,42 @@ public class StockfishSettingsDialog {
         LinearLayout engineCard = createGlassCard(activity, density);
         panelEngine.addView(engineCard);
 
-        final CheckBox classifCb = addGlassCheckbox(engineCard, I18n.get(activity, "rate_moves"), StockfishSettings.isMoveClassificationEnabled(activity), density, activity);
-        final CheckBox blunderCb = addGlassCheckbox(engineCard, I18n.get(activity, "vibrate_blunder"), StockfishSettings.isBlunderAlertsEnabled(activity), density, activity);
-        addGlassHint(engineCard, I18n.get(activity, "vibrate_hint"), density, activity);
+        final CyberSwitchView classifSwitch = addCyberSwitchRow(engineCard,
+                I18n.get(activity, "rate_moves"),
+                null,
+                StockfishSettings.isMoveClassificationEnabled(activity),
+                density, activity);
+
         addCardSeparator(engineCard, density);
 
-        final CheckBox eloCb = addGlassCheckbox(engineCard, I18n.get(activity, "limit_strength"), StockfishSettings.isLimitStrength(activity), density, activity);
+        final CyberSwitchView blunderSwitch = addCyberSwitchRow(engineCard,
+                I18n.get(activity, "vibrate_blunder"),
+                I18n.get(activity, "vibrate_hint"),
+                StockfishSettings.isBlunderAlertsEnabled(activity),
+                density, activity);
+
+        addCardSeparator(engineCard, density);
+
+        final CyberSwitchView eloSwitch = addCyberSwitchRow(engineCard,
+                I18n.get(activity, "limit_strength"),
+                null,
+                StockfishSettings.isLimitStrength(activity),
+                density, activity);
+
+        addCardSeparator(engineCard, density);
+
         int currentElo = Math.max(1320, Math.min(3190, StockfishSettings.getElo(activity)));
         final String eloPrefix = I18n.get(activity, "engine_elo");
-        final TextView eloLabel = addGlassLabel(engineCard, eloPrefix + ": " + currentElo, density, activity);
-        final SeekBar eloSeekBar = addGlassSeekBar(engineCard, eloLabel, eloPrefix, currentElo - 1320, 3190 - 1320, 1320, density, activity);
-        addGlassHint(engineCard, I18n.get(activity, "elo_hint"), density, activity);
+        final SeekBar eloSeekBar = addGlassSeekBarWithBadge(engineCard, eloPrefix,
+                currentElo + " ELO",
+                currentElo - 1320, 3190 - 1320, 1320,
+                I18n.get(activity, "elo_hint"),
+                density, activity);
 
-        eloLabel.setEnabled(eloCb.isChecked());
-        eloSeekBar.setEnabled(eloCb.isChecked());
-        eloLabel.setAlpha(eloCb.isChecked() ? 1f : 0.4f);
-        eloSeekBar.setAlpha(eloCb.isChecked() ? 1f : 0.4f);
-        eloCb.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            eloLabel.setEnabled(isChecked);
+        eloSeekBar.setEnabled(eloSwitch.isChecked());
+        eloSeekBar.setAlpha(eloSwitch.isChecked() ? 1f : 0.4f);
+        eloSwitch.setOnCheckedChangeListener((switchView, isChecked) -> {
             eloSeekBar.setEnabled(isChecked);
-            eloLabel.setAlpha(isChecked ? 1f : 0.4f);
             eloSeekBar.setAlpha(isChecked ? 1f : 0.4f);
         });
 
@@ -400,7 +474,7 @@ public class StockfishSettingsDialog {
         GradientDrawable tgBg = new GradientDrawable();
         tgBg.setColor(0xCC0A84FF); // 80% Cyber Blue
         tgBg.setCornerRadius(14 * density);
-        tgBg.setStroke((int) (1 * density), COLOR_ACCENT_CYAN);
+        tgBg.setStroke((int) (1.2f * density), COLOR_ACCENT_CYAN);
         telegramBtn.setBackground(tgBg);
 
         ImageView tgIcon = TelegramIconHelper.createTelegramLogoView(activity, (int) (18 * density));
@@ -467,43 +541,43 @@ public class StockfishSettingsDialog {
         saveBtn.setTextSize(14);
         saveBtn.setTypeface(Typeface.create("sans-serif-medium", Typeface.BOLD));
         saveBtn.setGravity(Gravity.CENTER);
-        saveBtn.setPadding((int) (20 * density), (int) (8 * density), (int) (20 * density), (int) (8 * density));
+        saveBtn.setPadding((int) (22 * density), (int) (8 * density), (int) (22 * density), (int) (8 * density));
 
         GradientDrawable saveBg = new GradientDrawable();
         saveBg.setColor(COLOR_ACCENT_BLUE);
         saveBg.setCornerRadius(10 * density);
-        saveBg.setStroke((int) (1 * density), COLOR_ACCENT_CYAN);
+        saveBg.setStroke((int) (1.2f * density), COLOR_ACCENT_CYAN);
         saveBtn.setBackground(saveBg);
 
         saveBtn.setOnClickListener(v -> {
-            StockfishSettings.setEngineEnabled(activity, enabledCb.isChecked());
+            StockfishSettings.setEngineEnabled(activity, enabledSwitch.isChecked());
             StockfishSettings.setDepth(activity, Math.max(1, depthSeekBar.getProgress() + 1));
             StockfishSettings.setMultiPV(activity, Math.max(1, pvSeekBar.getProgress() + 1));
-            StockfishSettings.setMySideOnly(activity, sideCb.isChecked());
-            StockfishSettings.setLimitStrength(activity, eloCb.isChecked());
+            StockfishSettings.setMySideOnly(activity, sideSwitch.isChecked());
+            StockfishSettings.setLimitStrength(activity, eloSwitch.isChecked());
             StockfishSettings.setElo(activity, 1320 + eloSeekBar.getProgress());
             StockfishSettings.setPremiumEnabled(activity, true);
-            StockfishSettings.setArrowsVisible(activity, arrowsCb.isChecked());
-            StockfishSettings.setEvalBarEnabled(activity, evalBarCb.isChecked());
-            StockfishSettings.setWdlEnabled(activity, wdlCb.isChecked());
-            StockfishSettings.setEngineInfoEnabled(activity, infoCb.isChecked());
-            StockfishSettings.setThreatArrowsEnabled(activity, threatCb.isChecked());
-            StockfishSettings.setMoveClassificationEnabled(activity, classifCb.isChecked());
-            StockfishSettings.setBlunderAlertsEnabled(activity, blunderCb.isChecked());
-            StockfishSettings.setMateAnnouncementEnabled(activity, mateCb.isChecked());
-            if (!mateCb.isChecked()) OverlayManager.hideMateAnnouncement();
+            StockfishSettings.setArrowsVisible(activity, arrowsSwitch.isChecked());
+            StockfishSettings.setEvalBarEnabled(activity, evalBarSwitch.isChecked());
+            StockfishSettings.setWdlEnabled(activity, wdlSwitch.isChecked());
+            StockfishSettings.setEngineInfoEnabled(activity, infoSwitch.isChecked());
+            StockfishSettings.setThreatArrowsEnabled(activity, threatSwitch.isChecked());
+            StockfishSettings.setMoveClassificationEnabled(activity, classifSwitch.isChecked());
+            StockfishSettings.setBlunderAlertsEnabled(activity, blunderSwitch.isChecked());
+            StockfishSettings.setMateAnnouncementEnabled(activity, mateSwitch.isChecked());
+            if (!mateSwitch.isChecked()) OverlayManager.hideMateAnnouncement();
 
             Toast.makeText(activity, I18n.get(activity, "settings_saved"), Toast.LENGTH_SHORT).show();
 
             Object state = StockfishExtension.getStateImpl();
-            if (!enabledCb.isChecked() || !arrowsCb.isChecked()) {
+            if (!enabledSwitch.isChecked() || !arrowsSwitch.isChecked()) {
                 ArrowInjector.clearEngineArrows(state);
             }
-            if (!enabledCb.isChecked() || !evalBarCb.isChecked()) OverlayManager.hideEvalBar();
-            if (!enabledCb.isChecked() || !wdlCb.isChecked()) OverlayManager.hideWdlBar();
-            if (!enabledCb.isChecked() || !infoCb.isChecked()) OverlayManager.hideEngineInfo();
-            if (!enabledCb.isChecked()) OverlayManager.hideMateAnnouncement();
-            if (enabledCb.isChecked()) {
+            if (!enabledSwitch.isChecked() || !evalBarSwitch.isChecked()) OverlayManager.hideEvalBar();
+            if (!enabledSwitch.isChecked() || !wdlSwitch.isChecked()) OverlayManager.hideWdlBar();
+            if (!enabledSwitch.isChecked() || !infoSwitch.isChecked()) OverlayManager.hideEngineInfo();
+            if (!enabledSwitch.isChecked()) OverlayManager.hideMateAnnouncement();
+            if (enabledSwitch.isChecked()) {
                 StockfishExtension.triggerAnalysisForCurrentState();
             }
 
@@ -532,7 +606,7 @@ public class StockfishSettingsDialog {
         GradientDrawable bg = new GradientDrawable();
         bg.setColor(COLOR_CARD_BG);
         bg.setCornerRadius(14 * density);
-        bg.setStroke((int) (1 * density), COLOR_CARD_BORDER);
+        bg.setStroke((int) (1.2f * density), COLOR_CARD_BORDER);
         card.setBackground(bg);
 
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
@@ -562,7 +636,7 @@ public class StockfishSettingsDialog {
         GradientDrawable bg = new GradientDrawable();
         if (active) {
             bg.setColor(0x550A84FF); // Active Cyber Glow
-            bg.setStroke((int) (1 * density), COLOR_ACCENT_CYAN);
+            bg.setStroke((int) (1.2f * density), COLOR_ACCENT_CYAN);
         } else {
             bg.setColor(Color.TRANSPARENT);
         }
@@ -570,32 +644,91 @@ public class StockfishSettingsDialog {
         tab.setBackground(bg);
     }
 
-    private static CheckBox addGlassCheckbox(LinearLayout layout, String labelText, boolean checked, float density, Activity activity) {
-        CheckBox cb = new CheckBox(activity);
-        cb.setText(labelText);
-        cb.setTextColor(COLOR_TEXT_PRIMARY);
-        cb.setTextSize(14);
-        cb.setChecked(checked);
-        cb.setPadding((int) (8 * density), (int) (6 * density), 0, (int) (6 * density));
-        if (Build.VERSION.SDK_INT >= 21) {
-            cb.setButtonTintList(ColorStateList.valueOf(COLOR_ACCENT_BLUE));
+    private static CyberSwitchView addCyberSwitchRow(LinearLayout container, String title, String subtitle, boolean initialChecked, float density, Activity activity) {
+        LinearLayout row = new LinearLayout(activity);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setPadding((int) (4 * density), (int) (8 * density), (int) (4 * density), (int) (8 * density));
+
+        LinearLayout textCol = new LinearLayout(activity);
+        textCol.setOrientation(LinearLayout.VERTICAL);
+        LinearLayout.LayoutParams textColParams = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1.0f);
+        textColParams.rightMargin = (int) (10 * density);
+        textCol.setLayoutParams(textColParams);
+
+        TextView titleTv = new TextView(activity);
+        titleTv.setText(title);
+        titleTv.setTextColor(COLOR_TEXT_PRIMARY);
+        titleTv.setTextSize(13.5f);
+        titleTv.setTypeface(Typeface.create("sans-serif-medium", Typeface.BOLD));
+        textCol.addView(titleTv);
+
+        if (subtitle != null && !subtitle.isEmpty()) {
+            TextView subTv = new TextView(activity);
+            subTv.setText(subtitle);
+            subTv.setTextColor(COLOR_TEXT_MUTED);
+            subTv.setTextSize(10.5f);
+            subTv.setLineSpacing(1.2f, 1.1f);
+            LinearLayout.LayoutParams subParams = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT
+            );
+            subParams.topMargin = (int) (2 * density);
+            subTv.setLayoutParams(subParams);
+            textCol.addView(subTv);
         }
-        layout.addView(cb);
-        return cb;
+
+        row.addView(textCol);
+
+        CyberSwitchView cyberSwitch = new CyberSwitchView(activity);
+        cyberSwitch.setChecked(initialChecked, false);
+        LinearLayout.LayoutParams switchParams = new LinearLayout.LayoutParams(
+                (int) (48 * density), (int) (27 * density)
+        );
+        cyberSwitch.setLayoutParams(switchParams);
+        row.addView(cyberSwitch);
+
+        // Click row to toggle
+        row.setClickable(true);
+        row.setOnClickListener(v -> cyberSwitch.toggle());
+
+        container.addView(row);
+        return cyberSwitch;
     }
 
-    private static TextView addGlassLabel(LinearLayout layout, String text, float density, Activity activity) {
-        TextView label = new TextView(activity);
-        label.setText(text);
-        label.setTextColor(COLOR_TEXT_SECONDARY);
-        label.setTextSize(13);
-        label.setTypeface(Typeface.create("monospace", Typeface.BOLD));
-        label.setPadding(0, (int) (6 * density), 0, 0);
-        layout.addView(label);
-        return label;
-    }
+    private static SeekBar addGlassSeekBarWithBadge(LinearLayout layout, final String labelPrefix, String initialBadge, int progress, int max, final int minVal, String hint, float density, Activity activity) {
+        // Label & Badge Header
+        LinearLayout headerRow = new LinearLayout(activity);
+        headerRow.setOrientation(LinearLayout.HORIZONTAL);
+        headerRow.setGravity(Gravity.CENTER_VERTICAL);
+        headerRow.setPadding(0, (int) (4 * density), 0, (int) (4 * density));
 
-    private static SeekBar addGlassSeekBar(LinearLayout layout, final TextView labelTv, final String labelPrefix, int progress, int max, final int minVal, float density, Activity activity) {
+        TextView labelTv = new TextView(activity);
+        labelTv.setText(labelPrefix);
+        labelTv.setTextColor(COLOR_TEXT_SECONDARY);
+        labelTv.setTextSize(13);
+        labelTv.setTypeface(Typeface.create("sans-serif-medium", Typeface.BOLD));
+        LinearLayout.LayoutParams labelParams = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1.0f);
+        labelTv.setLayoutParams(labelParams);
+        headerRow.addView(labelTv);
+
+        // Amber Gold Value Badge
+        final TextView valBadge = new TextView(activity);
+        valBadge.setText(initialBadge);
+        valBadge.setTextColor(COLOR_ACCENT_GOLD);
+        valBadge.setTextSize(11);
+        valBadge.setTypeface(Typeface.create("monospace", Typeface.BOLD));
+        valBadge.setPadding((int) (8 * density), (int) (2 * density), (int) (8 * density), (int) (2 * density));
+
+        GradientDrawable badgeBg = new GradientDrawable();
+        badgeBg.setColor(0x33FFD760);
+        badgeBg.setCornerRadius(6 * density);
+        badgeBg.setStroke((int) (1 * density), COLOR_ACCENT_GOLD);
+        valBadge.setBackground(badgeBg);
+        headerRow.addView(valBadge);
+
+        layout.addView(headerRow);
+
+        // SeekBar with Cyan & Blue tints
         SeekBar seekBar = new SeekBar(activity);
         seekBar.setMax(max);
         seekBar.setProgress(progress);
@@ -603,13 +736,19 @@ public class StockfishSettingsDialog {
             seekBar.setProgressTintList(ColorStateList.valueOf(COLOR_ACCENT_BLUE));
             seekBar.setThumbTintList(ColorStateList.valueOf(COLOR_ACCENT_CYAN));
         }
-        seekBar.setPadding((int) (6 * density), (int) (6 * density), (int) (6 * density), (int) (10 * density));
+        seekBar.setPadding((int) (4 * density), (int) (6 * density), (int) (4 * density), (int) (8 * density));
 
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar sb, int prog, boolean fromUser) {
                 int val = Math.max(minVal, prog + minVal);
-                labelTv.setText(labelPrefix + ": " + val);
+                if (labelPrefix.toLowerCase().contains("elo")) {
+                    valBadge.setText(val + " ELO");
+                } else if (labelPrefix.toLowerCase().contains("mũi tên") || labelPrefix.toLowerCase().contains("arrow")) {
+                    valBadge.setText(val + " PV");
+                } else {
+                    valBadge.setText(String.valueOf(val));
+                }
             }
             @Override
             public void onStartTrackingTouch(SeekBar sb) {}
@@ -618,17 +757,17 @@ public class StockfishSettingsDialog {
         });
 
         layout.addView(seekBar);
-        return seekBar;
-    }
 
-    private static TextView addGlassHint(LinearLayout layout, String text, float density, Activity activity) {
-        TextView hint = new TextView(activity);
-        hint.setText(text);
-        hint.setTextColor(COLOR_TEXT_MUTED);
-        hint.setTextSize(11);
-        hint.setPadding((int) (4 * density), 0, (int) (4 * density), (int) (4 * density));
-        layout.addView(hint);
-        return hint;
+        if (hint != null && !hint.isEmpty()) {
+            TextView hintTv = new TextView(activity);
+            hintTv.setText(hint);
+            hintTv.setTextColor(COLOR_TEXT_MUTED);
+            hintTv.setTextSize(10.5f);
+            hintTv.setPadding((int) (4 * density), 0, (int) (4 * density), (int) (4 * density));
+            layout.addView(hintTv);
+        }
+
+        return seekBar;
     }
 
     private static void addCardSeparator(LinearLayout layout, float density) {
@@ -636,7 +775,7 @@ public class StockfishSettingsDialog {
         sep.setLayoutParams(new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, (int) (1 * density)
         ));
-        GradientDivider(sep, 0x22FFFFFF);
+        GradientDivider(sep, 0x1AFFFFFF);
         layout.addView(sep);
     }
 
