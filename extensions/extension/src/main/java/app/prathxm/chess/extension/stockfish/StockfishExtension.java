@@ -252,11 +252,35 @@ public class StockfishExtension {
         scheduleAnalysis(fen);
     }
 
+    // Stubs for real Game Review compatibility
+    public static Object getLocalAnalysisFlowForConfig(Class<?> flowClass, Object pgn, Object depth) {
+        Log.d(TAG, "getLocalAnalysisFlowForConfig called (stub for real game review)");
+        return null;
+    }
+
+    public static boolean shouldUseDummyMove(Object o1, Object o2) {
+        return false;
+    }
+
+    public static Object buildDummyMoveResult(Class<?> clazz, Object o) {
+        return null;
+    }
+
+    public static Object getFullGameAnalysisPermissions() {
+        return null;
+    }
+
     public static void onArrowsChanged(Object stateImplObject, List<?> arrows) {
         if (stateImplObject == null) return;
         stateImplRef.set(new WeakReference<>(stateImplObject));
 
         GestureInterceptor.ensureGestureInterceptorRegistered();
+        ensureEngineReady();
+
+        // Auto-trigger analysis for move 0 / initial position if no job has been scheduled yet
+        if (engineReady && currentJob == null) {
+            triggerAnalysisForCurrentState();
+        }
 
         if (ArrowInjector.isInjecting.get()) {
             return;
@@ -524,6 +548,20 @@ public class StockfishExtension {
             public void onActivityResumed(Activity activity) {
                 resumedActivity = new WeakReference<>(activity);
                 GestureInterceptor.registerGestureInterceptor(activity);
+                lastArrowSignature = null;
+                lastScheduledKey = null;
+                // Re-trigger analysis and board redraw after multitasking switch
+                new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            triggerAnalysisForCurrentState();
+                            invalidateAllBoards();
+                        } catch (Throwable t) {
+                            Log.e(TAG, "Failed to refresh onActivityResumed: " + t.getMessage());
+                        }
+                    }
+                }, 300);
             }
 
             @Override
@@ -566,9 +604,9 @@ public class StockfishExtension {
     }
 
     public static void triggerAnalysisForCurrentState() {
-        // Settings may have changed (depth, lines, overlays): always repaint and restart the
-        // search even if the same position is already being analysed.
+        // Settings or app state changed: always repaint and restart analysis
         lastArrowSignature = null;
+        lastScheduledKey = null;
         Object state = getStateImpl();
         if (state != null) {
             try {
@@ -618,6 +656,7 @@ public class StockfishExtension {
     }
 
     public static Boolean isUserWhite(Object stateImplObject) {
+        if (stateImplObject == null) return Boolean.TRUE;
         try {
             Field field = null;
             try {
@@ -634,18 +673,34 @@ public class StockfishExtension {
             if (field != null) {
                 field.setAccessible(true);
                 Object sideToPlaySelfEffects = field.get(stateImplObject);
-                if (sideToPlaySelfEffects == null) return null;
-                
-                Method invokeMethod = sideToPlaySelfEffects.getClass().getMethod("invoke");
-                invokeMethod.setAccessible(true);
-                Object side = invokeMethod.invoke(sideToPlaySelfEffects);
-                if (side == null) return null;
-                return sideToWhite(side);
+                if (sideToPlaySelfEffects != null) {
+                    Method invokeMethod = sideToPlaySelfEffects.getClass().getMethod("invoke");
+                    invokeMethod.setAccessible(true);
+                    Object side = invokeMethod.invoke(sideToPlaySelfEffects);
+                    if (side != null) {
+                        Boolean w = sideToWhite(side);
+                        if (w != null) return w;
+                    }
+                }
             }
         } catch (Throwable t) {
             Log.e(TAG, "isUserWhite failed: " + t.getMessage(), t);
         }
-        return null;
+
+        // Fallback: Infer player side from board orientation (not flipped = White, flipped = Black)
+        try {
+            for (Method m : stateImplObject.getClass().getMethods()) {
+                String n = m.getName();
+                if ((n.equals("getFlipBoard") || n.equals("isFlipped") || n.equals("getFlipped"))
+                        && m.getParameterCount() == 0 && m.getReturnType() == boolean.class) {
+                    boolean flipped = (boolean) m.invoke(stateImplObject);
+                    return !flipped;
+                }
+            }
+        } catch (Throwable ignored) {}
+
+        // Move 0 default: Player starting a match is White
+        return Boolean.TRUE;
     }
 
     /**

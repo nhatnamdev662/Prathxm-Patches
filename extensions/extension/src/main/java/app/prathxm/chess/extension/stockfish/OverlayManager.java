@@ -48,7 +48,15 @@ public class OverlayManager {
                     int boardY = loc[1];
                     int boardW = boardView.getWidth();
                     int boardH = boardView.getHeight();
-                    if (boardW <= 0 || boardH <= 0) return;
+                    if (boardW <= 0 || boardH <= 0) {
+                        boardView.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                updateArrowOverlay(moves, stateImpl);
+                            }
+                        });
+                        return;
+                    }
 
                     View overlay = decorView.findViewWithTag("nnvc_arrow_overlay");
                     ArrowOverlayView arrowView;
@@ -131,7 +139,15 @@ public class OverlayManager {
                     int boardY = loc[1];
                     int boardW = boardView.getWidth();
                     int boardH = boardView.getHeight();
-                    if (boardW <= 0 || boardH <= 0) return;
+                    if (boardW <= 0 || boardH <= 0) {
+                        boardView.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                updateEvalBar(score, hasMate, mateIn, stateImpl);
+                            }
+                        });
+                        return;
+                    }
 
                     float density = decorView.getContext().getResources().getDisplayMetrics().density;
                     int barWidth = (int) (12 * density);

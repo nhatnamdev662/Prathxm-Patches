@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-10-06T21:55:00",
-  "description": "## [2.0.1] (2026-10-06)\n\n### ⚡ NNVC v2.0.1 — Lane Separation, Native Threat Arrows, Always-Active Engine & Custom Color Palette\n\n* **Né mũi tên trùng (Lane Separation):** Cơ chế tính toán độ lệch trực giao perpOffset y chang Extension NNVC, triệt tiêu hoàn toàn trùng đè khi nhiều mũi tên cùng đích, cùng xuất phát, hay ngược chiều.\n* **Mũi tên hiểm hoạ chuẩn gốc Chess.com:** Giữ nguyên style vector native màu đỏ gốc của Chess.com qua HintArrow (ArrowInjector), độc lập hoàn toàn với Engine Overlay.\n* **Engine luôn hoạt động:** Tab Engine bỏ nút công tắc thừa, Depth và ELO luôn luôn hoạt động song song và đặt liền kề sát nhau.\n* **Bảng màu Cyber Palette tùy chỉnh:** Tự do tùy chỉnh màu sắc cho từng bậc nước đi (Nước 1 đến 5) ngay trong Menu Cài đặt Tab VISUAL với giao diện bảng màu Cyber Luxury.\n* **Author:** NNVC (@nncutett)",
-  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.1/patches-2.0.1.mpp",
+  "created_at": "2026-10-06T22:25:00",
+  "description": "## [2.0.2] (2026-10-06)\n\n### ⚡ NNVC v2.0.2 — Fix Game Review Crash, Initial Turn White Recognition & Multitasking Overlay Recovery\n\n* **Khắc phục triệt để crash Game Review:** Vô hiệu hoá hoàn toàn hook Game Analysis trong patch bundle và bổ sung stub methods tương thích, trả lại 100% Game Review gốc (real) của Chess.com, triệt tiêu lỗi `NoSuchMethodError: getLocalAnalysisFlowForConfig`.\n* **Nhận diện quân Trắng ngay từ nước đầu tiên:** Bổ sung cơ chế suy luận màu quân theo góc nhìn bàn cờ `getFlipBoard()` và auto-trigger phân tích ngay khi mở ván cờ, hiển thị mũi tên ngay lập tức ở nước 0 khi bật chế độ chỉ hiện bên mình.\n* **Khôi phục mũi tên khi đa nhiệm (thoát Home/quay lại):** Tự động phát hiện lifecycle resume, reset signature, kích hoạt lại phân tích và cơ chế vẽ lại overlay ngay sau khi bàn cờ hoàn tất layout khi chuyển app quay lại.\n* **Author:** NNVC (@nncutett)",
+  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.2/patches-2.0.2.mpp",
   "signature_download_url": "",
-  "version": "2.0.1"
+  "version": "2.0.2"
 }
