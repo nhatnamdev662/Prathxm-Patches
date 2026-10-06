@@ -21,23 +21,8 @@ val botUnlockPatch = bytecodePatch(
     extendWith("extensions/extension.mpe")
 
     execute {
-        // Bot.PersonalityBot.i() → boolean (canPlay)
-        BotPersonalityBotGetCanPlayFingerprint.method.addInstructions(
-            0,
-            """
-                const/4 v0, 1
-                return v0
-            """
-        )
-
-        // Bot.PersonalityBot.E() → boolean (requiresAccountActivation)
-        BotPersonalityBotGetRequiresActivationFingerprint.method.addInstructions(
-            0,
-            """
-                const/4 v0, 0
-                return v0
-            """
-        )
+        // Legacy Bot.PersonalityBot checks removed in 4.10.x (handled via ProtoBotPersonality & LockedBots)
+        // BotPersonalityBotGetCanPlayFingerprint and BotPersonalityBotGetRequiresActivationFingerprint omitted
 
         // BotPersonality (Proto).getCan_play() → Boolean (boxed)
         ProtoBotPersonalityGetCanPlayFingerprint.method.addInstructions(
