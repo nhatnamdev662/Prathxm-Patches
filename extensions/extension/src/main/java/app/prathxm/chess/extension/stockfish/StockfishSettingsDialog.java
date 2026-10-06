@@ -18,6 +18,7 @@ import android.view.Window;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -47,39 +48,87 @@ public class StockfishSettingsDialog {
         rootLayout.setPadding(rootPadding, rootPadding, rootPadding, rootPadding);
         scrollView.addView(rootLayout);
 
-        // Header Title
+        // Header (Title + Language Toggle Button)
+        RelativeLayout headerLayout = new RelativeLayout(activity);
+        LinearLayout.LayoutParams headerParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        headerLayout.setLayoutParams(headerParams);
+
         TextView titleTv = new TextView(activity);
-        titleTv.setText("Engine Settings");
+        titleTv.setText(I18n.get(activity, "title"));
         titleTv.setTextColor(0xFFFFFFFF);
         titleTv.setTextSize(20);
         titleTv.setTypeface(Typeface.create("sans-serif-medium", Typeface.BOLD));
-        titleTv.setGravity(Gravity.CENTER);
-        rootLayout.addView(titleTv);
+        RelativeLayout.LayoutParams titleParams = new RelativeLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        titleParams.addRule(RelativeLayout.CENTER_IN_PARENT);
+        titleTv.setLayoutParams(titleParams);
+        headerLayout.addView(titleTv);
+
+        TextView langBtn = new TextView(activity);
+        boolean isCurrentVi = "vi".equalsIgnoreCase(StockfishSettings.getLanguage(activity));
+        langBtn.setText(isCurrentVi ? "VI" : "EN");
+        langBtn.setTextColor(0xFFFFFFFF);
+        langBtn.setTextSize(12);
+        langBtn.setTypeface(Typeface.create("sans-serif-medium", Typeface.BOLD));
+        langBtn.setGravity(Gravity.CENTER);
+        int langPadH = (int) (10 * density);
+        int langPadV = (int) (4 * density);
+        langBtn.setPadding(langPadH, langPadV, langPadH, langPadV);
+
+        GradientDrawable langBg = new GradientDrawable();
+        langBg.setColor(0xFF3B3935);
+        langBg.setCornerRadius(6 * density);
+        langBg.setStroke((int) (1 * density), 0xFF81B64C);
+        langBtn.setBackground(langBg);
+
+        RelativeLayout.LayoutParams langParams = new RelativeLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        langParams.addRule(RelativeLayout.ALIGN_PARENT_END);
+        langParams.addRule(RelativeLayout.CENTER_VERTICAL);
+        langBtn.setLayoutParams(langParams);
+
+        langBtn.setOnClickListener(v -> {
+            String newLang = isCurrentVi ? "en" : "vi";
+            StockfishSettings.setLanguage(activity, newLang);
+            dialog.dismiss();
+            showSettingsMenu(activity);
+        });
+        headerLayout.addView(langBtn);
+
+        rootLayout.addView(headerLayout);
 
         addDialogSpacer(rootLayout, 16, density);
 
         // 1. ENGINE
-        addSectionHeader(rootLayout, "Engine", density, activity);
+        addSectionHeader(rootLayout, I18n.get(activity, "engine"), density, activity);
 
-        CheckBox enabledCb = addStyledCheckbox(rootLayout, "Enable Stockfish", StockfishSettings.isEngineEnabled(activity), density, activity);
-        addHint(rootLayout, "Double-tap the top bar to switch it off or on instantly (panic mode).", density, activity);
+        CheckBox enabledCb = addStyledCheckbox(rootLayout, I18n.get(activity, "enable_stockfish"), StockfishSettings.isEngineEnabled(activity), density, activity);
+        addHint(rootLayout, I18n.get(activity, "panic_hint"), density, activity);
 
         int currentDepth = StockfishSettings.getDepth(activity);
-        TextView depthLabel = addStyledLabel(rootLayout, "Analysis depth: " + currentDepth, density, activity);
-        SeekBar depthSeekBar = addStyledSeekBar(rootLayout, depthLabel, "Analysis depth", currentDepth - 1, StockfishSettings.MAX_DEPTH - 1, 1, density, activity);
-        addHint(rootLayout, "Higher is stronger but slower. 18–22 suits most phones. Arrows update while the engine thinks.", density, activity);
+        final String depthPrefix = I18n.get(activity, "depth");
+        TextView depthLabel = addStyledLabel(rootLayout, depthPrefix + ": " + currentDepth, density, activity);
+        SeekBar depthSeekBar = addStyledSeekBar(rootLayout, depthLabel, depthPrefix, currentDepth - 1, StockfishSettings.MAX_DEPTH - 1, 1, density, activity);
+        addHint(rootLayout, I18n.get(activity, "depth_hint"), density, activity);
 
         // 2. ON THE BOARD
-        addSectionHeader(rootLayout, "On the board", density, activity);
-        CheckBox arrowsCb = addStyledCheckbox(rootLayout, "Best-move arrows", StockfishSettings.isArrowsVisible(activity), density, activity);
-        CheckBox evalBarCb = addStyledCheckbox(rootLayout, "Evaluation bar", StockfishSettings.isEvalBarEnabled(activity), density, activity);
-        CheckBox classifCb = addStyledCheckbox(rootLayout, "Rate each move (Best, Blunder…)", StockfishSettings.isMoveClassificationEnabled(activity), density, activity);
+        addSectionHeader(rootLayout, I18n.get(activity, "on_board"), density, activity);
+        CheckBox arrowsCb = addStyledCheckbox(rootLayout, I18n.get(activity, "best_move_arrows"), StockfishSettings.isArrowsVisible(activity), density, activity);
+        CheckBox evalBarCb = addStyledCheckbox(rootLayout, I18n.get(activity, "eval_bar"), StockfishSettings.isEvalBarEnabled(activity), density, activity);
+        CheckBox classifCb = addStyledCheckbox(rootLayout, I18n.get(activity, "rate_moves"), StockfishSettings.isMoveClassificationEnabled(activity), density, activity);
 
         addDialogSpacer(rootLayout, 12, density);
 
         // ADVANCED TOGGLE
         TextView advancedToggleBtn = new TextView(activity);
-        advancedToggleBtn.setText("Show advanced settings ▾");
+        advancedToggleBtn.setText(I18n.get(activity, "show_advanced"));
         advancedToggleBtn.setTextColor(0xFF81B64C); // Chess.com Green
         advancedToggleBtn.setTextSize(14);
         advancedToggleBtn.setGravity(Gravity.CENTER);
@@ -95,7 +144,7 @@ public class StockfishSettingsDialog {
             public void onClick(View v) {
                 boolean isVisible = advancedLayout.getVisibility() == View.VISIBLE;
                 advancedLayout.setVisibility(isVisible ? View.GONE : View.VISIBLE);
-                advancedToggleBtn.setText(isVisible ? "Show advanced settings ▾" : "Hide advanced settings ▴");
+                advancedToggleBtn.setText(isVisible ? I18n.get(activity, "show_advanced") : I18n.get(activity, "hide_advanced"));
             }
         });
 
@@ -103,62 +152,66 @@ public class StockfishSettingsDialog {
         rootLayout.addView(advancedLayout);
 
         // Arrows & overlays
-        addSectionHeader(advancedLayout, "Arrows & overlays", density, activity);
+        addSectionHeader(advancedLayout, I18n.get(activity, "arrows_overlays"), density, activity);
         int currentPV = StockfishSettings.getMultiPV(activity);
-        TextView pvLabel = addStyledLabel(advancedLayout, "Number of arrows: " + currentPV, density, activity);
-        SeekBar pvSeekBar = addStyledSeekBar(advancedLayout, pvLabel, "Number of arrows", currentPV - 1, 4, 1, density, activity);
-        addHint(advancedLayout, "Green is the best move, then blue, orange and purple. More arrows make each search a little slower.", density, activity);
-        CheckBox sideCb = addStyledCheckbox(advancedLayout, "Arrows only on my turn", StockfishSettings.isMySideOnly(activity), density, activity);
-        CheckBox threatCb = addStyledCheckbox(advancedLayout, "Threat arrow (opponent's best reply)", StockfishSettings.isThreatArrowsEnabled(activity), density, activity);
-        CheckBox wdlCb = addStyledCheckbox(advancedLayout, "Win / Draw / Loss bar", StockfishSettings.isWdlEnabled(activity), density, activity);
-        CheckBox infoCb = addStyledCheckbox(advancedLayout, "Depth & score above the board", StockfishSettings.isEngineInfoEnabled(activity), density, activity);
-        CheckBox mateCb = addStyledCheckbox(advancedLayout, "Announce forced mates", StockfishSettings.isMateAnnouncementEnabled(activity), density, activity);
-        CheckBox blunderCb = addStyledCheckbox(advancedLayout, "Vibrate on mistakes & blunders", StockfishSettings.isBlunderAlertsEnabled(activity), density, activity);
-        addHint(advancedLayout, "Needs \"Rate each move\" to be on.", density, activity);
+        final String pvPrefix = I18n.get(activity, "num_arrows");
+        TextView pvLabel = addStyledLabel(advancedLayout, pvPrefix + ": " + currentPV, density, activity);
+        SeekBar pvSeekBar = addStyledSeekBar(advancedLayout, pvLabel, pvPrefix, currentPV - 1, 4, 1, density, activity);
+        addHint(advancedLayout, I18n.get(activity, "arrows_hint"), density, activity);
+        CheckBox sideCb = addStyledCheckbox(advancedLayout, I18n.get(activity, "my_turn_only"), StockfishSettings.isMySideOnly(activity), density, activity);
+        CheckBox threatCb = addStyledCheckbox(advancedLayout, I18n.get(activity, "threat_arrow"), StockfishSettings.isThreatArrowsEnabled(activity), density, activity);
+        CheckBox wdlCb = addStyledCheckbox(advancedLayout, I18n.get(activity, "wdl_bar"), StockfishSettings.isWdlEnabled(activity), density, activity);
+        CheckBox infoCb = addStyledCheckbox(advancedLayout, I18n.get(activity, "depth_score_above"), StockfishSettings.isEngineInfoEnabled(activity), density, activity);
+        CheckBox mateCb = addStyledCheckbox(advancedLayout, I18n.get(activity, "forced_mates"), StockfishSettings.isMateAnnouncementEnabled(activity), density, activity);
+        CheckBox blunderCb = addStyledCheckbox(advancedLayout, I18n.get(activity, "vibrate_blunder"), StockfishSettings.isBlunderAlertsEnabled(activity), density, activity);
+        addHint(advancedLayout, I18n.get(activity, "vibrate_hint"), density, activity);
 
         // Performance
-        addSectionHeader(advancedLayout, "Performance", density, activity);
+        addSectionHeader(advancedLayout, I18n.get(activity, "performance"), density, activity);
         final int cpuCount = StockfishSettings.getCpuCount();
         int currentThreads = StockfishSettings.getThreads(activity);
-        TextView threadsLabel = addStyledLabel(advancedLayout, "CPU threads: " + currentThreads + " of " + cpuCount, density, activity);
-        SeekBar threadsSeekBar = addStyledSeekBar(advancedLayout, threadsLabel, "CPU threads", currentThreads - 1, Math.max(0, cpuCount - 1), 1, density, activity);
-        final String threadsSuffix = " of " + cpuCount;
+        final String threadsPrefix = I18n.get(activity, "cpu_threads");
+        TextView threadsLabel = addStyledLabel(advancedLayout, threadsPrefix + ": " + currentThreads + " / " + cpuCount, density, activity);
+        SeekBar threadsSeekBar = addStyledSeekBar(advancedLayout, threadsLabel, threadsPrefix, currentThreads - 1, Math.max(0, cpuCount - 1), 1, density, activity);
+        final String threadsSuffix = " / " + cpuCount;
         threadsSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar sb, int prog, boolean fromUser) {
-                threadsLabel.setText("CPU threads: " + (prog + 1) + threadsSuffix);
+                threadsLabel.setText(threadsPrefix + ": " + (prog + 1) + threadsSuffix);
             }
             @Override
             public void onStartTrackingTouch(SeekBar sb) {}
             @Override
             public void onStopTrackingTouch(SeekBar sb) {}
         });
-        addHint(advancedLayout, "All cores gives the fastest analysis. Lower it if your phone gets hot.", density, activity);
+        addHint(advancedLayout, I18n.get(activity, "cpu_hint"), density, activity);
 
         // Game Review
-        addSectionHeader(advancedLayout, "Game Review", density, activity);
+        addSectionHeader(advancedLayout, I18n.get(activity, "game_review"), density, activity);
         int currentBoost = StockfishSettings.getReviewDepthBoost(activity);
-        TextView boostLabel = addStyledLabel(advancedLayout, "Extra review depth: +" + currentBoost, density, activity);
-        SeekBar boostSeekBar = addStyledSeekBar(advancedLayout, boostLabel, "Extra review depth", currentBoost, 10, 0, density, activity);
+        final String boostPrefix = I18n.get(activity, "extra_review_depth");
+        TextView boostLabel = addStyledLabel(advancedLayout, boostPrefix + ": +" + currentBoost, density, activity);
+        SeekBar boostSeekBar = addStyledSeekBar(advancedLayout, boostLabel, boostPrefix, currentBoost, 10, 0, density, activity);
         boostSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar sb, int prog, boolean fromUser) {
-                boostLabel.setText("Extra review depth: +" + prog);
+                boostLabel.setText(boostPrefix + ": +" + prog);
             }
             @Override
             public void onStartTrackingTouch(SeekBar sb) {}
             @Override
             public void onStopTrackingTouch(SeekBar sb) {}
         });
-        addHint(advancedLayout, "Added on top of the Fast / Standard / Deep / Maximum preset you choose in Game Review. Each +1 is more accurate and takes longer.", density, activity);
+        addHint(advancedLayout, I18n.get(activity, "review_hint"), density, activity);
 
         // Engine strength
-        addSectionHeader(advancedLayout, "Engine strength", density, activity);
-        CheckBox eloCb = addStyledCheckbox(advancedLayout, "Limit strength to an Elo", StockfishSettings.isLimitStrength(activity), density, activity);
+        addSectionHeader(advancedLayout, I18n.get(activity, "engine_strength"), density, activity);
+        CheckBox eloCb = addStyledCheckbox(advancedLayout, I18n.get(activity, "limit_strength"), StockfishSettings.isLimitStrength(activity), density, activity);
         int currentElo = Math.max(1320, Math.min(3190, StockfishSettings.getElo(activity)));
-        TextView eloLabel = addStyledLabel(advancedLayout, "Engine Elo: " + currentElo, density, activity);
-        SeekBar eloSeekBar = addStyledSeekBar(advancedLayout, eloLabel, "Engine Elo", currentElo - 1320, 3190 - 1320, 1320, density, activity);
-        addHint(advancedLayout, "Only changes the live arrows. Game Review always runs at full strength.", density, activity);
+        final String eloPrefix = I18n.get(activity, "engine_elo");
+        TextView eloLabel = addStyledLabel(advancedLayout, eloPrefix + ": " + currentElo, density, activity);
+        SeekBar eloSeekBar = addStyledSeekBar(advancedLayout, eloLabel, eloPrefix, currentElo - 1320, 3190 - 1320, 1320, density, activity);
+        addHint(advancedLayout, I18n.get(activity, "elo_hint"), density, activity);
 
         eloLabel.setEnabled(eloCb.isChecked());
         eloSeekBar.setEnabled(eloCb.isChecked());
@@ -177,16 +230,16 @@ public class StockfishSettingsDialog {
         // Reset
         addDialogSpacer(advancedLayout, 8, density);
         TextView resetBtn = new TextView(activity);
-        resetBtn.setText("Reset engine settings to defaults");
+        resetBtn.setText(I18n.get(activity, "reset_defaults"));
         resetBtn.setTextColor(0xFFE15554);
         resetBtn.setTextSize(13);
         resetBtn.setGravity(Gravity.CENTER);
         resetBtn.setPadding(0, (int) (10 * density), 0, (int) (10 * density));
         resetBtn.setOnClickListener(v -> new android.app.AlertDialog.Builder(activity)
-                .setTitle("Reset engine settings?")
-                .setMessage("Depth, arrows, overlays, threads, review depth and strength go back to their defaults.")
-                .setNegativeButton("Cancel", null)
-                .setPositiveButton("Reset", (d, w) -> {
+                .setTitle(I18n.get(activity, "reset_title"))
+                .setMessage(I18n.get(activity, "reset_message"))
+                .setNegativeButton(I18n.get(activity, "cancel"), null)
+                .setPositiveButton(I18n.get(activity, "reset"), (d, w) -> {
                     StockfishSettings.resetToDefaults(activity);
                     Object st = StockfishExtension.getStateImpl();
                     ArrowInjector.clearEngineArrows(st);
@@ -195,7 +248,7 @@ public class StockfishSettingsDialog {
                     OverlayManager.hideMateAnnouncement();
                     OverlayManager.hideEngineInfo();
                     StockfishExtension.triggerAnalysisForCurrentState();
-                    Toast.makeText(activity, "Engine settings reset", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(activity, I18n.get(activity, "reset_toast"), Toast.LENGTH_SHORT).show();
                     dialog.dismiss();
                 })
                 .show());
@@ -206,12 +259,13 @@ public class StockfishSettingsDialog {
         // 3. ABOUT & CREDITS
         LinearLayout creditsCard = new LinearLayout(activity);
         creditsCard.setOrientation(LinearLayout.VERTICAL);
+        creditsCard.setGravity(Gravity.CENTER_HORIZONTAL);
         creditsCard.setPadding(0, (int) (16 * density), 0, (int) (8 * density));
 
         TextView devTv = new TextView(activity);
-        devTv.setText("Prathxm Patches");
+        devTv.setText("Nhat Nam Patches");
         devTv.setTextColor(0xFF81B64C); // Chess.com Green accent
-        devTv.setTextSize(14);
+        devTv.setTextSize(15);
         devTv.setGravity(Gravity.CENTER);
         devTv.setTypeface(Typeface.create("sans-serif-medium", Typeface.BOLD));
         devTv.setOnLongClickListener(new View.OnLongClickListener() {
@@ -224,10 +278,53 @@ public class StockfishSettingsDialog {
         });
         creditsCard.addView(devTv);
 
-        addDialogSpacer(creditsCard, 2, density);
+        addDialogSpacer(creditsCard, 4, density);
+
+        // Telegram Button with beautiful styling
+        LinearLayout telegramBtn = new LinearLayout(activity);
+        telegramBtn.setOrientation(LinearLayout.HORIZONTAL);
+        telegramBtn.setGravity(Gravity.CENTER);
+        int tgPadH = (int) (14 * density);
+        int tgPadV = (int) (8 * density);
+        telegramBtn.setPadding(tgPadH, tgPadV, tgPadH, tgPadV);
+
+        GradientDrawable tgBg = new GradientDrawable();
+        tgBg.setColor(0xFF229ED9); // Telegram brand blue
+        tgBg.setCornerRadius(18 * density);
+        telegramBtn.setBackground(tgBg);
+
+        TextView tgIcon = new TextView(activity);
+        tgIcon.setText("✈ ");
+        tgIcon.setTextColor(0xFFFFFFFF);
+        tgIcon.setTextSize(14);
+        telegramBtn.addView(tgIcon);
+
+        TextView tgText = new TextView(activity);
+        tgText.setText(I18n.get(activity, "contact_telegram"));
+        tgText.setTextColor(0xFFFFFFFF);
+        tgText.setTextSize(13);
+        tgText.setTypeface(Typeface.create("sans-serif-medium", Typeface.BOLD));
+        telegramBtn.addView(tgText);
+
+        telegramBtn.setOnClickListener(v -> {
+            try {
+                android.content.Intent intent = new android.content.Intent(
+                        android.content.Intent.ACTION_VIEW,
+                        android.net.Uri.parse("https://t.me/nncutett")
+                );
+                intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
+                activity.startActivity(intent);
+            } catch (Throwable t) {
+                Toast.makeText(activity, "Telegram: @nncutett", Toast.LENGTH_LONG).show();
+            }
+        });
+
+        creditsCard.addView(telegramBtn);
+
+        addDialogSpacer(creditsCard, 6, density);
 
         TextView engineTv = new TextView(activity);
-        engineTv.setText("Engine: Stockfish 19 NNUE · offline");
+        engineTv.setText(I18n.get(activity, "engine_name"));
         engineTv.setTextColor(0xFF8B8985);
         engineTv.setTextSize(11);
         engineTv.setGravity(Gravity.CENTER);
@@ -238,7 +335,7 @@ public class StockfishSettingsDialog {
         String versionText = "v" + BuildConfig.PATCH_VERSION;
 
         TextView patchTv = new TextView(activity);
-        patchTv.setText("Patches " + versionText);
+        patchTv.setText("Patches " + versionText + " · by Nhat Nam (@nncutett)");
         patchTv.setTextColor(0xFF8B8985);
         patchTv.setTextSize(11);
         patchTv.setGravity(Gravity.CENTER);
@@ -254,7 +351,7 @@ public class StockfishSettingsDialog {
         buttonLayout.setGravity(Gravity.END);
 
         TextView cancelBtn = new TextView(activity);
-        cancelBtn.setText("Cancel");
+        cancelBtn.setText(I18n.get(activity, "cancel"));
         cancelBtn.setTextColor(0xFFB0B0B0);
         cancelBtn.setTextSize(16);
         cancelBtn.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
@@ -267,7 +364,7 @@ public class StockfishSettingsDialog {
         cancelBtn.setOnClickListener(v -> dialog.dismiss());
 
         TextView saveBtn = new TextView(activity);
-        saveBtn.setText("Save");
+        saveBtn.setText(I18n.get(activity, "save"));
         saveBtn.setTextColor(0xFFFFFFFF);
         saveBtn.setTextSize(16);
         saveBtn.setTypeface(Typeface.create("sans-serif-medium", Typeface.BOLD));
@@ -303,7 +400,7 @@ public class StockfishSettingsDialog {
             StockfishSettings.setMateAnnouncementEnabled(activity, mateCb.isChecked());
             if (!mateCb.isChecked()) OverlayManager.hideMateAnnouncement();
 
-            Toast.makeText(activity, "Settings saved", Toast.LENGTH_SHORT).show();
+            Toast.makeText(activity, I18n.get(activity, "settings_saved"), Toast.LENGTH_SHORT).show();
 
             // Apply immediately: hide whatever was switched off, then re-run the current
             // position so everything that is on shows up without having to make a move.

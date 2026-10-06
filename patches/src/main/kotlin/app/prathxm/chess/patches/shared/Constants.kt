@@ -18,7 +18,9 @@ object Constants {
         signatures = setOf("aa8c9ff93efbdc4226a113e49fc9645b2c02092a314305da2d76be6cdf8abfc3"),
         targets = listOf(
             AppTarget(version = "4.10.0"),
-            AppTarget(version = "4.10.0-googleplay")
+            AppTarget(version = "4.10.0-googleplay"),
+            AppTarget(version = "4.10.20"),
+            AppTarget(version = "4.10.20-googleplay")
         )
     )
 }

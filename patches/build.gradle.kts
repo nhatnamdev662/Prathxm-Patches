@@ -5,12 +5,12 @@ group = "app.prathxm.chess"
 
 patches {
     about {
-        name = "Prathxm Patches"
-        description = "Custom Morphe patches for Chess.com — Ad-free experience and local offline engine tools"
-        source = "git@github.com:PrathxmOp/Prathxm-Patches.git"
-        author = "Prathxm"
-        contact = "github.com/PrathxmOp"
-        website = "github.com/PrathxmOp/Prathxm-Patches"
+        name = "Nhat Nam Patches"
+        description = "Bản mod tùy chỉnh Chess.com — Stockfish 19 NNUE, gỡ quảng cáo, mở khóa bot, song ngữ Anh - Việt"
+        source = "https://github.com/nhatnamdev662/Prathxm-Patches.git"
+        author = "Nhat Nam"
+        contact = "t.me/nncutett"
+        website = "https://t.me/nncutett"
         license = "GPLv3"
     }
 }

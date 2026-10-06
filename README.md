@@ -1,25 +1,24 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Platform-Android-3DDC84?style=for-the-badge&logo=android&logoColor=white" />
-  <img src="https://img.shields.io/badge/Engine-Stockfish_18-4A90D9?style=for-the-badge&logo=chess.com&logoColor=white" />
-  <img src="https://img.shields.io/badge/License-GPLv3-blue?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Engine-Stockfish_19-4A90D9?style=for-the-badge&logo=chess.com&logoColor=white" />
+  <img src="https://img.shields.io/badge/Telegram-@nncutett-229ED9?style=for-the-badge&logo=telegram&logoColor=white" />
 </p>
 
-<h1 align="center">♟️ Prathxm Patches</h1>
+<h1 align="center">♟️ Nhat Nam Patches</h1>
 
 <p align="center">
-  Custom Morphe patches for <b>Chess.com</b> on Android. Enables fully offline analysis powered by local Stockfish 18 NNUE, ad-free usage, locked bots bypass, and Lichess puzzles.
+  Bản mod tùy chỉnh dành cho <b>Chess.com</b> trên Android. Hỗ trợ phân tích ngoại tuyến với Stockfish 19 NNUE, gỡ quảng cáo, mở khóa bot, song ngữ Anh - Việt và bài tập Lichess.
 </p>
 
 <p align="center">
-  <a href="https://github.com/PrathxmOp/Prathxm-Patches/discussions"><img src="https://img.shields.io/badge/Discussions-Join_Community-6e5494?style=flat-square&logo=github" /></a>
-  <a href="https://github.com/PrathxmOp/Prathxm-Patches/releases"><img src="https://img.shields.io/badge/Releases-Latest-green?style=flat-square&logo=github" /></a>
+  <a href="https://t.me/nncutett"><img src="https://img.shields.io/badge/Telegram-@nncutett-229ED9?style=flat-square&logo=telegram&logoColor=white" /></a>
 </p>
 
 ---
 
 ## 📖 About & Features
 
-Prathxm Patches embeds a native **Stockfish 18 NNUE** chess engine directly into the Chess.com Android app for fully offline analysis and game reviews. All analysis features are programmatically disabled during live online matches to ensure fair play.
+
 
 ### 🌟 Key Features
 - **Local Stockfish 18 & Offline Reviews**: Centipawn evaluation, Win/Draw/Loss tracking, move classification (Brilliant, Great, etc.), ELO estimation, and configurable bot strengths.
@@ -48,8 +47,8 @@ Access features by interacting with the Chess.com logo on the main screen:
 
 **🎯 Supported versions:**
 
-| 4.10.0 | 4.10.0-googleplay |
-| :---: | :---: |
+| 4.10.0 | 4.10.0-googleplay | 4.10.20 | 4.10.20-googleplay |
+| :---: | :---: | :---: | :---: |
 
 | 💊&nbsp;Patch | 📜&nbsp;Description | ⚙️&nbsp;Options |
 |----------|----------------|-----------|

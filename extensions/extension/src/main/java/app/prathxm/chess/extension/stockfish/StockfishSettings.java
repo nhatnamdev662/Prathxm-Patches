@@ -38,6 +38,16 @@ public class StockfishSettings {
         getPrefs(context).edit().putBoolean(KEY_ENGINE_ENABLED, enabled).apply();
     }
 
+    private static final String KEY_LANGUAGE = "app_language";
+
+    public static String getLanguage(Context context) {
+        return getPrefs(context).getString(KEY_LANGUAGE, "en");
+    }
+
+    public static void setLanguage(Context context, String lang) {
+        getPrefs(context).edit().putString(KEY_LANGUAGE, lang).apply();
+    }
+
     /** Max selectable live-analysis depth. */
     public static final int MAX_DEPTH = 40;
 

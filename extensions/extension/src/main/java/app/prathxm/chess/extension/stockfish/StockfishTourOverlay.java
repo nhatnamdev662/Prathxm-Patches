@@ -187,6 +187,51 @@ public class StockfishTourOverlay extends Dialog {
         );
         card.addView(row2);
         
+        // Telegram contact button
+        LinearLayout telegramTourBtn = new LinearLayout(getContext());
+        telegramTourBtn.setOrientation(LinearLayout.HORIZONTAL);
+        telegramTourBtn.setGravity(Gravity.CENTER);
+        int tgPadH = (int) (14 * density);
+        int tgPadV = (int) (8 * density);
+        telegramTourBtn.setPadding(tgPadH, tgPadV, tgPadH, tgPadV);
+
+        GradientDrawable tgTourBg = new GradientDrawable();
+        tgTourBg.setColor(0xFF229ED9); // Telegram brand blue
+        tgTourBg.setCornerRadius(8 * density);
+        telegramTourBtn.setBackground(tgTourBg);
+
+        TextView tgTourIcon = new TextView(getContext());
+        tgTourIcon.setText("✈ ");
+        tgTourIcon.setTextColor(Color.WHITE);
+        tgTourIcon.setTextSize(14);
+        telegramTourBtn.addView(tgTourIcon);
+
+        TextView tgTourText = new TextView(getContext());
+        tgTourText.setText("Telegram: @nncutett (Nhat Nam)");
+        tgTourText.setTextColor(Color.WHITE);
+        tgTourText.setTextSize(13);
+        tgTourText.setTypeface(Typeface.create("sans-serif-medium", Typeface.BOLD));
+        telegramTourBtn.addView(tgTourText);
+
+        LinearLayout.LayoutParams tgTourParams = new LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        tgTourParams.topMargin = (int) (16 * density);
+        telegramTourBtn.setLayoutParams(tgTourParams);
+
+        telegramTourBtn.setOnClickListener(v -> {
+            try {
+                android.content.Intent intent = new android.content.Intent(
+                        android.content.Intent.ACTION_VIEW,
+                        android.net.Uri.parse("https://t.me/nncutett")
+                );
+                intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
+                getContext().startActivity(intent);
+            } catch (Throwable ignored) {}
+        });
+        card.addView(telegramTourBtn);
+
         // Button: Got it!
         Button btn = new Button(getContext());
         btn.setText("Got it!");
@@ -205,7 +250,7 @@ public class StockfishTourOverlay extends Dialog {
             ViewGroup.LayoutParams.MATCH_PARENT,
             (int) (46 * density)
         );
-        btnParams.topMargin = (int) (24 * density);
+        btnParams.topMargin = (int) (12 * density);
         btn.setLayoutParams(btnParams);
         
         btn.setOnClickListener(new View.OnClickListener() {

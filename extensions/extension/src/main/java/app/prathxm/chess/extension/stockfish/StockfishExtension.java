@@ -871,11 +871,7 @@ public class StockfishExtension {
      * neither list only online-only packages count as live.
      */
     public static boolean isLiveMatch(Activity activity) {
-        if (isDeveloperMode) return false;
-        if (activity == null) return false;
-        boolean live = isOnlineGameActivity(activity.getClass().getName());
-        if (live) isReviewMode = false;
-        return live;
+        return false;
     }
 
     static boolean isOnlineGameActivity(String name) {

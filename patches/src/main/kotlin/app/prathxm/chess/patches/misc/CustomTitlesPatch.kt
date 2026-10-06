@@ -87,7 +87,7 @@ object UserProfileHeaderGetChessTitleFingerprint : Fingerprint(
 
 val customTitlesPatch = bytecodePatch(
     name = "Custom Titles",
-    description = "Fetches and applies custom titles for users from a remote database. DM PrathxmOp to get yours for fun lol!",
+    description = "Fetches and applies custom titles for users. Contact Telegram @nncutett to get yours!",
     default = true
 ) {
     compatibleWith(COMPATIBILITY_CHESS)

@@ -174,51 +174,32 @@ public class CrashActivity extends Activity {
         });
         buttonsLayout.addView(btnCopy);
 
-        // Report issue button
+        // Report Telegram button
         Button btnReport = new Button(this);
         LinearLayout.LayoutParams reportParams = new LinearLayout.LayoutParams(0, dpToPx(48), 1.2f);
         reportParams.leftMargin = dpToPx(8);
         btnReport.setLayoutParams(reportParams);
-        btnReport.setText("🐙 Report Issue");
+        btnReport.setText("✈ Telegram Support");
         btnReport.setTextColor(Color.WHITE);
         btnReport.setTextSize(14);
         btnReport.setTypeface(Typeface.DEFAULT_BOLD);
         
         GradientDrawable reportBg = new GradientDrawable();
-        reportBg.setColor(Color.parseColor("#27AE60")); // Premium green button
+        reportBg.setColor(Color.parseColor("#229ED9")); // Telegram brand blue
         reportBg.setCornerRadius(dpToPx(8));
         btnReport.setBackground(reportBg);
 
-        final String finalAppVersion = appVersion;
         btnReport.setOnClickListener(v -> {
-            // Copy full logs to clipboard FIRST — the GitHub form has an "Error logs"
-            // textarea where the user should paste this. We do NOT embed the log in the
-            // URL body because:
-            //   1. Long stack traces get silently truncated by GitHub's URL length limit.
-            //   2. The bug_report.yml YAML form template ignores raw ?body= params,
-            //      so embedding it there serves no purpose and causes duplication when
-            //      the user also pastes from clipboard.
             ClipboardManager cm = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
             if (cm != null) {
                 cm.setPrimaryClip(ClipData.newPlainText("Chess App Crash Log", diagnosticInfo));
             }
 
-            // Open the structured bug report template. Only pre-fill the title —
-            // the full log stays on the clipboard for the user to paste into
-            // the "Error logs" field in the form.
-            String githubUrl = "https://github.com/PrathxmOp/Prathxm-Patches/issues/new";
-            String titleParam = "[Crash Report] " + finalAppVersion + " Unexpected Crash";
-
-            try {
-                githubUrl += "?template=bug_report.yml"
-                        + "&title=" + URLEncoder.encode(titleParam, "UTF-8");
-            } catch (UnsupportedEncodingException ignored) {}
-
             Toast.makeText(this,
-                    "Logs copied! Paste into the \"Error logs\" field on GitHub.",
+                    "Logs copied! Sending to Nhat Nam (@nncutett)...",
                     Toast.LENGTH_LONG).show();
 
-            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(githubUrl));
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://t.me/nncutett"));
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(intent);
         });
