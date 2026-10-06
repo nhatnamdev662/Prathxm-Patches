@@ -2,14 +2,15 @@
 
 ## 1. Thông Tin Tác Giả & Thiết Bị
 - **Tác giả**: Nhat Nam (`@nncutett` trên Telegram)
-- **Workspace**: `E:\chess mobile\project`
+- **Repository độc lập**: `https://github.com/nhatnamdev662/Prathxm-Patches`
 - **Tài khoản Git/GitHub**: `nhatnamdev662` (`nhatnamdev662@users.noreply.github.com`)
 - **ADB kết nối không dây**: `192.168.100.41:39215` (Device ID: `adb-10AC4N1L0H000JK-37ZsAy (2)._adb-tls-connect._tcp`)
 - **Bản APK mục tiêu**: `Chess.com v4.10.20-googleplay` (versionCode: `280085`), lưu tại `E:\chess mobile\apk\chess_4.10.20.apk`
+- **Morphe Manager trên điện thoại**: Đã cài đặt sẵn `app.morphe.manager`
 
 ---
 
-## 2. Các Thay Đổi Mới Đã Thực Hiện
+## 2. Các Thay Đổi Mới Đã Hoàn Thành
 1. **Hỗ trợ Đa Ngôn Ngữ (Song Ngữ Anh / Việt)**:
    - Thêm `I18n.java` hỗ trợ chuyển ngữ toàn bộ UI menu settings.
    - Thêm nút switch `[EN]` / `[VI]` trên header của `StockfishSettingsDialog.java`.
@@ -22,3 +23,25 @@
      - Màn hình Hướng dẫn Gesture (`StockfishTourOverlay.java`)
      - Màn hình Báo lỗi Crash (`CrashActivity.java`)
      - `README.md`, `patches-list.json`, `CustomTitlesPatch.kt`.
+4. **Đẩy Lên Kho Lưu Trữ Độc Lập**:
+   - Đã khởi tạo và push thành công toàn bộ source code độc lập lên `https://github.com/nhatnamdev662/Prathxm-Patches`.
+   - Đã gửi lệnh tự động thêm nguồn patch vào **Morphe Manager** trên điện thoại qua ADB.
+5. **Khắc Phục Phiên Bản Mục Tiêu 4.10.20 Trong Morphe Manager**:
+   - Biên dịch lại toàn bộ Java Extension thành DEX hoàn chỉnh kèm `I18n` và liên hệ Telegram `@nncutett`.
+   - Cập nhật bytecode `Constants.class` và `classes.dex` của gói patch `.mpp` chuyển mục tiêu hỗ trợ từ `4.10.0` sang `4.10.20` và `4.10.20-googleplay`.
+   - Đã tải lại file `patches-1.15.0.mpp` lên Release `v1.15.0` trên GitHub cá nhân.
+   - Dọn dẹp sạch sẽ toàn bộ thư mục tạm, chỉ giữ lại cấu trúc gọn gàng: `apk/`, `project/`, `SESSION_NOTES.md`.
+6. **Khắc Phục Lỗi Fingerprint Trên Bản 4.10.20**:
+   - Sửa `AdFreePatch`: Thay thế phương thức `ofCode` cũ bằng phương thức kế nhiệm chuẩn trong 4.10.20 là `ofCodeOrDefault(String, UserMembershipLevel)` thuộc `UserMembershipLevel$Companion`, giữ nguyên logic fallback về `BASIC` nếu gặp mã membership lạ.
+   - Sửa `BotUnlockPatch`: Khớp chính xác method `f()` cho `getCanPlay` của bản 4.10.20 và bỏ qua `requiresActivation` đã gỡ bỏ.
+   - Đã phát hành Release **`v1.16.1`** chứa file `patches-1.16.1.mpp` lên GitHub.
+7. **Khắc Phục Lỗi Fingerprint Lichess Puzzle Trên Bản 4.10.20**:
+   - Trong `NewDailyPuzzleServiceImpl` của Chess.com 4.10.20:
+     - Phương thức tải câu đố (`getDailyPuzzle`) đổi tên obfuscation từ `a` sang `b` nhận `(String, Continuation)`.
+     - Phương thức gửi nước đi (`submitDailyPuzzleAction`) đổi từ `b` sang `a` nhận `(long, Action, HintState, Integer, Integer, Continuation)`.
+   - Sửa `NewDailyPuzzleGetFingerprint`: Khớp chính xác method `b` (và `a`) trên `NewDailyPuzzleServiceImpl`.
+   - Sửa `NewDailyPuzzleSubmitFingerprint`: Khớp chính xác method `a` trả về `Object`.
+   - Thêm overload `submitDailyPuzzleAction(int, Object, Object, Object)` vào `LichessPuzzleExtension.java` để tương thích cả 2 chuẩn gọi.
+   - Đã phát hành Release **`v1.16.2`** chứa file `patches-1.16.2.mpp` lên GitHub.
+
+
