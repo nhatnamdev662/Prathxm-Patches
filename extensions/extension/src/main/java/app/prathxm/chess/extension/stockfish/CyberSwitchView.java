@@ -8,11 +8,13 @@ import android.graphics.Paint;
 import android.graphics.RectF;
 import android.view.View;
 import android.view.animation.DecelerateInterpolator;
+import android.view.animation.OvershootInterpolator;
 
 public class CyberSwitchView extends View {
 
     private boolean isChecked = false;
     private float progress = 0.0f; // 0.0 = off, 1.0 = on
+    private float thumbScale = 1.0f;
     private ValueAnimator animator;
     private OnCheckedChangeListener listener;
 
@@ -48,7 +50,7 @@ public class CyberSwitchView extends View {
         borderPaint.setStyle(Paint.Style.STROKE);
         glowPaint.setStyle(Paint.Style.FILL);
 
-        setOnClickListener(v -> toggle());
+        setOnClickListener(v -> toggleWithFeedback());
     }
 
     public void setOnCheckedChangeListener(OnCheckedChangeListener listener) {
@@ -77,15 +79,19 @@ public class CyberSwitchView extends View {
             float start = progress;
             float end = checked ? 1.0f : 0.0f;
             animator = ValueAnimator.ofFloat(start, end);
-            animator.setDuration(220);
-            animator.setInterpolator(new DecelerateInterpolator());
+            animator.setDuration(240);
+            animator.setInterpolator(new OvershootInterpolator(1.1f));
             animator.addUpdateListener(animation -> {
                 progress = (float) animation.getAnimatedValue();
+                // Dynamic thumb bounce while sliding
+                float p = Math.abs(progress - 0.5f) * 2f; // 0 at center, 1 at ends
+                thumbScale = 0.88f + (0.12f * p);
                 invalidate();
             });
             animator.start();
         } else {
             progress = checked ? 1.0f : 0.0f;
+            thumbScale = 1.0f;
             invalidate();
         }
 
@@ -94,8 +100,16 @@ public class CyberSwitchView extends View {
         }
     }
 
-    public void toggle() {
+    public void toggleWithFeedback() {
+        HapticHelper.pop(getContext(), this);
+        animate().scaleX(0.90f).scaleY(0.90f).setDuration(80).withEndAction(() -> {
+            animate().scaleX(1.0f).scaleY(1.0f).setDuration(120).start();
+        }).start();
         setChecked(!isChecked, true);
+    }
+
+    public void toggle() {
+        toggleWithFeedback();
     }
 
     @Override
@@ -121,9 +135,10 @@ public class CyberSwitchView extends View {
         borderPaint.setStrokeWidth(strokeWidth);
 
         // 1. Interpolate Colors
-        int curBg = blendColor(COLOR_OFF_BG, COLOR_ON_BG, progress);
-        int curBorder = blendColor(COLOR_OFF_BORDER, COLOR_ON_BORDER, progress);
-        int curThumb = blendColor(COLOR_OFF_THUMB, COLOR_ON_THUMB, progress);
+        float clampedProgress = Math.max(0f, Math.min(1f, progress));
+        int curBg = blendColor(COLOR_OFF_BG, COLOR_ON_BG, clampedProgress);
+        int curBorder = blendColor(COLOR_OFF_BORDER, COLOR_ON_BORDER, clampedProgress);
+        int curThumb = blendColor(COLOR_OFF_THUMB, COLOR_ON_THUMB, clampedProgress);
 
         // Track Bounds
         float pad = strokeWidth / 2f;
@@ -131,9 +146,9 @@ public class CyberSwitchView extends View {
         float cornerRadius = h / 2f;
 
         // Draw Glow when ON
-        if (progress > 0.05f) {
+        if (clampedProgress > 0.05f) {
             glowPaint.setColor(COLOR_ON_GLOW);
-            glowPaint.setAlpha((int) (80 * progress));
+            glowPaint.setAlpha((int) (90 * clampedProgress));
             canvas.drawRoundRect(trackRect, cornerRadius, cornerRadius, glowPaint);
         }
 
@@ -146,22 +161,23 @@ public class CyberSwitchView extends View {
         canvas.drawRoundRect(trackRect, cornerRadius, cornerRadius, borderPaint);
 
         // 2. Draw Thumb (Pill Slider Knob)
-        float thumbRadius = (h - 6f * density) / 2f;
-        float startX = 3f * density + thumbRadius;
-        float endX = w - 3f * density - thumbRadius;
-        float curThumbX = startX + (endX - startX) * progress;
+        float baseThumbRadius = (h - 6f * density) / 2f;
+        float scaledThumbRadius = baseThumbRadius * thumbScale;
+        float startX = 3f * density + baseThumbRadius;
+        float endX = w - 3f * density - baseThumbRadius;
+        float curThumbX = startX + (endX - startX) * clampedProgress;
         float curThumbY = h / 2f;
 
         // Thumb Outer Neon Ring when active
-        if (progress > 0.2f) {
+        if (clampedProgress > 0.15f) {
             glowPaint.setColor(COLOR_ON_BORDER);
-            glowPaint.setAlpha((int) (120 * progress));
-            canvas.drawCircle(curThumbX, curThumbY, thumbRadius + 2.5f * density, glowPaint);
+            glowPaint.setAlpha((int) (140 * clampedProgress));
+            canvas.drawCircle(curThumbX, curThumbY, scaledThumbRadius + 2.5f * density, glowPaint);
         }
 
         // Thumb Body
         thumbPaint.setColor(curThumb);
-        canvas.drawCircle(curThumbX, curThumbY, thumbRadius, thumbPaint);
+        canvas.drawCircle(curThumbX, curThumbY, scaledThumbRadius, thumbPaint);
     }
 
     private static int blendColor(int from, int to, float ratio) {

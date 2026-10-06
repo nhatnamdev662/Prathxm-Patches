@@ -1,5 +1,6 @@
 package app.prathxm.chess.extension.stockfish;
 
+import android.animation.ValueAnimator;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.res.ColorStateList;
@@ -7,12 +8,14 @@ import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
+import android.util.DisplayMetrics;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
+import android.view.animation.DecelerateInterpolator;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
@@ -25,7 +28,7 @@ import app.prathxm.chess.extension.BuildConfig;
 public class StockfishSettingsDialog {
 
     // ══ NNVC Cyber Luxury Frosted Palette ══════════════════════════════════════
-    private static final int COLOR_BG_PANEL       = 0xF00C0F16; // Deep Frosted Midnight Glass
+    private static final int COLOR_BG_PANEL       = 0xF20C0F16; // Deep Frosted Midnight Glass
     private static final int COLOR_CARD_BG        = 0xCC121722; // Layered Glass Card
     private static final int COLOR_CARD_BORDER    = 0x330A84FF; // Cyber Blue Glow Border (20%)
     private static final int COLOR_ACCENT_BLUE    = 0xFF0A84FF; // NNVC Royal Blue
@@ -41,21 +44,42 @@ public class StockfishSettingsDialog {
         final Dialog dialog = new Dialog(activity);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
 
-        float density = activity.getResources().getDisplayMetrics().density;
+        DisplayMetrics dm = activity.getResources().getDisplayMetrics();
+        float density = dm.density;
+        int screenWidth = dm.widthPixels;
+        int screenHeight = dm.heightPixels;
 
-        // Frosted Glass Window Frame
-        GradientDrawable dialogBg = new GradientDrawable();
+        // Cố định chiều cao Dialog: 70% chiều cao màn hình để không bị co giật khi chuyển tab
+        final int targetDialogHeight = (int) (screenHeight * 0.70f);
+        final int targetDialogWidth = (int) (screenWidth * 0.92f);
+
+        // Frosted Glass Window Frame với hiệu ứng viền thở động (Ambient Breathing Glow)
+        final GradientDrawable dialogBg = new GradientDrawable();
         dialogBg.setColor(COLOR_BG_PANEL);
         dialogBg.setCornerRadius(22 * density);
         dialogBg.setStroke((int) (1.4f * density), COLOR_ACCENT_BLUE);
         dialog.getWindow().setBackgroundDrawable(dialogBg);
 
-        // Root container
+        // Theme động: Hiệu ứng viền thở Cyber Neon tuần hoàn
+        ValueAnimator borderGlowAnim = ValueAnimator.ofFloat(0f, 1f);
+        borderGlowAnim.setDuration(1600);
+        borderGlowAnim.setRepeatMode(ValueAnimator.REVERSE);
+        borderGlowAnim.setRepeatCount(ValueAnimator.INFINITE);
+        borderGlowAnim.addUpdateListener(animation -> {
+            float frac = (float) animation.getAnimatedValue();
+            int glowColor = blendColor(0x330A84FF, 0xAA64D2FF, frac);
+            dialogBg.setStroke((int) ((1.4f + 0.4f * frac) * density), glowColor);
+        });
+        borderGlowAnim.start();
+
+        dialog.setOnDismissListener(d -> borderGlowAnim.cancel());
+
+        // Root container (Cố định chiều cao và chiều rộng)
         LinearLayout windowRoot = new LinearLayout(activity);
         windowRoot.setOrientation(LinearLayout.VERTICAL);
         windowRoot.setLayoutParams(new ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
+                targetDialogWidth,
+                targetDialogHeight
         ));
 
         // ══════════════════════════════════════════════════════════════════════
@@ -67,7 +91,7 @@ public class StockfishSettingsDialog {
         headerLayout.setPadding((int) (16 * density), (int) (14 * density), (int) (16 * density), (int) (12 * density));
 
         GradientDrawable headerBg = new GradientDrawable();
-        headerBg.setColor(0x330A84FF); // 20% cyber blue glow under header
+        headerBg.setColor(0x330A84FF); // 20% cyber blue glow
         headerBg.setCornerRadii(new float[]{
                 22 * density, 22 * density,
                 22 * density, 22 * density,
@@ -164,6 +188,7 @@ public class StockfishSettingsDialog {
         langBtn.setBackground(langBg);
 
         langBtn.setOnClickListener(v -> {
+            HapticHelper.pop(activity, v);
             String newLang = isCurrentVi ? "en" : "vi";
             StockfishSettings.setLanguage(activity, newLang);
             dialog.dismiss();
@@ -210,10 +235,11 @@ public class StockfishSettingsDialog {
         windowRoot.addView(tabNav);
 
         // ══════════════════════════════════════════════════════════════════════
-        // 3. TAB CONTENT CONTAINERS (SCROLLABLE)
+        // 3. TAB CONTENT CONTAINERS (SCROLLABLE VỚI CHIỀU CAO CỐ ĐỊNH)
         // ══════════════════════════════════════════════════════════════════════
         ScrollView scrollView = new ScrollView(activity);
         scrollView.setVerticalScrollBarEnabled(false);
+        scrollView.setFillViewport(true); // Đảm bảo cuộn đầy đủ khung nhìn cố định
         LinearLayout.LayoutParams scrollParams = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 0, 1.0f
@@ -266,7 +292,7 @@ public class StockfishSettingsDialog {
 
         addDialogSpacer(panelLive, 8, density);
 
-        // Live options in Glass Card with Cyber Switches
+        // Live options in Glass Card
         LinearLayout liveCard = createGlassCard(activity, density);
         panelLive.addView(liveCard);
 
@@ -416,27 +442,31 @@ public class StockfishSettingsDialog {
         resetBtn.setTextSize(12.5f);
         resetBtn.setGravity(Gravity.CENTER);
         resetBtn.setPadding(0, (int) (8 * density), 0, (int) (8 * density));
-        resetBtn.setOnClickListener(v -> new android.app.AlertDialog.Builder(activity)
-                .setTitle(I18n.get(activity, "reset_title"))
-                .setMessage(I18n.get(activity, "reset_message"))
-                .setNegativeButton(I18n.get(activity, "cancel"), null)
-                .setPositiveButton(I18n.get(activity, "reset"), (d, w) -> {
-                    StockfishSettings.resetToDefaults(activity);
-                    Object st = StockfishExtension.getStateImpl();
-                    ArrowInjector.clearEngineArrows(st);
-                    OverlayManager.hideEvalBar();
-                    OverlayManager.hideWdlBar();
-                    OverlayManager.hideMateAnnouncement();
-                    OverlayManager.hideEngineInfo();
-                    StockfishExtension.triggerAnalysisForCurrentState();
-                    Toast.makeText(activity, I18n.get(activity, "reset_toast"), Toast.LENGTH_SHORT).show();
-                    dialog.dismiss();
-                })
-                .show());
+        resetBtn.setOnClickListener(v -> {
+            HapticHelper.pop(activity, v);
+            new android.app.AlertDialog.Builder(activity)
+                    .setTitle(I18n.get(activity, "reset_title"))
+                    .setMessage(I18n.get(activity, "reset_message"))
+                    .setNegativeButton(I18n.get(activity, "cancel"), null)
+                    .setPositiveButton(I18n.get(activity, "reset"), (d, w) -> {
+                        StockfishSettings.resetToDefaults(activity);
+                        Object st = StockfishExtension.getStateImpl();
+                        ArrowInjector.clearEngineArrows(st);
+                        OverlayManager.hideEvalBar();
+                        OverlayManager.hideWdlBar();
+                        OverlayManager.hideMateAnnouncement();
+                        OverlayManager.hideEngineInfo();
+                        StockfishExtension.triggerAnalysisForCurrentState();
+                        Toast.makeText(activity, I18n.get(activity, "reset_toast"), Toast.LENGTH_SHORT).show();
+                        dialog.dismiss();
+                    })
+                    .show();
+        });
         engineCard.addView(resetBtn);
 
-        // Tab Switching Click Listeners
+        // Tab Switching Click Listeners kèm Hoạt ảnh Fade & Slide mượt mà + Phản hồi rung
         View.OnClickListener tabListener = v -> {
+            HapticHelper.tick(activity, v);
             boolean isL = (v == tabLive);
             boolean isV = (v == tabVisual);
             boolean isE = (v == tabEngine);
@@ -445,9 +475,13 @@ public class StockfishSettingsDialog {
             updateTabStyle(tabVisual, isV, density);
             updateTabStyle(tabEngine, isE, density);
 
-            panelLive.setVisibility(isL ? View.VISIBLE : View.GONE);
-            panelVisual.setVisibility(isV ? View.VISIBLE : View.GONE);
-            panelEngine.setVisibility(isE ? View.VISIBLE : View.GONE);
+            if (isL) {
+                switchTabWithAnim(panelLive, panelVisual, panelEngine);
+            } else if (isV) {
+                switchTabWithAnim(panelVisual, panelLive, panelEngine);
+            } else {
+                switchTabWithAnim(panelEngine, panelLive, panelVisual);
+            }
         };
 
         tabLive.setOnClickListener(tabListener);
@@ -491,6 +525,7 @@ public class StockfishSettingsDialog {
         telegramBtn.addView(tgText);
 
         telegramBtn.setOnClickListener(v -> {
+            HapticHelper.pop(activity, v);
             try {
                 android.content.Intent intent = new android.content.Intent(
                         android.content.Intent.ACTION_VIEW,
@@ -528,7 +563,10 @@ public class StockfishSettingsDialog {
         cancelBtn.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
         cancelBtn.setGravity(Gravity.CENTER);
         cancelBtn.setPadding((int) (16 * density), (int) (8 * density), (int) (16 * density), (int) (8 * density));
-        cancelBtn.setOnClickListener(v -> dialog.dismiss());
+        cancelBtn.setOnClickListener(v -> {
+            HapticHelper.pop(activity, v);
+            dialog.dismiss();
+        });
         actionButtons.addView(cancelBtn);
 
         View btnSpacer = new View(activity);
@@ -550,6 +588,7 @@ public class StockfishSettingsDialog {
         saveBtn.setBackground(saveBg);
 
         saveBtn.setOnClickListener(v -> {
+            HapticHelper.pop(activity, v);
             StockfishSettings.setEngineEnabled(activity, enabledSwitch.isChecked());
             StockfishSettings.setDepth(activity, Math.max(1, depthSeekBar.getProgress() + 1));
             StockfishSettings.setMultiPV(activity, Math.max(1, pvSeekBar.getProgress() + 1));
@@ -573,9 +612,9 @@ public class StockfishSettingsDialog {
             if (!enabledSwitch.isChecked() || !arrowsSwitch.isChecked()) {
                 ArrowInjector.clearEngineArrows(state);
             }
-            if (!enabledSwitch.isChecked() || !evalBarSwitch.isChecked()) OverlayManager.hideEvalBar();
-            if (!enabledSwitch.isChecked() || !wdlSwitch.isChecked()) OverlayManager.hideWdlBar();
-            if (!enabledSwitch.isChecked() || !infoSwitch.isChecked()) OverlayManager.hideEngineInfo();
+            if (!enabledSwitch.isChecked() || !evalBarCbChecked(evalBarSwitch)) OverlayManager.hideEvalBar();
+            if (!enabledSwitch.isChecked() || !wdlCbChecked(wdlSwitch)) OverlayManager.hideWdlBar();
+            if (!enabledSwitch.isChecked() || !infoCbChecked(infoSwitch)) OverlayManager.hideEngineInfo();
             if (!enabledSwitch.isChecked()) OverlayManager.hideMateAnnouncement();
             if (enabledSwitch.isChecked()) {
                 StockfishExtension.triggerAnalysisForCurrentState();
@@ -591,17 +630,37 @@ public class StockfishSettingsDialog {
         dialog.setContentView(windowRoot);
         dialog.show();
 
-        int width = (int) (activity.getResources().getDisplayMetrics().widthPixels * 0.92f);
-        dialog.getWindow().setLayout(width, ViewGroup.LayoutParams.WRAP_CONTENT);
+        // Đảm bảo kích thước cửa sổ chuẩn cố định sau khi show
+        dialog.getWindow().setLayout(targetDialogWidth, targetDialogHeight);
     }
 
+    private static boolean evalBarCbChecked(CyberSwitchView s) { return s != null && s.isChecked(); }
+    private static boolean wdlCbChecked(CyberSwitchView s) { return s != null && s.isChecked(); }
+    private static boolean infoCbChecked(CyberSwitchView s) { return s != null && s.isChecked(); }
+
     // ══ UI Helpers matching NNVC Cyber Glass Architecture ══════════════════════
+
+    private static void switchTabWithAnim(View showView, View... hideViews) {
+        for (View v : hideViews) {
+            v.setVisibility(View.GONE);
+        }
+        showView.setVisibility(View.VISIBLE);
+        showView.setAlpha(0f);
+        showView.setTranslationY(18f);
+        showView.animate()
+                .alpha(1f)
+                .translationY(0f)
+                .setDuration(190)
+                .setInterpolator(new DecelerateInterpolator())
+                .start();
+    }
 
     private static LinearLayout createGlassCard(Activity activity, float density) {
         LinearLayout card = new LinearLayout(activity);
         card.setOrientation(LinearLayout.VERTICAL);
-        int pad = (int) (12 * density);
-        card.setPadding(pad, pad, pad, pad);
+        int padH = (int) (14 * density);
+        int padV = (int) (12 * density);
+        card.setPadding(padH, padV, padH, padV);
 
         GradientDrawable bg = new GradientDrawable();
         bg.setColor(COLOR_CARD_BG);
@@ -687,9 +746,9 @@ public class StockfishSettingsDialog {
         cyberSwitch.setLayoutParams(switchParams);
         row.addView(cyberSwitch);
 
-        // Click row to toggle
+        // Click row to toggle with feedback
         row.setClickable(true);
-        row.setOnClickListener(v -> cyberSwitch.toggle());
+        row.setOnClickListener(v -> cyberSwitch.toggleWithFeedback());
 
         container.addView(row);
         return cyberSwitch;
@@ -728,15 +787,28 @@ public class StockfishSettingsDialog {
 
         layout.addView(headerRow);
 
-        // SeekBar with Cyan & Blue tints
-        SeekBar seekBar = new SeekBar(activity);
+        // SeekBar với padding rộng và thumbOffset để núm tròn KHÔNG BAO GIỜ bị lòi dính ra ngoài viền
+        final SeekBar seekBar = new SeekBar(activity);
         seekBar.setMax(max);
         seekBar.setProgress(progress);
         if (Build.VERSION.SDK_INT >= 21) {
             seekBar.setProgressTintList(ColorStateList.valueOf(COLOR_ACCENT_BLUE));
             seekBar.setThumbTintList(ColorStateList.valueOf(COLOR_ACCENT_CYAN));
         }
-        seekBar.setPadding((int) (4 * density), (int) (6 * density), (int) (4 * density), (int) (8 * density));
+
+        // Padding ngang 16dp và thumbOffset 16dp triệt tiêu hoàn toàn hiện tượng dính mép viền
+        int padH = (int) (16 * density);
+        int padV = (int) (8 * density);
+        seekBar.setPadding(padH, padV, padH, padV);
+        seekBar.setThumbOffset(padH);
+
+        LinearLayout.LayoutParams sbParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        sbParams.setMargins(0, (int) (2 * density), 0, (int) (4 * density));
+        seekBar.setLayoutParams(sbParams);
+
+        final int[] lastVal = { Math.max(minVal, progress + minVal) };
 
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
@@ -749,11 +821,21 @@ public class StockfishSettingsDialog {
                 } else {
                     valBadge.setText(String.valueOf(val));
                 }
+
+                // Rung xúc giác nhẹ mỗi nấc giá trị thay đổi khi người dùng kéo
+                if (fromUser && val != lastVal[0]) {
+                    lastVal[0] = val;
+                    HapticHelper.tick(activity, sb);
+                }
             }
             @Override
-            public void onStartTrackingTouch(SeekBar sb) {}
+            public void onStartTrackingTouch(SeekBar sb) {
+                HapticHelper.tick(activity, sb);
+            }
             @Override
-            public void onStopTrackingTouch(SeekBar sb) {}
+            public void onStopTrackingTouch(SeekBar sb) {
+                HapticHelper.pop(activity, sb);
+            }
         });
 
         layout.addView(seekBar);
@@ -792,5 +874,14 @@ public class StockfishSettingsDialog {
                 (int) (dpHeight * density)
         ));
         layout.addView(spacer);
+    }
+
+    private static int blendColor(int from, int to, float ratio) {
+        float inverseRatio = 1f - ratio;
+        float a = Color.alpha(from) * inverseRatio + Color.alpha(to) * ratio;
+        float r = Color.red(from) * inverseRatio + Color.red(to) * ratio;
+        float g = Color.green(from) * inverseRatio + Color.green(to) * ratio;
+        float b = Color.blue(from) * inverseRatio + Color.blue(to) * ratio;
+        return Color.argb((int) a, (int) r, (int) g, (int) b);
     }
 }
