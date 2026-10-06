@@ -229,6 +229,7 @@ public class StockfishExtension {
         if (ctx != null && !StockfishSettings.isEngineEnabled(ctx)) {
             Log.d(TAG, "Engine is disabled in settings.");
             ArrowInjector.clearEngineArrows(stateImplObject);
+            OverlayManager.hideArrowOverlay();
             OverlayManager.hideEvalBar();
             OverlayManager.hideWdlBar();
             OverlayManager.hideMateAnnouncement();
@@ -237,6 +238,7 @@ public class StockfishExtension {
         }
 
         ArrowInjector.clearEngineArrows(stateImplObject);
+        OverlayManager.hideArrowOverlay();
         lastArrowSignature = null;
 
         String fen = extractFen(positionObject);
@@ -447,11 +449,13 @@ public class StockfishExtension {
             String sig = fen + '|' + (showArrows ? result.moves : "") + '|' + (showThreat ? result.ponder : "");
             if (!sig.equals(lastArrowSignature)) {
                 lastArrowSignature = sig;
-                ArrowInjector.injectEngineArrows(context, getStateImpl(), movesToInject, threatToInject);
+                ArrowInjector.clearEngineArrows(getStateImpl());
+                OverlayManager.updateArrowOverlay(movesToInject, threatToInject, getStateImpl());
             }
         } else if (isFinal) {
             lastArrowSignature = null;
             ArrowInjector.clearEngineArrows(getStateImpl());
+            OverlayManager.hideArrowOverlay();
         }
 
         if (!disableOverlays && StockfishSettings.isEvalBarEnabled(context)) {
@@ -542,6 +546,7 @@ public class StockfishExtension {
             StockfishBridge.stopSearch();
             
             ArrowInjector.clearEngineArrows(getStateImpl());
+            OverlayManager.hideArrowOverlay();
             lastArrowSignature = null;
             OverlayManager.hideEvalBar();
             OverlayManager.hideWdlBar();

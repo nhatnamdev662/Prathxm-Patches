@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-10-06T20:45:00",
-  "description": "## [1.0.5] (2026-10-06)\n\n### ⚡ NNVC — Polished Visuals 1.0.5\n\n* **Mũi tên đối thủ:** Đổi thành tùy chọn 'Mũi tên đối thủ' (Bật: hiện cả đối thủ, Tắt: chỉ hiện bên mình).\n* **Mũi tên hiểm hoạ độc lập:** Hoạt động độc lập, luôn hiển thị nước đáp trả nguy hiểm nhất của đối thủ dù tắt hay bật mũi tên đối thủ.\n* **Gỡ bỏ WDL & Điểm số trên bàn cờ:** Tinh gọn giao diện, loại bỏ hoàn toàn thanh Thắng/Hoà/Thua và khung điểm số trên bàn cờ.\n* **Thiết kế lại Thông báo chiếu hết:** Giao diện banner chiếu hết dạng Cyber Pill tinh tế, thanh thoát, đồng bộ phong cách NNVC.\n* **Author:** NNVC (@nncutett)",
-  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v1.0.5/patches-1.0.5.mpp",
+  "created_at": "2026-10-06T21:10:00",
+  "description": "## [1.0.6] (2026-10-06)\n\n### ⚡ NNVC — 100% Cyber Extension Arrows\n\n* **Mũi tên chuẩn 100% Extension:** Tự vẽ mũi tên Canvas chuẩn đồ họa NNVC với dải màu chuyển sắc LinearGradient, viền phản quang trắng và hiệu ứng phát sáng Neon Cyber Glow.\n* **Bảng màu phân tầng:** Nước tốt nhất Vàng Cyber #F0B84B, Nước 2 Xanh băng #58B8FF, Nước 3 Bạc #D9DDE6, Nước 4 Tím #C084FC, Nước 5 Xanh ngọc #34D399, Hiểm hoạ Đỏ neon #EF4444.\n* **Độ mờ chuẩn NNVC:** Tier 1 (0.94), Tier 2 (0.82), Tier 3+ (0.65), Hiểm họa (0.92).\n* **Nước đi quân Mã (Knight):** Đường gấp khúc chữ L bo góc mượt mà chính xác toạ độ.\n* **Author:** NNVC (@nncutett)",
+  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v1.0.6/patches-1.0.6.mpp",
   "signature_download_url": "",
-  "version": "1.0.5"
+  "version": "1.0.6"
 }

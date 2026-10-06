@@ -168,7 +168,8 @@ public class ArrowInjector {
                     Integer color = (Integer) field.get(arrow);
                     if (color != null) {
                         int c = color.intValue();
-                        if (c == 0xFF00C853 || c == 0xFF2196F3 || c == 0xFFFF9800 || c == 0xFF9C27B0 || c == 0xFFE53935 || c == 0xFFD50000) {
+                        if (c == 0xFFF0B84B || c == 0xFF58B8FF || c == 0xFFD9DDE6 || c == 0xFFC084FC || c == 0xFF34D399 || c == 0xFFEF4444
+                                || c == 0xFF00C853 || c == 0xFF2196F3 || c == 0xFFFF9800 || c == 0xFF9C27B0 || c == 0xFFE53935 || c == 0xFFD50000) {
                             return true;
                         }
                     }
@@ -246,15 +247,15 @@ public class ArrowInjector {
 
                 int moveColor;
                 if (i == 0) {
-                    moveColor = 0xFF00C853; // Green for 1st best move
+                    moveColor = 0xFFF0B84B; // NNVC Gold
                 } else if (i == 1) {
-                    moveColor = 0xFF2196F3; // Blue for 2nd best move
+                    moveColor = 0xFF58B8FF; // NNVC Cyan / Sky Blue
                 } else if (i == 2) {
-                    moveColor = 0xFFFF9800; // Orange for 3rd best move
+                    moveColor = 0xFFD9DDE6; // NNVC Silver
                 } else if (i == 3) {
-                    moveColor = 0xFF9C27B0; // Purple for 4th best move
+                    moveColor = 0xFFC084FC; // NNVC Lavender
                 } else {
-                    moveColor = 0xFFE53935; // Red for other moves
+                    moveColor = 0xFF34D399; // NNVC Mint
                 }
 
                 Object arrow = newArrow(hintArrowClass, fromSquare, toSquare, moveColor, opacity);
@@ -271,7 +272,7 @@ public class ArrowInjector {
 
                 if (fromSquare != null && toSquare != null) {
                     Object threatArrow = newArrow(hintArrowClass, fromSquare, toSquare,
-                            0xFFD50000 /* crimson threat */, 0.90f);
+                            0xFFEF4444 /* NNVC Red danger */, 0.92f);
                     arrowList.add(threatArrow);
                 }
             }

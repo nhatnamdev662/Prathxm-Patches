@@ -21,9 +21,97 @@ import android.widget.TextView;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 
 public class OverlayManager {
     private static final String TAG = "OverlayManager";
+
+    public static void updateArrowOverlay(final List<String> moves, final String threat, final Object stateImpl) {
+        new Handler(Looper.getMainLooper()).post(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Activity activity = StockfishExtension.getCurrentActivity();
+                    if (activity == null) return;
+                    Window window = activity.getWindow();
+                    if (window == null) return;
+                    ViewGroup decorView = (ViewGroup) window.getDecorView();
+                    if (decorView == null) return;
+
+                    View boardView = findChessBoardView(decorView);
+                    if (boardView == null) return;
+
+                    int[] loc = new int[2];
+                    boardView.getLocationInWindow(loc);
+                    int boardX = loc[0];
+                    int boardY = loc[1];
+                    int boardW = boardView.getWidth();
+                    int boardH = boardView.getHeight();
+                    if (boardW <= 0 || boardH <= 0) return;
+
+                    View overlay = decorView.findViewWithTag("nnvc_arrow_overlay");
+                    ArrowOverlayView arrowView;
+                    if (overlay instanceof ArrowOverlayView) {
+                        arrowView = (ArrowOverlayView) overlay;
+                    } else {
+                        if (overlay != null) decorView.removeView(overlay);
+                        arrowView = new ArrowOverlayView(decorView.getContext());
+                        arrowView.setTag("nnvc_arrow_overlay");
+                        decorView.addView(arrowView);
+                    }
+
+                    List<ArrowOverlayView.ArrowData> list = new ArrayList<>();
+                    if (moves != null) {
+                        for (int i = 0; i < moves.size(); i++) {
+                            String m = moves.get(i);
+                            if (m != null && m.matches("^[a-h][1-8][a-h][1-8][qrbn]?$")) {
+                                list.add(new ArrowOverlayView.ArrowData(m, i + 1, false));
+                            }
+                        }
+                    }
+                    if (threat != null && threat.matches("^[a-h][1-8][a-h][1-8][qrbn]?$")) {
+                        list.add(new ArrowOverlayView.ArrowData(threat, 1, true));
+                    }
+
+                    if (list.isEmpty()) {
+                        arrowView.setVisibility(View.GONE);
+                        return;
+                    }
+
+                    boolean flipped = isBoardFlipped(stateImpl);
+                    arrowView.update(boardX, boardY, boardW, boardH, list, flipped);
+                    arrowView.setVisibility(View.VISIBLE);
+                    arrowView.bringToFront();
+
+                } catch (Throwable t) {
+                    Log.e(TAG, "updateArrowOverlay failed: " + t.getMessage(), t);
+                }
+            }
+        });
+    }
+
+    public static void hideArrowOverlay() {
+        new Handler(Looper.getMainLooper()).post(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Activity activity = StockfishExtension.getCurrentActivity();
+                    if (activity == null) return;
+                    Window window = activity.getWindow();
+                    if (window == null) return;
+                    View decorView = window.getDecorView();
+                    if (decorView == null) return;
+                    View v = decorView.findViewWithTag("nnvc_arrow_overlay");
+                    if (v != null) {
+                        v.setVisibility(View.GONE);
+                    }
+                } catch (Throwable t) {
+                    Log.e(TAG, "hideArrowOverlay failed: " + t.getMessage());
+                }
+            }
+        });
+    }
 
     public static void updateEvalBar(final float score, final boolean hasMate, final int mateIn, final Object stateImpl) {
         new Handler(Looper.getMainLooper()).post(new Runnable() {
