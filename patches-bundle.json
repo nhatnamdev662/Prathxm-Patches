@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-10-06T17:40:00",
-  "description": "## [1.16.4] (2026-10-06)\n\n### 🐛 Bug Fixes\n\n* **Game Review:** Khắc phục triệt để lỗi phân tích Stockfish 100% bị 'thử lại không thành công' trên Chess.com 4.10.20+ do AppTypes.primaryCtor bắt nhầm synthetic serialization constructor (R8 bhb marker).\n* **Compatibility:** Lọc bỏ hoàn toàn các constructor serialization nội bộ, khởi tạo chính xác MovesTally, PlayedMove và AnalyzedGameData.\n* **Author:** Nhat Nam (@nncutett)",
-  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v1.16.4/patches-1.16.4.mpp",
+  "created_at": "2026-10-06T18:05:00",
+  "description": "## [1.16.5] (2026-10-06)\n\n### ⚡ Performance & Game Review Speedup\n\n* **Tự động đa luồng (Auto Multi-threading):** Tự động phát hiện số nhân CPU máy và chạy tối đa (N - 1 luồng), ví dụ 7/8 luồng, tăng tốc độ phân tích gấp đôi x2 mà không làm đơ giật giao diện.\n* **Game Review siêu tốc:** Tối ưu MultiPV 2 (giảm 35% thời gian tìm kiếm) và lướt nhanh các nước trong Sách Khai Cuộc (Book moves), giữ nguyên 100% độ sâu Depth ở các nước trung tàn cuộc.\n* **Author:** Nhat Nam (@nncutett)",
+  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v1.16.5/patches-1.16.5.mpp",
   "signature_download_url": "",
-  "version": "1.16.4"
+  "version": "1.16.5"
 }

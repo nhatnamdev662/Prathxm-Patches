@@ -129,7 +129,7 @@ public class LocalAnalysisFlow {
             if (appCtx != null) searchDepth += StockfishSettings.getReviewDepthBoost(appCtx);
             // Safety net so one pathological position cannot stall the whole review.
             final int movetimeCap = 20_000 + searchDepth * 1_000;
-            final int reviewMultiPV = 3;
+            final int reviewMultiPV = 2;
 
             // Get Reflection Classes
             Class<?> adClass = loadClassSafe("com.chess.entities.AnalysisDepth");
@@ -240,7 +240,9 @@ public class LocalAnalysisFlow {
             for (int i = 0; i <= totalMoves; i++) {
                 emitter.ensureActive();
                 List<String> hist = historyUsable ? new ArrayList<>(engineMoves.subList(0, i)) : null;
-                results[i] = StockfishBridge.analyzeForReview(startingFen, hist, fens[i], searchDepth, reviewMultiPV, movetimeCap);
+                int curDepth = (i < bookPlies) ? Math.min(10, searchDepth) : searchDepth;
+                int curMultiPV = (i < bookPlies) ? 1 : reviewMultiPV;
+                results[i] = StockfishBridge.analyzeForReview(startingFen, hist, fens[i], curDepth, curMultiPV, movetimeCap);
 
                 float progress = (float) (i + 1) / (totalMoves + 1);
                 Object progObj = ipConstructor.newInstance(progress, depthEnum, sourceEnum);

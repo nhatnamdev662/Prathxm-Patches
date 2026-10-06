@@ -63,12 +63,18 @@ public class StockfishSettings {
         return Math.max(1, Runtime.getRuntime().availableProcessors());
     }
 
-    /** Search threads; defaults to 3 (stored 0 = auto). */
+    /** Auto threads: cpus - 1 (leaving 1 core for UI responsiveness), minimum 1. */
+    public static int getAutoThreads() {
+        int cpus = getCpuCount();
+        return cpus >= 4 ? cpus - 1 : cpus;
+    }
+
+    /** Search threads; defaults to auto (all available cores - 1). */
     public static int getThreads(Context context) {
         int t = getPrefs(context).getInt(KEY_THREADS, 0);
-        int cpus = getCpuCount();
-        if (t <= 0) return Math.min(3, cpus);
-        return Math.min(t, cpus);
+        int auto = getAutoThreads();
+        if (t <= 0) return auto;
+        return Math.min(t, getCpuCount());
     }
 
     public static void setThreads(Context context, int threads) {

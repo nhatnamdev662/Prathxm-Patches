@@ -55,6 +55,8 @@ public class I18n {
                 return isVi ? "Hiệu năng" : "Performance";
             case "cpu_threads":
                 return isVi ? "Số luồng CPU" : "CPU threads";
+            case "auto_optimal":
+                return isVi ? "Tự động tối ưu" : "Auto Optimal";
             case "cpu_hint":
                 return isVi ? "Tất cả các nhân cho tốc độ phân tích nhanh nhất. Giảm xuống nếu máy bị nóng." : "All cores gives the fastest analysis. Lower it if your phone gets hot.";
             case "game_review":

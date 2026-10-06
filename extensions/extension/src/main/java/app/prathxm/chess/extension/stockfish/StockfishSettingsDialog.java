@@ -169,15 +169,20 @@ public class StockfishSettingsDialog {
         // Performance
         addSectionHeader(advancedLayout, I18n.get(activity, "performance"), density, activity);
         final int cpuCount = StockfishSettings.getCpuCount();
+        final int autoThreads = StockfishSettings.getAutoThreads();
         int currentThreads = StockfishSettings.getThreads(activity);
         final String threadsPrefix = I18n.get(activity, "cpu_threads");
-        TextView threadsLabel = addStyledLabel(advancedLayout, threadsPrefix + ": " + currentThreads + " / " + cpuCount, density, activity);
+        boolean isAuto = (currentThreads == autoThreads);
+        String initialTag = isAuto ? " (" + I18n.get(activity, "auto_optimal") + ")" : "";
+        TextView threadsLabel = addStyledLabel(advancedLayout, threadsPrefix + ": " + currentThreads + " / " + cpuCount + initialTag, density, activity);
         SeekBar threadsSeekBar = addStyledSeekBar(advancedLayout, threadsLabel, threadsPrefix, currentThreads - 1, Math.max(0, cpuCount - 1), 1, density, activity);
         final String threadsSuffix = " / " + cpuCount;
         threadsSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar sb, int prog, boolean fromUser) {
-                threadsLabel.setText(threadsPrefix + ": " + (prog + 1) + threadsSuffix);
+                int val = prog + 1;
+                String tag = (val == autoThreads) ? " (" + I18n.get(activity, "auto_optimal") + ")" : "";
+                threadsLabel.setText(threadsPrefix + ": " + val + threadsSuffix + tag);
             }
             @Override
             public void onStartTrackingTouch(SeekBar sb) {}
@@ -383,8 +388,7 @@ public class StockfishSettingsDialog {
             StockfishSettings.setDepth(activity, Math.max(1, depthSeekBar.getProgress() + 1));
             StockfishSettings.setMultiPV(activity, Math.max(1, pvSeekBar.getProgress() + 1));
             int threads = Math.max(1, threadsSeekBar.getProgress() + 1);
-            // Store 0 (= auto, all cores) when the maximum is selected.
-            StockfishSettings.setThreads(activity, threads >= cpuCount ? 0 : threads);
+            StockfishSettings.setThreads(activity, threads);
             StockfishSettings.setReviewDepthBoost(activity, boostSeekBar.getProgress());
             StockfishSettings.setMySideOnly(activity, sideCb.isChecked());
             StockfishSettings.setLimitStrength(activity, eloCb.isChecked());
