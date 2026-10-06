@@ -91,6 +91,10 @@ public final class LichessPuzzleExtension {
         }
     }
 
+    public static Object submitDailyPuzzleAction(int dailyPuzzleId, Object action, Object hintState, Object continuation) {
+        return submitDailyPuzzleAction((long) dailyPuzzleId, action, hintState);
+    }
+
     private static Puzzle fetchDailyPuzzle(String date) throws Exception {
         HttpURLConnection connection = (HttpURLConnection) new URL(DAILY_URL).openConnection();
         connection.setConnectTimeout(5000);
