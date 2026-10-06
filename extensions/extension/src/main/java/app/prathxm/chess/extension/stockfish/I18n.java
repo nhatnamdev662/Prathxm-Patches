@@ -45,10 +45,14 @@ public class I18n {
                 return isVi ? "Số lượng mũi tên" : "Number of arrows";
             case "arrows_hint":
                 return isVi ? "Màu xanh lá là nước tối ưu, kế đến là xanh dương, cam và tím." : "Green is the best move, then blue, orange and purple. More arrows make each search a little slower.";
-            case "my_turn_only":
-                return isVi ? "Chỉ hiện mũi tên ở lượt của tôi" : "Arrows only on my turn";
+            case "opponent_arrows":
+                return isVi ? "Mũi tên đối thủ" : "Opponent arrows";
+            case "opponent_arrows_hint":
+                return isVi ? "Hiện mũi tên gợi ý khi đến lượt đối thủ." : "Show arrows when it is opponent's turn.";
             case "threat_arrow":
-                return isVi ? "Mũi tên hiểm hoạ (đối thủ đáp trả)" : "Threat arrow (opponent's best reply)";
+                return isVi ? "Mũi tên hiểm hoạ" : "Threat arrow";
+            case "threat_arrow_hint":
+                return isVi ? "Nước đi đáp trả nguy hiểm nhất của đối thủ (đỏ crimson)." : "Opponent's most dangerous reply (crimson).";
             case "wdl_bar":
                 return isVi ? "Thanh Thắng / Hoà / Thua (WDL)" : "Win / Draw / Loss bar";
             case "depth_score_above":

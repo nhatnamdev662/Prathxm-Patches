@@ -291,18 +291,19 @@ public class OverlayManager {
                         banner.setTag("stockfish_mate_banner");
 
                         GradientDrawable bg = new GradientDrawable();
-                        bg.setColor(0xEE1B1B1B);
-                        bg.setCornerRadius(24 * density);
-                        bg.setStroke((int)(1.5f * density), 0xFF81B64C); // green border
+                        bg.setColor(0xE60C0F16); // Cyber Midnight Glass
+                        bg.setCornerRadius(14 * density);
+                        bg.setStroke((int) (1.2f * density), mateIn > 0 ? 0xCC64D2FF : 0xCCFF453A);
                         banner.setBackground(bg);
 
-                        banner.setTextColor(Color.WHITE);
-                        banner.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
-                        banner.setTypeface(android.graphics.Typeface.create("sans-serif-medium", android.graphics.Typeface.BOLD));
+                        banner.setTextColor(mateIn > 0 ? 0xFFF0F8FF : 0xFFFFF0F0);
+                        banner.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f);
+                        banner.setTypeface(android.graphics.Typeface.create("monospace", android.graphics.Typeface.BOLD));
+                        banner.setLetterSpacing(0.06f);
                         banner.setGravity(Gravity.CENTER);
 
-                        int padH = (int)(16 * density);
-                        int padV = (int)(8 * density);
+                        int padH = (int) (14 * density);
+                        int padV = (int) (6 * density);
                         banner.setPadding(padH, padV, padH, padV);
 
                         FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(
@@ -313,7 +314,14 @@ public class OverlayManager {
                         decorView.addView(banner);
                     }
 
-                    String sign = mateIn > 0 ? "♟ Mate in " : "☠ Opponent Mates in ";
+                    // Cập nhật lại màu viền & màu chữ tương ứng với kết quả chiếu
+                    GradientDrawable bg = (GradientDrawable) banner.getBackground();
+                    if (bg != null) {
+                        bg.setStroke((int) (1.2f * density), mateIn > 0 ? 0xCC64D2FF : 0xCCFF453A);
+                    }
+                    banner.setTextColor(mateIn > 0 ? 0xFFF0F8FF : 0xFFFFF0F0);
+
+                    String sign = mateIn > 0 ? "⚡ MATE IN " : "⚠️ OPPONENT MATES IN ";
                     banner.setText(sign + Math.abs(mateIn) + "!");
 
                     banner.measure(

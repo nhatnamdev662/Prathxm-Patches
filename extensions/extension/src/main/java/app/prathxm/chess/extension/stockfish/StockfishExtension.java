@@ -437,14 +437,17 @@ public class StockfishExtension {
             }
         }
 
-        if (showArrows) {
-            // Re-injecting identical arrows restarts their animation (visible flicker while
-            // the search deepens), so only push arrows when they actually changed.
-            String sig = fen + '|' + result.moves
-                    + (StockfishSettings.isThreatArrowsEnabled(context) ? "|" + result.ponder : "");
+        boolean showThreat = !disableOverlays && StockfishSettings.isThreatArrowsEnabled(context)
+                && result.ponder != null && !result.ponder.isEmpty();
+
+        if (showArrows || showThreat) {
+            java.util.List<String> movesToInject = (showArrows && result.moves != null) ? result.moves : java.util.Collections.emptyList();
+            String threatToInject = showThreat ? result.ponder : null;
+
+            String sig = fen + '|' + (showArrows ? result.moves : "") + '|' + (showThreat ? result.ponder : "");
             if (!sig.equals(lastArrowSignature)) {
                 lastArrowSignature = sig;
-                ArrowInjector.injectEngineArrows(context, getStateImpl(), result.moves, result.ponder);
+                ArrowInjector.injectEngineArrows(context, getStateImpl(), movesToInject, threatToInject);
             }
         } else if (isFinal) {
             lastArrowSignature = null;

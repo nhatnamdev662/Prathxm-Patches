@@ -319,10 +319,11 @@ public class StockfishSettingsDialog {
 
         addCardSeparator(visualCard, density);
 
-        final CyberSwitchView sideSwitch = addCyberSwitchRow(visualCard,
-                I18n.get(activity, "my_turn_only"),
-                null,
-                StockfishSettings.isMySideOnly(activity),
+        // Mũi tên đối thủ (Bật: hiện cả đối thủ, Tắt: chỉ hiện bên mình)
+        final CyberSwitchView oppArrowsSwitch = addCyberSwitchRow(visualCard,
+                I18n.get(activity, "opponent_arrows"),
+                I18n.get(activity, "opponent_arrows_hint"),
+                !StockfishSettings.isMySideOnly(activity),
                 density, activity);
 
         addCardSeparator(visualCard, density);
@@ -337,9 +338,10 @@ public class StockfishSettingsDialog {
 
         addCardSeparator(visualCard, density);
 
+        // Mũi tên hiểm hoạ độc lập
         final CyberSwitchView threatSwitch = addCyberSwitchRow(visualCard,
                 I18n.get(activity, "threat_arrow"),
-                null,
+                I18n.get(activity, "threat_arrow_hint"),
                 StockfishSettings.isThreatArrowsEnabled(activity),
                 density, activity);
 
@@ -349,22 +351,6 @@ public class StockfishSettingsDialog {
                 I18n.get(activity, "eval_bar"),
                 null,
                 StockfishSettings.isEvalBarEnabled(activity),
-                density, activity);
-
-        addCardSeparator(visualCard, density);
-
-        final CyberSwitchView wdlSwitch = addCyberSwitchRow(visualCard,
-                I18n.get(activity, "wdl_bar"),
-                null,
-                StockfishSettings.isWdlEnabled(activity),
-                density, activity);
-
-        addCardSeparator(visualCard, density);
-
-        final CyberSwitchView infoSwitch = addCyberSwitchRow(visualCard,
-                I18n.get(activity, "depth_score_above"),
-                null,
-                StockfishSettings.isEngineInfoEnabled(activity),
                 density, activity);
 
         addCardSeparator(visualCard, density);
@@ -593,14 +579,14 @@ public class StockfishSettingsDialog {
             StockfishSettings.setEngineEnabled(activity, enabledSwitch.isChecked());
             StockfishSettings.setDepth(activity, Math.max(1, depthSeekBar.getProgress() + 1));
             StockfishSettings.setMultiPV(activity, Math.max(1, pvSeekBar.getProgress() + 1));
-            StockfishSettings.setMySideOnly(activity, sideSwitch.isChecked());
+            StockfishSettings.setMySideOnly(activity, !oppArrowsSwitch.isChecked());
             StockfishSettings.setLimitStrength(activity, eloSwitch.isChecked());
             StockfishSettings.setElo(activity, 1320 + eloSeekBar.getProgress());
             StockfishSettings.setPremiumEnabled(activity, true);
             StockfishSettings.setArrowsVisible(activity, arrowsSwitch.isChecked());
             StockfishSettings.setEvalBarEnabled(activity, evalBarSwitch.isChecked());
-            StockfishSettings.setWdlEnabled(activity, wdlSwitch.isChecked());
-            StockfishSettings.setEngineInfoEnabled(activity, infoSwitch.isChecked());
+            StockfishSettings.setWdlEnabled(activity, false); // Gỡ bỏ WDL
+            StockfishSettings.setEngineInfoEnabled(activity, false); // Gỡ bỏ điểm số trên bàn cờ
             StockfishSettings.setThreatArrowsEnabled(activity, threatSwitch.isChecked());
             StockfishSettings.setMoveClassificationEnabled(activity, classifSwitch.isChecked());
             StockfishSettings.setBlunderAlertsEnabled(activity, blunderSwitch.isChecked());
@@ -614,8 +600,8 @@ public class StockfishSettingsDialog {
                 ArrowInjector.clearEngineArrows(state);
             }
             if (!enabledSwitch.isChecked() || !evalBarCbChecked(evalBarSwitch)) OverlayManager.hideEvalBar();
-            if (!enabledSwitch.isChecked() || !wdlCbChecked(wdlSwitch)) OverlayManager.hideWdlBar();
-            if (!enabledSwitch.isChecked() || !infoCbChecked(infoSwitch)) OverlayManager.hideEngineInfo();
+            OverlayManager.hideWdlBar();
+            OverlayManager.hideEngineInfo();
             if (!enabledSwitch.isChecked()) OverlayManager.hideMateAnnouncement();
             if (enabledSwitch.isChecked()) {
                 StockfishExtension.triggerAnalysisForCurrentState();
@@ -636,8 +622,6 @@ public class StockfishSettingsDialog {
     }
 
     private static boolean evalBarCbChecked(CyberSwitchView s) { return s != null && s.isChecked(); }
-    private static boolean wdlCbChecked(CyberSwitchView s) { return s != null && s.isChecked(); }
-    private static boolean infoCbChecked(CyberSwitchView s) { return s != null && s.isChecked(); }
 
     // ══ UI Helpers matching NNVC Cyber Glass Architecture ══════════════════════
 
