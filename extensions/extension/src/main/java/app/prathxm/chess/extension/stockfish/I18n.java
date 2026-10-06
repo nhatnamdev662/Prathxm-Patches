@@ -8,7 +8,15 @@ public class I18n {
         boolean isVi = "vi".equalsIgnoreCase(StockfishSettings.getLanguage(context));
         switch (key) {
             case "title":
-                return isVi ? "Cài Đặt Engine" : "Engine Settings";
+                return isVi ? "CÀI ĐẶT NNVC" : "NNVC SETTINGS";
+            case "ttl_sub":
+                return isVi ? "AI ENGINE · CHESS.COM" : "AI ENGINE · CHESS.COM";
+            case "tab_live":
+                return "LIVE";
+            case "tab_visual":
+                return "VISUAL";
+            case "tab_engine":
+                return "ENGINE";
             case "engine":
                 return isVi ? "Engine" : "Engine";
             case "enable_stockfish":
