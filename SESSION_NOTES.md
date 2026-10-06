@@ -48,5 +48,11 @@
    - Trong bản 4.10.x, class `Bot$PersonalityBot` không còn chứa method `canPlay` (đã chuyển hoàn toàn sang Protobuf `Lchesscom/bots/v1/BotPersonality` và check UI `LockedBots`).
    - Đã bỏ qua lệnh gọi `BotPersonalityBotGetCanPlayFingerprint` để không gây lỗi `PatchException` khi patch bất kỳ bản 4.10.x nào.
    - Đã cập nhật `patches-bundle.json` lên `1.16.2` và tải lại file `patches-1.16.2.mpp` lên Release GitHub.
-
-
+9. **Phát Hành Bản v2.0.0**:
+   - Chuyển đổi định dạng `extension.mpe` sang raw DEX bytecode chuẩn (`dex\n035\0`), dọn dẹp các release và tag cũ.
+10. **Phát Hành Bản v2.0.1 (Né Mũi Tên Trùng, Mũi Tên Hiểm Họa Gốc, Engine Sát Nhau & Bảng Màu Tùy Chỉnh)**:
+   - **Né Mũi Tên (Lane Separation)**: Tính toán độ lệch trực giao `perpOffset` trong `ArrowOverlayView.java` theo chuẩn NNVC Extension, triệt tiêu trùng đè khi cùng hướng, ngược chiều, cùng đích hoặc cùng điểm xuất phát (hỗ trợ cả đường thẳng và đường chữ L của quân Mã).
+   - **Mũi Tên Hiểm Họa Gốc Chess.com**: Tách riêng khỏi Canvas Overlay; gọi `ArrowInjector.injectThreatArrow(...)` để Chess.com tự hiển thị vector native `HintArrow` màu đỏ gốc.
+   - **Engine Luôn Hoạt Động & Đặt Liền Kề**: Bỏ hoàn toàn nút switch `limit_strength`. Độ sâu (Depth) và ELO luôn chạy song song và nằm sát nhau trong Tab ENGINE.
+   - **Bảng Màu Mũi Tên Tùy Chỉnh (Cyber Palette)**: Thêm giao diện chọn màu trực tiếp cho từng bậc gợi ý (Nước 1 đến Nước 5) với bảng màu Cyber Luxury trong Tab VISUAL, lưu cấu hình vào `SharedPreferences`.
+   - Đã phát hành Release **`v2.0.1`** chứa file `patches-2.0.1.mpp` lên GitHub.
