@@ -284,7 +284,7 @@ public class StockfishSettingsDialog {
         statusDot.startAnimation(pulseAnim);
 
         TextView statusLabel = new TextView(activity);
-        statusLabel.setText(StockfishSettings.isEngineEnabled(activity) ? "ENGINE READY (1 THREAD)" : "ENGINE OFF");
+        statusLabel.setText(StockfishSettings.isEngineEnabled(activity) ? "ENGINE READY" : "ENGINE OFF");
         statusLabel.setTextColor(COLOR_TEXT_SECONDARY);
         statusLabel.setTextSize(11);
         statusLabel.setTypeface(Typeface.create("monospace", Typeface.BOLD));
@@ -300,16 +300,6 @@ public class StockfishSettingsDialog {
                 I18n.get(activity, "enable_stockfish"),
                 I18n.get(activity, "panic_hint"),
                 StockfishSettings.isEngineEnabled(activity),
-                density, activity);
-
-        addCardSeparator(liveCard, density);
-
-        int currentDepth = StockfishSettings.getDepth(activity);
-        final String depthPrefix = I18n.get(activity, "depth");
-        final SeekBar depthSeekBar = addGlassSeekBarWithBadge(liveCard, depthPrefix,
-                String.valueOf(currentDepth),
-                currentDepth - 1, StockfishSettings.MAX_DEPTH - 1, 1,
-                I18n.get(activity, "depth_hint"),
                 density, activity);
 
         // ─── TAB 2: VISUAL (Mũi tên & Giao diện) ───
@@ -394,18 +384,13 @@ public class StockfishSettingsDialog {
         LinearLayout engineCard = createGlassCard(activity, density);
         panelEngine.addView(engineCard);
 
-        final CyberSwitchView classifSwitch = addCyberSwitchRow(engineCard,
-                I18n.get(activity, "rate_moves"),
-                null,
-                StockfishSettings.isMoveClassificationEnabled(activity),
-                density, activity);
-
-        addCardSeparator(engineCard, density);
-
-        final CyberSwitchView blunderSwitch = addCyberSwitchRow(engineCard,
-                I18n.get(activity, "vibrate_blunder"),
-                I18n.get(activity, "vibrate_hint"),
-                StockfishSettings.isBlunderAlertsEnabled(activity),
+        // Độ sâu phân tích (Depth) gom chung với Elo trong Tab Engine
+        int currentDepth = StockfishSettings.getDepth(activity);
+        final String depthPrefix = I18n.get(activity, "depth");
+        final SeekBar depthSeekBar = addGlassSeekBarWithBadge(engineCard, depthPrefix,
+                String.valueOf(currentDepth),
+                currentDepth - 1, StockfishSettings.MAX_DEPTH - 1, 1,
+                I18n.get(activity, "depth_hint"),
                 density, activity);
 
         addCardSeparator(engineCard, density);
@@ -432,6 +417,22 @@ public class StockfishSettingsDialog {
             eloSeekBar.setEnabled(isChecked);
             eloSeekBar.setAlpha(isChecked ? 1f : 0.4f);
         });
+
+        addCardSeparator(engineCard, density);
+
+        final CyberSwitchView classifSwitch = addCyberSwitchRow(engineCard,
+                I18n.get(activity, "rate_moves"),
+                null,
+                StockfishSettings.isMoveClassificationEnabled(activity),
+                density, activity);
+
+        addCardSeparator(engineCard, density);
+
+        final CyberSwitchView blunderSwitch = addCyberSwitchRow(engineCard,
+                I18n.get(activity, "vibrate_blunder"),
+                I18n.get(activity, "vibrate_hint"),
+                StockfishSettings.isBlunderAlertsEnabled(activity),
+                density, activity);
 
         addCardSeparator(engineCard, density);
 
