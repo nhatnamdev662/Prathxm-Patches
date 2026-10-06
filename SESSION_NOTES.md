@@ -61,3 +61,21 @@
    - **Nhận diện quân Trắng & Tự động chạy ở Nước 0**: Bổ sung fallback kiểm tra góc nhìn bàn cờ `getFlipBoard()` từ `stateImplObject` trong `isUserWhite(...)` (bàn cờ không lật = quân Trắng `Boolean.TRUE`, bàn cờ lật = quân Đen `Boolean.FALSE`). Trong `onArrowsChanged`, tự động kích hoạt `triggerAnalysisForCurrentState()` ngay ở move 0 khi vừa vào ván cờ, hiển thị mũi tên và gợi ý tức thì mà không cần phải đi 1 nước trước.
    - **Khôi phục mũi tên khi đa nhiệm (thoát Home rồi vào lại)**: Trong `onActivityResumed`, reset toàn bộ signature cache (`lastArrowSignature = null`, `lastScheduledKey = null`), lên lịch chạy lại phân tích và ép vẽ lại bàn cờ sau khi Window/DecorView layout xong. Trong `OverlayManager.java`, bổ sung cơ chế `boardView.post(...)` nếu bàn cờ chưa kịp layout (`boardW <= 0`) khi resume, đảm bảo vẽ lại overlay ngay khi sẵn sàng.
    - Đã phát hành Release **`v2.0.2`** chứa file `patches-2.0.2.mpp` lên GitHub.
+
+---
+
+## 3. Trạng Thái Hiện Tại & Checklist Kiểm Thử (Cho Phiên Sau / Ngày Mai)
+- **Phiên bản mới nhất trên GitHub**: `v2.0.2` (commit `fb7efcf`, tag `v2.0.2`).
+- **File tải bundle**: `https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.2/patches-2.0.2.mpp`
+- **Thao tác cài đặt trước khi test**:
+  1. Mở app **Morphe Manager** trên điện thoại.
+  2. Vào tab Nguồn (Sources) -> Bấm **Refresh** (Làm mới) để Morphe nhận diện bản patch `2.0.2`.
+  3. Chọn APK `Chess.com 4.10.20-googleplay` -> Bấm Patch lại và cài đặt đè hoặc cài mới.
+- **Checklist Kiểm Thử Cần Test**:
+  - [ ] **Game Review Real**: Sau khi chơi xong trận (hoặc mở ván cờ cũ trong kho lưu trữ), bấm **Game Review** -> Xác nhận chạy bình thường bằng server Chess.com, không bị crash `NoSuchMethodError: getLocalAnalysisFlowForConfig`.
+  - [ ] **Nước 0 & Nhận Diện Quân Trắng**: Vừa vào ván cờ mới (khi người chơi cầm quân Trắng), bật chế độ "Chỉ hiện bên mình" (`mySideOnly`) -> Xác nhận mũi tên gợi ý và thanh eval hiện ngay lập tức ở move 0 mà không cần phải đi trước 1 nước.
+  - [ ] **Khôi Phục Mũi Tên Khi Đa Nhiệm**: Đang trong ván cờ đến lượt mình (đang có mũi tên) -> Bấm nút Home thoát ra màn hình chính điện thoại -> Chuyển lại vào app Chess.com -> Xác nhận mũi tên tự động vẽ lại đầy đủ trên bàn cờ, không bị mất.
+  - [ ] **Né Mũi Tên Trùng (Lane Separation)**: Kiểm tra các thế cờ có nhiều nước đi trùng đích / trùng điểm xuất phát / ngược chiều xem mũi tên có né nhau song song theo cơ chế `perpOffset` hay không.
+  - [ ] **Mũi Tên Hiểm Họa Gốc Chess.com**: Bật "Hiểm hoạ" trong menu -> Xác nhận hiện mũi tên vector màu đỏ native gốc của Chess.com.
+  - [ ] **Bảng Màu Cyber Palette**: Vào menu cài đặt Tab VISUAL -> Đổi màu cho các bậc 1..5 -> Xác nhận mũi tên đổi màu chuẩn theo bảng màu đã chọn.
+  - [ ] **Engine Luôn Hoạt Động**: Tab ENGINE kiểm tra Depth và ELO luôn chạy song song và nằm sát nhau.
