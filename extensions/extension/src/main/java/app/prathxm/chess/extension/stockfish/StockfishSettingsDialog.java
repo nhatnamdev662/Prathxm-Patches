@@ -361,6 +361,12 @@ public class StockfishSettingsDialog {
                 StockfishSettings.isMateAnnouncementEnabled(activity),
                 density, activity);
 
+        // Bảng màu mũi tên gợi ý Cyber Luxury
+        LinearLayout paletteCard = createGlassCard(activity, density);
+        panelVisual.addView(paletteCard);
+
+        addArrowPaletteSection(paletteCard, density, activity);
+
         // ─── TAB 3: ENGINE (Sức mạnh & Phân loại) ───
         final LinearLayout panelEngine = new LinearLayout(activity);
         panelEngine.setOrientation(LinearLayout.VERTICAL);
@@ -370,21 +376,13 @@ public class StockfishSettingsDialog {
         LinearLayout engineCard = createGlassCard(activity, density);
         panelEngine.addView(engineCard);
 
-        // Độ sâu phân tích (Depth) gom chung với Elo trong Tab Engine
+        // Độ sâu phân tích (Depth) và Elo luôn hoạt động và nằm liền kề sát nhau
         int currentDepth = StockfishSettings.getDepth(activity);
         final String depthPrefix = I18n.get(activity, "depth");
         final SeekBar depthSeekBar = addGlassSeekBarWithBadge(engineCard, depthPrefix,
                 String.valueOf(currentDepth),
                 currentDepth - 1, StockfishSettings.MAX_DEPTH - 1, 1,
                 I18n.get(activity, "depth_hint"),
-                density, activity);
-
-        addCardSeparator(engineCard, density);
-
-        final CyberSwitchView eloSwitch = addCyberSwitchRow(engineCard,
-                I18n.get(activity, "limit_strength"),
-                null,
-                StockfishSettings.isLimitStrength(activity),
                 density, activity);
 
         addCardSeparator(engineCard, density);
@@ -396,13 +394,6 @@ public class StockfishSettingsDialog {
                 currentElo - 1320, 3190 - 1320, 1320,
                 I18n.get(activity, "elo_hint"),
                 density, activity);
-
-        eloSeekBar.setEnabled(eloSwitch.isChecked());
-        eloSeekBar.setAlpha(eloSwitch.isChecked() ? 1f : 0.4f);
-        eloSwitch.setOnCheckedChangeListener((switchView, isChecked) -> {
-            eloSeekBar.setEnabled(isChecked);
-            eloSeekBar.setAlpha(isChecked ? 1f : 0.4f);
-        });
 
         addCardSeparator(engineCard, density);
 
@@ -580,7 +571,7 @@ public class StockfishSettingsDialog {
             StockfishSettings.setDepth(activity, Math.max(1, depthSeekBar.getProgress() + 1));
             StockfishSettings.setMultiPV(activity, Math.max(1, pvSeekBar.getProgress() + 1));
             StockfishSettings.setMySideOnly(activity, !oppArrowsSwitch.isChecked());
-            StockfishSettings.setLimitStrength(activity, eloSwitch.isChecked());
+            StockfishSettings.setLimitStrength(activity, true);
             StockfishSettings.setElo(activity, 1320 + eloSeekBar.getProgress());
             StockfishSettings.setPremiumEnabled(activity, true);
             StockfishSettings.setArrowsVisible(activity, arrowsSwitch.isChecked());
@@ -868,5 +859,147 @@ public class StockfishSettingsDialog {
         float g = Color.green(from) * inverseRatio + Color.green(to) * ratio;
         float b = Color.blue(from) * inverseRatio + Color.blue(to) * ratio;
         return Color.argb((int) a, (int) r, (int) g, (int) b);
+    }
+
+    private static void addArrowPaletteSection(LinearLayout layout, float density, Activity activity) {
+        // Title Row
+        TextView titleTv = new TextView(activity);
+        titleTv.setText(I18n.get(activity, "arrow_palette_title"));
+        titleTv.setTextColor(COLOR_TEXT_PRIMARY);
+        titleTv.setTextSize(13.5f);
+        titleTv.setTypeface(Typeface.create("sans-serif-medium", Typeface.BOLD));
+        titleTv.setPadding((int) (4 * density), (int) (2 * density), (int) (4 * density), (int) (2 * density));
+        layout.addView(titleTv);
+
+        TextView hintTv = new TextView(activity);
+        hintTv.setText(I18n.get(activity, "arrow_palette_hint"));
+        hintTv.setTextColor(COLOR_TEXT_MUTED);
+        hintTv.setTextSize(10.5f);
+        hintTv.setPadding((int) (4 * density), 0, (int) (4 * density), (int) (8 * density));
+        layout.addView(hintTv);
+
+        // 5 Tiers Color Rows
+        for (int t = 1; t <= 5; t++) {
+            final int tier = t;
+            final int currentColor = StockfishSettings.getArrowTierColor(activity, tier);
+
+            LinearLayout row = new LinearLayout(activity);
+            row.setOrientation(LinearLayout.HORIZONTAL);
+            row.setGravity(Gravity.CENTER_VERTICAL);
+            row.setPadding((int) (4 * density), (int) (6 * density), (int) (4 * density), (int) (6 * density));
+
+            TextView tierLabel = new TextView(activity);
+            tierLabel.setText(I18n.get(activity, "tier_" + tier));
+            tierLabel.setTextColor(COLOR_TEXT_SECONDARY);
+            tierLabel.setTextSize(12.5f);
+            tierLabel.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
+            LinearLayout.LayoutParams lpText = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1.0f);
+            tierLabel.setLayoutParams(lpText);
+            row.addView(tierLabel);
+
+            // Cyber Color Swatch Box
+            final View colorBox = new View(activity);
+            int boxSize = (int) (28 * density);
+            LinearLayout.LayoutParams lpBox = new LinearLayout.LayoutParams(boxSize, boxSize);
+            colorBox.setLayoutParams(lpBox);
+
+            final GradientDrawable boxBg = new GradientDrawable();
+            boxBg.setColor(currentColor);
+            boxBg.setCornerRadius(8 * density);
+            boxBg.setStroke((int) (1.5f * density), 0xFFFFFFFF);
+            colorBox.setBackground(boxBg);
+            row.addView(colorBox);
+
+            row.setClickable(true);
+            row.setOnClickListener(v -> {
+                HapticHelper.pop(activity, v);
+                showColorPickerDialog(activity, tier, colorBox, boxBg, density);
+            });
+
+            layout.addView(row);
+            if (t < 5) {
+                addCardSeparator(layout, density);
+            }
+        }
+    }
+
+    private static void showColorPickerDialog(Activity activity, int tier, View colorBox, GradientDrawable boxBg, float density) {
+        final Dialog pickerDialog = new Dialog(activity);
+        pickerDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+
+        final GradientDrawable bg = new GradientDrawable();
+        bg.setColor(COLOR_BG_PANEL);
+        bg.setCornerRadius(18 * density);
+        bg.setStroke((int) (1.2f * density), COLOR_ACCENT_BLUE);
+        pickerDialog.getWindow().setBackgroundDrawable(bg);
+
+        LinearLayout root = new LinearLayout(activity);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setPadding((int) (18 * density), (int) (16 * density), (int) (18 * density), (int) (16 * density));
+
+        TextView title = new TextView(activity);
+        title.setText(I18n.get(activity, "choose_color") + " - " + I18n.get(activity, "tier_" + tier));
+        title.setTextColor(COLOR_TEXT_PRIMARY);
+        title.setTextSize(14.5f);
+        title.setTypeface(Typeface.create("sans-serif-medium", Typeface.BOLD));
+        title.setGravity(Gravity.CENTER);
+        root.addView(title);
+
+        addDialogSpacer(root, 14, density);
+
+        // Predefined Cyber Palette Swatches
+        final int[][] presetColors = {
+                {0xFFF0B84B, 0xFFFFB300, 0xFFFF7043, 0xFFFF5252}, // Warm: Gold, Amber, Orange, Coral
+                {0xFF58B8FF, 0xFF00E5FF, 0xFF2979FF, 0xFF00B0FF}, // Cyber Blue & Cyan
+                {0xFF34D399, 0xFF00E676, 0xFF76FF03, 0xFF1DE9B6}, // Neon Green & Mint
+                {0xFFC084FC, 0xFFE040FB, 0xFFFF4081, 0xFFD500F9}, // Cyber Purple & Magenta
+                {0xFFD9DDE6, 0xFFB0BEC5, 0xFFECEFF1, 0xFFFFFFFF}  // Silver & Platinum White
+        };
+
+        for (int[] rowColors : presetColors) {
+            LinearLayout row = new LinearLayout(activity);
+            row.setOrientation(LinearLayout.HORIZONTAL);
+            row.setGravity(Gravity.CENTER);
+            row.setPadding(0, (int) (4 * density), 0, (int) (4 * density));
+
+            for (final int c : rowColors) {
+                View swatch = new View(activity);
+                int size = (int) (36 * density);
+                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(size, size);
+                lp.setMargins((int) (5 * density), 0, (int) (5 * density), 0);
+                swatch.setLayoutParams(lp);
+
+                GradientDrawable sBg = new GradientDrawable();
+                sBg.setColor(c);
+                sBg.setCornerRadius(999 * density);
+                sBg.setStroke((int) (1.2f * density), 0x55FFFFFF);
+                swatch.setBackground(sBg);
+
+                swatch.setOnClickListener(v -> {
+                    HapticHelper.pop(activity, v);
+                    StockfishSettings.setArrowTierColor(activity, tier, c);
+                    boxBg.setColor(c);
+                    colorBox.invalidate();
+                    pickerDialog.dismiss();
+                });
+
+                row.addView(swatch);
+            }
+            root.addView(row);
+        }
+
+        addDialogSpacer(root, 10, density);
+
+        TextView cancelBtn = new TextView(activity);
+        cancelBtn.setText(I18n.get(activity, "cancel"));
+        cancelBtn.setTextColor(COLOR_TEXT_MUTED);
+        cancelBtn.setTextSize(13);
+        cancelBtn.setGravity(Gravity.CENTER);
+        cancelBtn.setPadding(0, (int) (8 * density), 0, (int) (8 * density));
+        cancelBtn.setOnClickListener(v -> pickerDialog.dismiss());
+        root.addView(cancelBtn);
+
+        pickerDialog.setContentView(root);
+        pickerDialog.show();
     }
 }

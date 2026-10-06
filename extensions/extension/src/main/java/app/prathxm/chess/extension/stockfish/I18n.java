@@ -95,6 +95,22 @@ public class I18n {
                 return isVi ? "Liên hệ Telegram: @nncutett" : "Telegram: @nncutett";
             case "open_telegram":
                 return isVi ? "Mở Telegram @nncutett" : "Open Telegram @nncutett";
+            case "arrow_palette_title":
+                return isVi ? "Bảng màu mũi tên gợi ý" : "Arrow Color Palette";
+            case "arrow_palette_hint":
+                return isVi ? "Chạm vào ô màu để đổi màu cho từng thứ hạng gợi ý." : "Tap color box to customize colors for each candidate tier.";
+            case "tier_1":
+                return isVi ? "Nước 1 (Tối ưu)" : "Move 1 (Best)";
+            case "tier_2":
+                return isVi ? "Nước 2" : "Move 2";
+            case "tier_3":
+                return isVi ? "Nước 3" : "Move 3";
+            case "tier_4":
+                return isVi ? "Nước 4" : "Move 4";
+            case "tier_5":
+                return isVi ? "Nước 5" : "Move 5";
+            case "choose_color":
+                return isVi ? "Chọn màu" : "Pick Color";
             default:
                 return key;
         }

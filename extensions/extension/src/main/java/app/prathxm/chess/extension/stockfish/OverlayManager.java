@@ -27,7 +27,7 @@ import java.util.List;
 public class OverlayManager {
     private static final String TAG = "OverlayManager";
 
-    public static void updateArrowOverlay(final List<String> moves, final String threat, final Object stateImpl) {
+    public static void updateArrowOverlay(final List<String> moves, final Object stateImpl) {
         new Handler(Looper.getMainLooper()).post(new Runnable() {
             @Override
             public void run() {
@@ -69,9 +69,6 @@ public class OverlayManager {
                                 list.add(new ArrowOverlayView.ArrowData(m, i + 1, false));
                             }
                         }
-                    }
-                    if (threat != null && threat.matches("^[a-h][1-8][a-h][1-8][qrbn]?$")) {
-                        list.add(new ArrowOverlayView.ArrowData(threat, 1, true));
                     }
 
                     if (list.isEmpty()) {

@@ -144,11 +144,41 @@ public class ArrowOverlayView extends View {
         // Draw in reverse order (Tier 5 first, Tier 1 last so Tier 1 is on top)
         for (int i = arrows.size() - 1; i >= 0; i--) {
             ArrowData arrow = arrows.get(i);
-            drawSingleArrow(canvas, arrow, sqSize);
+            float perpOffset = computePerpOffset(i, sqSize);
+            drawSingleArrow(canvas, arrow, sqSize, perpOffset);
         }
     }
 
-    private void drawSingleArrow(Canvas canvas, ArrowData arrow, float sqSize) {
+    /**
+     * Compute orthogonal lane separation (perpOffset) matching NNVC extension
+     * so concurrent arrows sharing paths, opposite directions, or common squares don't overlap.
+     */
+    private float computePerpOffset(int currentIndex, float sqSize) {
+        if (currentIndex <= 0 || currentIndex >= arrows.size()) return 0f;
+        ArrowData current = arrows.get(currentIndex);
+        float offset = 0f;
+
+        for (int j = 0; j < currentIndex; j++) {
+            ArrowData prev = arrows.get(j);
+            boolean sameDirect = current.from.equals(prev.from) && current.to.equals(prev.to);
+            boolean opposite   = current.from.equals(prev.to)   && current.to.equals(prev.from);
+            boolean sameTarget = current.to.equals(prev.to);
+            boolean sameSource = current.from.equals(prev.from);
+
+            if (sameDirect) {
+                offset += sqSize * 0.12f;
+            } else if (opposite) {
+                offset += sqSize * 0.10f;
+            } else if (sameTarget) {
+                offset += (currentIndex % 2 == 1 ? 1 : -1) * sqSize * 0.08f;
+            } else if (sameSource) {
+                offset += (currentIndex % 2 == 1 ? 1 : -1) * sqSize * 0.06f;
+            }
+        }
+        return offset;
+    }
+
+    private void drawSingleArrow(Canvas canvas, ArrowData arrow, float sqSize, float perpOffset) {
         float[] fromCenter = getSquareCenter(arrow.from, flipped, sqSize);
         float[] toCenter   = getSquareCenter(arrow.to,   flipped, sqSize);
         if (fromCenter == null || toCenter == null) return;
@@ -178,15 +208,15 @@ public class ArrowOverlayView extends View {
         Path arrowPath;
         if (isKnight) {
             arrowPath = buildKnightPath(x1, y1, x2, y2, fileDelta, rankDelta,
-                    startOffset, shaftHalf, neckHalf, headHalf, headLen);
+                    startOffset, shaftHalf, neckHalf, headHalf, headLen, perpOffset);
         } else {
             arrowPath = buildStraightPath(x1, y1, x2, y2, len,
-                    startOffset, shaftHalf, neckHalf, headHalf, headLen);
+                    startOffset, shaftHalf, neckHalf, headHalf, headLen, perpOffset);
         }
         if (arrowPath == null) return;
 
-        // Color computation matching NNVC extension
-        int[] rawRgb = getBaseRgb(arrow.tier, arrow.isThreat);
+        // Color computation matching NNVC extension with custom tier palette
+        int[] rawRgb = getBaseRgb(getContext(), arrow.tier, arrow.isThreat);
         int[] rgb = (arrow.tier == 2) ? tint(rawRgb, 0.12f)
                 : (arrow.tier >= 3) ? tint(rawRgb, 0.30f)
                 : rawRgb;
@@ -230,7 +260,7 @@ public class ArrowOverlayView extends View {
 
     private Path buildStraightPath(float x1, float y1, float x2, float y2, float len,
                                    float startOffset, float shaftHalf, float neckHalf,
-                                   float headHalf, float headLen) {
+                                   float headHalf, float headLen, float perpOffset) {
         if (len < 2.0f) return null;
 
         float ux = (x2 - x1) / len;
@@ -238,10 +268,10 @@ public class ArrowOverlayView extends View {
         float px = -uy;
         float py = ux;
 
-        float startX = x1 + ux * startOffset;
-        float startY = y1 + uy * startOffset;
-        float endX = x2;
-        float endY = y2;
+        float startX = x1 + ux * startOffset + px * perpOffset;
+        float startY = y1 + uy * startOffset + py * perpOffset;
+        float endX = x2 + px * perpOffset;
+        float endY = y2 + py * perpOffset;
 
         HeadPoints h = buildHeadPoints(endX, endY, ux, uy, px, py, headLen, headHalf, neckHalf);
 
@@ -264,7 +294,8 @@ public class ArrowOverlayView extends View {
 
     private Path buildKnightPath(float x1, float y1, float x2, float y2,
                                  int fileDelta, int rankDelta, float startOffset,
-                                 float shaftHalf, float neckHalf, float headHalf, float headLen) {
+                                 float shaftHalf, float neckHalf, float headHalf, float headLen,
+                                 float perpOffset) {
         float elbowX = x1;
         float elbowY = y2;
         if (fileDelta == 2 && rankDelta == 1) {
@@ -278,8 +309,8 @@ public class ArrowOverlayView extends View {
         float u1x = s1dx / s1len, u1y = s1dy / s1len;
         float p1x = -u1y, p1y = u1x;
 
-        float startX = x1 + u1x * startOffset;
-        float startY = y1 + u1y * startOffset;
+        float startX = x1 + u1x * startOffset + p1x * perpOffset;
+        float startY = y1 + u1y * startOffset + p1y * perpOffset;
 
         float s2dx = x2 - elbowX, s2dy = y2 - elbowY;
         float s2len = (float) Math.hypot(s2dx, s2dy);
@@ -287,17 +318,23 @@ public class ArrowOverlayView extends View {
         float u2x = s2dx / s2len, u2y = s2dy / s2len;
         float p2x = -u2y, p2y = u2x;
 
-        HeadPoints h = buildHeadPoints(x2, y2, u2x, u2y, p2x, p2y, headLen, headHalf, neckHalf);
+        float endX = x2 + p2x * perpOffset;
+        float endY = y2 + p2y * perpOffset;
+
+        HeadPoints h = buildHeadPoints(endX, endY, u2x, u2y, p2x, p2y, headLen, headHalf, neckHalf);
 
         float leftStartX  = startX + p1x * shaftHalf;
         float leftStartY  = startY + p1y * shaftHalf;
         float rightStartX = startX - p1x * shaftHalf;
         float rightStartY = startY - p1y * shaftHalf;
 
+        float shiftedElbowX = elbowX + p1x * perpOffset;
+        float shiftedElbowY = elbowY + p1y * perpOffset;
+
         float[] leftElbow = lineIntersect(leftStartX, leftStartY, u1x, u1y,
-                elbowX + p2x * shaftHalf, elbowY + p2y * shaftHalf, u2x, u2y);
+                shiftedElbowX + p2x * shaftHalf, shiftedElbowY + p2y * shaftHalf, u2x, u2y);
         float[] rightElbow = lineIntersect(rightStartX, rightStartY, u1x, u1y,
-                elbowX - p2x * shaftHalf, elbowY - p2y * shaftHalf, u2x, u2y);
+                shiftedElbowX - p2x * shaftHalf, shiftedElbowY - p2y * shaftHalf, u2x, u2y);
 
         Path p = new Path();
         p.moveTo(leftStartX, leftStartY);
@@ -349,23 +386,17 @@ public class ArrowOverlayView extends View {
         return new float[]{cx, cy};
     }
 
-    private static int[] getBaseRgb(int tier, boolean isThreat) {
+    private static int[] getBaseRgb(Context context, int tier, boolean isThreat) {
         if (isThreat) {
             return new int[]{239, 68, 68}; // #EF4444 (Danger Red)
         }
-        switch (tier) {
-            case 1:
-                return new int[]{240, 184, 75}; // #F0B84B (Gold/Amber)
-            case 2:
-                return new int[]{88, 184, 255};  // #58B8FF (Sky Blue)
-            case 3:
-                return new int[]{217, 221, 230}; // #D9DDE6 (Cool Silver)
-            case 4:
-                return new int[]{192, 132, 252}; // #C084FC (Lavender Purple)
-            case 5:
-            default:
-                return new int[]{52, 211, 153};  // #34D399 (Mint Emerald)
-        }
+        int color = (context != null)
+                ? StockfishSettings.getArrowTierColor(context, tier)
+                : StockfishSettings.DEFAULT_TIER_COLORS[Math.max(1, Math.min(5, tier)) - 1];
+        int r = (color >> 16) & 0xFF;
+        int g = (color >> 8) & 0xFF;
+        int b = color & 0xFF;
+        return new int[]{r, g, b};
     }
 
     private static int clamp(int v) {

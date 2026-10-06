@@ -119,11 +119,11 @@ public class StockfishSettings {
     }
 
     public static boolean isLimitStrength(Context context) {
-        return getPrefs(context).getBoolean(KEY_LIMIT_STRENGTH, false);
+        return true;
     }
 
     public static void setLimitStrength(Context context, boolean limit) {
-        getPrefs(context).edit().putBoolean(KEY_LIMIT_STRENGTH, limit).apply();
+        getPrefs(context).edit().putBoolean(KEY_LIMIT_STRENGTH, true).apply();
     }
 
     public static int getElo(Context context) {
@@ -145,11 +145,31 @@ public class StockfishSettings {
     }
 
     public static int getArrowColor(Context context) {
-        return getPrefs(context).getInt(KEY_ARROW_COLOR, 0xFF00C853); // Default Green
+        return getArrowTierColor(context, 1);
     }
 
     public static void setArrowColor(Context context, int color) {
-        getPrefs(context).edit().putInt(KEY_ARROW_COLOR, color).apply();
+        setArrowTierColor(context, 1, color);
+    }
+
+    private static final String KEY_ARROW_COLOR_PREFIX = "arrow_color_tier_";
+    public static final int[] DEFAULT_TIER_COLORS = {
+            0xFFF0B84B, // Tier 1: Gold / Amber
+            0xFF58B8FF, // Tier 2: Sky Blue
+            0xFFD9DDE6, // Tier 3: Cool Silver
+            0xFFC084FC, // Tier 4: Lavender Purple
+            0xFF34D399  // Tier 5: Mint Emerald
+    };
+
+    public static int getArrowTierColor(Context context, int tier) {
+        int index = Math.max(1, Math.min(5, tier)) - 1;
+        int defaultColor = DEFAULT_TIER_COLORS[index];
+        return getPrefs(context).getInt(KEY_ARROW_COLOR_PREFIX + tier, defaultColor);
+    }
+
+    public static void setArrowTierColor(Context context, int tier, int color) {
+        int t = Math.max(1, Math.min(5, tier));
+        getPrefs(context).edit().putInt(KEY_ARROW_COLOR_PREFIX + t, color).apply();
     }
 
     private static final String KEY_SHOW_EVAL_BAR = "show_eval_bar";

@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-10-06T21:35:00",
-  "description": "## [2.0.0] (2026-10-06)\n\n### ⚡ NNVC v2.0 — 100% Cyber Extension Arrows & Visual Overhaul\n\n* **Mũi tên chuẩn 100% Extension:** Tự vẽ mũi tên Canvas chuẩn đồ họa NNVC với dải màu chuyển sắc LinearGradient, viền phản quang trắng và hiệu ứng phát sáng Neon Cyber Glow.\n* **Bảng màu phân tầng:** Nước tốt nhất Vàng Cyber #F0B84B, Nước 2 Xanh băng #58B8FF, Nước 3 Bạc #D9DDE6, Nước 4 Tím #C084FC, Nước 5 Xanh ngọc #34D399, Hiểm hoạ Đỏ neon #EF4444.\n* **Độ mờ chuẩn NNVC:** Tier 1 (0.94), Tier 2 (0.82), Tier 3+ (0.65), Hiểm họa (0.92).\n* **Nước đi quân Mã (Knight):** Đường gấp khúc chữ L bo góc mượt mà chính xác toạ độ.\n* **Author:** NNVC (@nncutett)",
-  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.0/patches-2.0.0.mpp",
+  "created_at": "2026-10-06T21:55:00",
+  "description": "## [2.0.1] (2026-10-06)\n\n### ⚡ NNVC v2.0.1 — Lane Separation, Native Threat Arrows, Always-Active Engine & Custom Color Palette\n\n* **Né mũi tên trùng (Lane Separation):** Cơ chế tính toán độ lệch trực giao perpOffset y chang Extension NNVC, triệt tiêu hoàn toàn trùng đè khi nhiều mũi tên cùng đích, cùng xuất phát, hay ngược chiều.\n* **Mũi tên hiểm hoạ chuẩn gốc Chess.com:** Giữ nguyên style vector native màu đỏ gốc của Chess.com qua HintArrow (ArrowInjector), độc lập hoàn toàn với Engine Overlay.\n* **Engine luôn hoạt động:** Tab Engine bỏ nút công tắc thừa, Depth và ELO luôn luôn hoạt động song song và đặt liền kề sát nhau.\n* **Bảng màu Cyber Palette tùy chỉnh:** Tự do tùy chỉnh màu sắc cho từng bậc nước đi (Nước 1 đến 5) ngay trong Menu Cài đặt Tab VISUAL với giao diện bảng màu Cyber Luxury.\n* **Author:** NNVC (@nncutett)",
+  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.1/patches-2.0.1.mpp",
   "signature_download_url": "",
-  "version": "2.0.0"
+  "version": "2.0.1"
 }

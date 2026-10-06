@@ -449,8 +449,16 @@ public class StockfishExtension {
             String sig = fen + '|' + (showArrows ? result.moves : "") + '|' + (showThreat ? result.ponder : "");
             if (!sig.equals(lastArrowSignature)) {
                 lastArrowSignature = sig;
-                ArrowInjector.clearEngineArrows(getStateImpl());
-                OverlayManager.updateArrowOverlay(movesToInject, threatToInject, getStateImpl());
+                if (showThreat && threatToInject != null) {
+                    ArrowInjector.injectThreatArrow(context, getStateImpl(), threatToInject);
+                } else {
+                    ArrowInjector.clearEngineArrows(getStateImpl());
+                }
+                if (showArrows && !movesToInject.isEmpty()) {
+                    OverlayManager.updateArrowOverlay(movesToInject, getStateImpl());
+                } else {
+                    OverlayManager.hideArrowOverlay();
+                }
             }
         } else if (isFinal) {
             lastArrowSignature = null;
