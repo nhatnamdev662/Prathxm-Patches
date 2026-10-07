@@ -213,6 +213,7 @@ public class TorchEngine {
                     "        const workerCode = atob('" + getWorkerScriptBase64() + "');\n" +
                     "        const blob = new Blob([workerCode], { type: 'application/javascript' });\n" +
                     "        const worker = new Worker(URL.createObjectURL(blob));\n" +
+                    "        window._torchWorker = worker;\n" +
                     "        worker.onmessage = function(e) {\n" +
                     "            const data = e.data;\n" +
                     "            if (data === '__TORCH_READY__') {\n" +
@@ -293,6 +294,24 @@ public class TorchEngine {
             } catch (Throwable t) {
                 log("[EVAL JS ERROR] " + t.getMessage());
                 Log.e(TAG, "evaluateJavascript failed: " + t.getMessage());
+            }
+        });
+    }
+
+    public void updateRatings(int whiteElo, int blackElo) {
+        if (webView == null) return;
+        final int w = Math.max(100, Math.min(3800, whiteElo));
+        final int b = Math.max(100, Math.min(3800, blackElo));
+        log("[TORCH ELO SYNC] Cập nhật WhiteElo=" + w + ", BlackElo=" + b);
+        mainHandler.post(() -> {
+            try {
+                String js = "if (window._torchWorker) {\n" +
+                        "  window._torchWorker.postMessage('setoption name WhiteElo value " + w + "');\n" +
+                        "  window._torchWorker.postMessage('setoption name BlackElo value " + b + "');\n" +
+                        "}";
+                webView.evaluateJavascript(js, null);
+            } catch (Throwable t) {
+                log("[TORCH ELO ERROR] " + t.getMessage());
             }
         });
     }
