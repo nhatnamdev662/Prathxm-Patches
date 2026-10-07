@@ -346,191 +346,31 @@ public class MoveClassifier {
                             });
                         }
                     } else {
-                        // Torch was unable to evaluate (e.g. out app mid-game): Fall back immediately to exact Java Stockfish Math
-                        TorchEngine.log("[TORCH FALLBACK] Torch returned null -> Using Java Stockfish ReviewMath calculation");
-                        classifyWithJavaModel(context, finalPrevKey, finalResult, finalUci, finalWhiteMoved, currentAct, transitionKey);
+                        // 100% phụ thuộc vào Torch: Không chuyển sang Stockfish, báo lỗi rõ ràng nếu thiếu lịch sử startpos
+                        TorchEngine.log("[TORCH CLASSIFIER ERROR] Không thể phân loại: Torch CEE trả về null (Thiếu chuỗi startpos hoặc lỗi WebAssembly)");
+                        if (currentAct != null) {
+                            boolean isVi = "vi".equalsIgnoreCase(StockfishSettings.getLanguage(currentAct));
+                            final String errText = isVi ? "⚠️ [Torch Coach] Không thể phân loại (Thiếu lịch sử nước đi)" : "⚠️ [Torch Coach] Classification failed (Missing move history)";
+                            currentAct.runOnUiThread(() -> {
+                                Toast.makeText(currentAct, errText, Toast.LENGTH_SHORT).show();
+                            });
+                        }
                     }
                 });
                 return;
             }
 
-            // ── 2. Immediate Java Fallback if Torch is not ready ──
-            classifyWithJavaModel(context, prevKey, currentResult, uciMove, whiteMoved, activity, transition);
-        } catch (Throwable t) {
-            Log.e(TAG, "Error in classifyMoveIfPossible: " + t.getMessage());
-        }
-    }
-
-    private static void classifyWithJavaModel(Context context, String prevKey, StockfishProcess.AnalysisResult currentResult,
-                                              String uciMove, boolean whiteMoved, Activity activity, String transition) {
-        try {
-            Float prevEvalVal = fenToEvalMap.get(prevKey);
-            List<String> prevBestMoves = fenToBestMovesMap.get(prevKey);
-            if (prevEvalVal == null || prevBestMoves == null || prevBestMoves.isEmpty()) return;
-
-            float prevEval = prevEvalVal;
-            float currentEval = currentResult.score;
-            
-            // Same expected-points model as the game review (win probability, mover POV).
-            float winBefore = ReviewMath.win(prevEval, whiteMoved);
-            float winAfter = ReviewMath.win(currentEval, whiteMoved);
-            boolean isBest = !prevBestMoves.isEmpty() && uciMove.equals(prevBestMoves.get(0));
-            boolean deliversMate = currentResult.terminal && currentResult.hasMate;
-            float loss = (isBest || deliversMate) ? 0f : Math.max(0f, winBefore - winAfter);
-
-            // 1. secondGap: win probability difference between line 1 and line 2 (for Great Move)
-            float secondGap = -1f;
-            float[] prevLineScores = fenToLineScoresMap.get(prevKey);
-            if (prevLineScores != null && prevLineScores.length >= 2) {
-                float winL1 = ReviewMath.win(prevLineScores[0], whiteMoved);
-                float winL2 = ReviewMath.win(prevLineScores[1], whiteMoved);
-                secondGap = Math.max(0f, winL1 - winL2);
-            }
-
-            // 2. Parse board before the move
-            char[] beforeBoard = BoardUtil.parseBoard(prevKey);
-
-            // 3. Recapture detection
-            boolean recapture = false;
-            if (lastPlayedUci != null && lastWasCapture) {
-                recapture = BoardUtil.isRecapture(lastPlayedUci, true, uciMove);
-            }
-
-            // 4. Sacrifice detection (engine reply PV after played move)
-            boolean sacrifice = false;
-            List<String> replyPv = (currentResult.pv != null && !currentResult.pv.isEmpty())
-                    ? currentResult.pv
-                    : currentResult.moves;
-            if (beforeBoard != null && replyPv != null && !replyPv.isEmpty()) {
-                sacrifice = BoardUtil.isSacrifice(beforeBoard, whiteMoved, uciMove, replyPv, 4);
-            }
-
-            // 5. Missed mate detection
-            Boolean prevHadMate = fenToMateMap.get(prevKey);
-            boolean prevMoverHadWinningMate = (prevHadMate != null && prevHadMate)
-                    && (whiteMoved ? prevEval > 50f : prevEval < -50f);
-            boolean currentMoverHasWinningMate = currentResult.hasMate
-                    && (whiteMoved ? currentResult.score > 50f : currentResult.score < -50f);
-            boolean missedMate = prevMoverHadWinningMate && !currentMoverHasWinningMate;
-
-            // 6. Forced move detection
-            Integer prevDepth = fenToDepthMap.get(prevKey);
-            boolean forced = false;
-            if (prevBestMoves.size() == 1 && (prevLineScores == null || prevLineScores.length <= 1)
-                    && prevDepth != null && prevDepth >= 10) {
-                forced = true;
-            }
-
-            // 7. Opponent previous loss
-            float oppPrevLoss = lastOppLoss;
-
-            // Compute classification
-            String c = ReviewMath.classify(isBest || deliversMate, forced, loss, winBefore, winAfter,
-                    secondGap, sacrifice, recapture, oppPrevLoss, missedMate);
-
-            // 8. Book move detection: first 16 plies (8 moves each) with theoretical play
-            int ply = fenHistory.size();
-            if (ply <= 16 && (isBest || loss < 0.02f) && ReviewMath.isBookEligible(c) && !sacrifice) {
-                c = ReviewMath.BOOK;
-            }
-
-            // Update state tracking for the next move
-            lastOppLoss = loss;
-            lastPlayedUci = uciMove;
-            if (beforeBoard != null && uciMove.length() >= 4) {
-                int toSq = BoardUtil.square(uciMove, 2);
-                lastWasCapture = (toSq >= 0 && toSq < 64 && beforeBoard[toSq] != '.');
-            } else {
-                lastWasCapture = false;
-            }
-
-            String classification;
-            String emoji;
-            boolean isBlunderOrMistake = false;
-            boolean isVi = "vi".equalsIgnoreCase(StockfishSettings.getLanguage(activity != null ? activity : context));
-
-            switch (c) {
-                case ReviewMath.BRILLIANT:
-                    classification = isVi ? "Nước cờ thiên tài (Brilliant)" : "Brilliant Move";
-                    emoji = "!!";
-                    break;
-                case ReviewMath.GREAT:
-                    classification = isVi ? "Nước cờ xuất sắc (Great)" : "Great Move";
-                    emoji = "!";
-                    break;
-                case ReviewMath.BEST:
-                    classification = isVi ? "Nước cờ tốt nhất (Best)" : "Best Move";
-                    emoji = "★";
-                    break;
-                case ReviewMath.EXCELLENT:
-                    classification = isVi ? "Nước cờ tuyệt vời (Excellent)" : "Excellent";
-                    emoji = "👍";
-                    break;
-                case ReviewMath.GOOD:
-                    classification = isVi ? "Nước cờ hay (Good)" : "Good Move";
-                    emoji = "✓";
-                    break;
-                case ReviewMath.BOOK:
-                    classification = isVi ? "Nước cờ khai cuộc (Book)" : "Book Move";
-                    emoji = "📖";
-                    break;
-                case ReviewMath.INACCURACY:
-                    classification = isVi ? "Thiếu chính xác (Inaccuracy)" : "Inaccuracy";
-                    emoji = "?!";
-                    break;
-                case ReviewMath.MISTAKE:
-                    classification = isVi ? "Sai lầm (Mistake)" : "Mistake";
-                    emoji = "?";
-                    isBlunderOrMistake = true;
-                    break;
-                case ReviewMath.BLUNDER:
-                    classification = isVi ? "Sai lầm nghiêm trọng (Blunder)" : "Blunder";
-                    emoji = "??";
-                    isBlunderOrMistake = true;
-                    break;
-                case ReviewMath.MISS:
-                    classification = isVi ? "Bỏ lỡ cơ hội (Miss)" : "Miss";
-                    emoji = "✕";
-                    isBlunderOrMistake = true;
-                    break;
-                case ReviewMath.MISSED_WIN:
-                    classification = isVi ? "Bỏ lỡ cơ hội thắng (Missed Win)" : "Missed Win";
-                    emoji = "✕";
-                    isBlunderOrMistake = true;
-                    break;
-                case ReviewMath.FORCED:
-                    classification = isVi ? "Nước bắt buộc (Forced)" : "Forced Move";
-                    emoji = "➔";
-                    break;
-                default:
-                    classification = isVi ? "Nước cờ hay (Good)" : "Good Move";
-                    emoji = "✓";
-                    break;
-            }
-
-            String lossText = (loss > 0.005f) ? String.format(java.util.Locale.US, " [-%.0f%%]", loss * 100f) : "";
-            final String toastText = "[Torch] [" + emoji + "] " + classification + " (" + uciMove + ")" + lossText;
-            final boolean triggerVibrate = isBlunderOrMistake;
-
+            // Torch Engine chưa sẵn sàng: Báo lỗi và ghi log, tuyệt đối không gọi SF
+            TorchEngine.log("[TORCH CLASSIFIER ERROR] Torch Engine WASM chưa sẵn sàng!");
             if (activity != null) {
-                classifiedMoves.add(transition);
+                boolean isVi = "vi".equalsIgnoreCase(StockfishSettings.getLanguage(activity));
+                final String notReadyText = isVi ? "⚠️ [Torch Coach] Engine đang khởi động..." : "⚠️ [Torch Coach] Engine initializing...";
                 activity.runOnUiThread(() -> {
-                    Toast.makeText(activity, toastText, Toast.LENGTH_SHORT).show();
-                    
-                    if (triggerVibrate && StockfishSettings.isBlunderAlertsEnabled(activity)) {
-                        Vibrator vibrator = (Vibrator) activity.getSystemService(Context.VIBRATOR_SERVICE);
-                        if (vibrator != null && vibrator.hasVibrator()) {
-                            if (Build.VERSION.SDK_INT >= 26) {
-                                vibrator.vibrate(VibrationEffect.createOneShot(150, VibrationEffect.DEFAULT_AMPLITUDE));
-                            } else {
-                                vibrator.vibrate(150);
-                            }
-                        }
-                    }
+                    Toast.makeText(activity, notReadyText, Toast.LENGTH_SHORT).show();
                 });
             }
         } catch (Throwable t) {
-            Log.e(TAG, "Error in classifyWithJavaModel: " + t.getMessage());
+            Log.e(TAG, "Error in classifyMoveIfPossible: " + t.getMessage());
         }
     }
 

@@ -226,13 +226,15 @@ public class StockfishSettingsDialog {
 
         final TextView tabLive = createTabButton(activity, I18n.get(activity, "tab_live"), true, density);
         final TextView tabEngine = createTabButton(activity, I18n.get(activity, "tab_engine"), false, density);
-        final TextView tabArrows = createTabButton(activity, I18n.get(activity, "tab_arrows"), false, density);
+        final TextView tabCoach = createTabButton(activity, I18n.get(activity, "tab_coach"), false, density);
         final TextView tabVisual = createTabButton(activity, I18n.get(activity, "tab_visual"), false, density);
+        final TextView tabArrows = createTabButton(activity, I18n.get(activity, "tab_arrows"), false, density);
 
         tabNav.addView(tabLive);
         tabNav.addView(tabEngine);
-        tabNav.addView(tabArrows);
+        tabNav.addView(tabCoach);
         tabNav.addView(tabVisual);
+        tabNav.addView(tabArrows);
 
         windowRoot.addView(tabNav);
 
@@ -482,22 +484,6 @@ public class StockfishSettingsDialog {
 
         addCardSeparator(engineCard, density);
 
-        final CyberSwitchView classifSwitch = addCyberSwitchRow(engineCard,
-                I18n.get(activity, "rate_moves"),
-                null,
-                StockfishSettings.isMoveClassificationEnabled(activity),
-                density, activity);
-
-        addCardSeparator(engineCard, density);
-
-        final CyberSwitchView blunderSwitch = addCyberSwitchRow(engineCard,
-                I18n.get(activity, "vibrate_blunder"),
-                I18n.get(activity, "vibrate_hint"),
-                StockfishSettings.isBlunderAlertsEnabled(activity),
-                density, activity);
-
-        addCardSeparator(engineCard, density);
-
         // Reset Settings button
         TextView resetBtn = new TextView(activity);
         resetBtn.setText(I18n.get(activity, "reset_defaults"));
@@ -527,13 +513,92 @@ public class StockfishSettingsDialog {
         });
         engineCard.addView(resetBtn);
 
-        // ─── TAB 3: ARROWS (Thiết Lập Mũi Tên & Bảng Màu) ───
+        // ─── TAB 3: COACH (Torch WebAssembly Coach Engine) ───
+        final LinearLayout panelCoach = new LinearLayout(activity);
+        panelCoach.setOrientation(LinearLayout.VERTICAL);
+        panelCoach.setVisibility(View.GONE);
+        tabContentRoot.addView(panelCoach);
+
+        LinearLayout coachCard = createGlassCard(activity, density);
+        panelCoach.addView(coachCard);
+
+        TextView coachTitle = new TextView(activity);
+        coachTitle.setText("HUẤN LUYỆN VIÊN (TORCH WASM)");
+        coachTitle.setTextColor(COLOR_TEXT_PRIMARY);
+        coachTitle.setTextSize(13.5f);
+        coachTitle.setTypeface(Typeface.create("sans-serif-medium", Typeface.BOLD));
+        coachCard.addView(coachTitle);
+
+        TextView coachSub = new TextView(activity);
+        coachSub.setText("Động cơ phân loại nước đi Torch CEE 26MB (Komodo WebAssembly) độc lập 100%.");
+        coachSub.setTextColor(COLOR_TEXT_MUTED);
+        coachSub.setTextSize(10.5f);
+        coachSub.setPadding(0, (int) (2 * density), 0, (int) (8 * density));
+        coachCard.addView(coachSub);
+
+        final CyberSwitchView classifSwitch = addCyberSwitchRow(coachCard,
+                I18n.get(activity, "rate_moves"),
+                "Phân loại nước đi theo chuẩn Game Review: Brilliant, Great, Best, Blunder...",
+                StockfishSettings.isMoveClassificationEnabled(activity),
+                density, activity);
+
+        addCardSeparator(coachCard, density);
+
+        final CyberSwitchView blunderSwitch = addCyberSwitchRow(coachCard,
+                I18n.get(activity, "vibrate_blunder"),
+                I18n.get(activity, "vibrate_hint"),
+                StockfishSettings.isBlunderAlertsEnabled(activity),
+                density, activity);
+
+        addCardSeparator(coachCard, density);
+
+        LinearLayout coachLogBtn = new LinearLayout(activity);
+        coachLogBtn.setOrientation(LinearLayout.HORIZONTAL);
+        coachLogBtn.setGravity(Gravity.CENTER);
+        coachLogBtn.setPadding(0, (int) (6 * density), 0, (int) (6 * density));
+        coachLogBtn.setClickable(true);
+        coachLogBtn.setOnClickListener(v -> {
+            HapticHelper.pop(activity, v);
+            showDiagnosticLogDialog(activity);
+        });
+
+        TextView coachLogTv = new TextView(activity);
+        coachLogTv.setText("📋 Xem Nhật Ký Chẩn Đoán Torch WASM");
+        coachLogTv.setTextColor(COLOR_ACCENT_CYAN);
+        coachLogTv.setTextSize(12f);
+        coachLogTv.setTypeface(Typeface.create("sans-serif-medium", Typeface.BOLD));
+        coachLogBtn.addView(coachLogTv);
+        coachCard.addView(coachLogBtn);
+
+        // ─── TAB 4: VISUAL (Giao Diện & Lớp Phủ) ───
+        final LinearLayout panelVisual = new LinearLayout(activity);
+        panelVisual.setOrientation(LinearLayout.VERTICAL);
+        panelVisual.setVisibility(View.GONE);
+        tabContentRoot.addView(panelVisual);
+
+        LinearLayout visualCard = createGlassCard(activity, density);
+        panelVisual.addView(visualCard);
+
+        final CyberSwitchView evalBarSwitch = addCyberSwitchRow(visualCard,
+                I18n.get(activity, "eval_bar"),
+                I18n.get(activity, "eval_bar_hint"),
+                StockfishSettings.isEvalBarEnabled(activity),
+                density, activity);
+
+        addCardSeparator(visualCard, density);
+
+        final CyberSwitchView mateSwitch = addCyberSwitchRow(visualCard,
+                I18n.get(activity, "forced_mates"),
+                I18n.get(activity, "forced_mates_hint"),
+                StockfishSettings.isMateAnnouncementEnabled(activity),
+                density, activity);
+
+        // ─── TAB 5: ARROWS (Thiết Lập Mũi Tên & Bảng Màu) ───
         final LinearLayout panelArrows = new LinearLayout(activity);
         panelArrows.setOrientation(LinearLayout.VERTICAL);
         panelArrows.setVisibility(View.GONE);
         tabContentRoot.addView(panelArrows);
 
-        // Card: Thiết Lập Mũi Tên
         LinearLayout arrowCard = createGlassCard(activity, density);
         panelArrows.addView(arrowCard);
 
@@ -555,7 +620,6 @@ public class StockfishSettingsDialog {
 
         addCardSeparator(arrowCard, density);
 
-        // Mũi Tên Đối Thủ
         final CyberSwitchView oppArrowsSwitch = addCyberSwitchRow(arrowCard,
                 I18n.get(activity, "opponent_arrows"),
                 I18n.get(activity, "opponent_arrows_hint"),
@@ -564,71 +628,49 @@ public class StockfishSettingsDialog {
 
         addCardSeparator(arrowCard, density);
 
-        // Mũi Tên Đe Dọa
         final CyberSwitchView threatSwitch = addCyberSwitchRow(arrowCard,
                 I18n.get(activity, "threat_arrow"),
                 I18n.get(activity, "threat_arrow_hint"),
                 StockfishSettings.isThreatArrowsEnabled(activity),
                 density, activity);
 
-        // Card: Bảng Màu Mũi Tên Gợi Ý Cyber Luxury
         LinearLayout paletteCard = createGlassCard(activity, density);
         panelArrows.addView(paletteCard);
-
         addArrowPaletteSection(paletteCard, density, activity);
-
-        // ─── TAB 4: VISUAL (Giao Diện & Lớp Phủ) ───
-        final LinearLayout panelVisual = new LinearLayout(activity);
-        panelVisual.setOrientation(LinearLayout.VERTICAL);
-        panelVisual.setVisibility(View.GONE);
-        tabContentRoot.addView(panelVisual);
-
-        // Card: Giao Diện
-        LinearLayout visualCard = createGlassCard(activity, density);
-        panelVisual.addView(visualCard);
-
-        final CyberSwitchView evalBarSwitch = addCyberSwitchRow(visualCard,
-                I18n.get(activity, "eval_bar"),
-                I18n.get(activity, "eval_bar_hint"),
-                StockfishSettings.isEvalBarEnabled(activity),
-                density, activity);
-
-        addCardSeparator(visualCard, density);
-
-        final CyberSwitchView mateSwitch = addCyberSwitchRow(visualCard,
-                I18n.get(activity, "forced_mates"),
-                I18n.get(activity, "forced_mates_hint"),
-                StockfishSettings.isMateAnnouncementEnabled(activity),
-                density, activity);
 
         // Tab Switching Click Listeners kèm Hoạt ảnh Fade & Slide mượt mà + Phản hồi rung
         View.OnClickListener tabListener = v -> {
             HapticHelper.tick(activity, v);
             boolean isL = (v == tabLive);
             boolean isE = (v == tabEngine);
-            boolean isA = (v == tabArrows);
+            boolean isC = (v == tabCoach);
             boolean isV = (v == tabVisual);
+            boolean isA = (v == tabArrows);
 
             updateTabStyle(tabLive, isL, density);
             updateTabStyle(tabEngine, isE, density);
-            updateTabStyle(tabArrows, isA, density);
+            updateTabStyle(tabCoach, isC, density);
             updateTabStyle(tabVisual, isV, density);
+            updateTabStyle(tabArrows, isA, density);
 
             if (isL) {
-                switchTabWithAnim(panelLive, panelEngine, panelArrows, panelVisual);
+                switchTabWithAnim(panelLive, panelEngine, panelCoach, panelVisual, panelArrows);
             } else if (isE) {
-                switchTabWithAnim(panelEngine, panelLive, panelArrows, panelVisual);
-            } else if (isA) {
-                switchTabWithAnim(panelArrows, panelLive, panelEngine, panelVisual);
+                switchTabWithAnim(panelEngine, panelLive, panelCoach, panelVisual, panelArrows);
+            } else if (isC) {
+                switchTabWithAnim(panelCoach, panelLive, panelEngine, panelVisual, panelArrows);
+            } else if (isV) {
+                switchTabWithAnim(panelVisual, panelLive, panelEngine, panelCoach, panelArrows);
             } else {
-                switchTabWithAnim(panelVisual, panelLive, panelEngine, panelArrows);
+                switchTabWithAnim(panelArrows, panelLive, panelEngine, panelCoach, panelVisual);
             }
         };
 
         tabLive.setOnClickListener(tabListener);
         tabEngine.setOnClickListener(tabListener);
-        tabArrows.setOnClickListener(tabListener);
+        tabCoach.setOnClickListener(tabListener);
         tabVisual.setOnClickListener(tabListener);
+        tabArrows.setOnClickListener(tabListener);
 
         windowRoot.addView(scrollView);
 

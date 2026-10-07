@@ -15,10 +15,12 @@ public class I18n {
                 return "LIVE";
             case "tab_engine":
                 return "ENGINE";
-            case "tab_arrows":
-                return "ARROWS";
+            case "tab_coach":
+                return "COACH";
             case "tab_visual":
                 return "VISUAL";
+            case "tab_arrows":
+                return "ARROWS";
             case "engine":
                 return isVi ? "Engine" : "Engine";
             case "card_control":

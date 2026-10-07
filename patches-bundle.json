@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-10-07T22:38:00",
-  "description": "## [2.0.17] (2026-10-07)\n\n### ⚡ NNVC v2.0.17 — Dual-layer Fallback: Tự động phân loại chuẩn xác khi vào lại giữa ván cờ\n\n* **Dual-layer Fallback khi Torch trả về null:** Xử lý triệt để tình huống người dùng thoát app vào lại giữa chừng hoặc ván cờ không có lịch sử từ startpos. Tự động chuyển tiếp mượt mà sang ReviewMath Stockfish Java model mà không gây abort hay nhãn mặc định vô nghĩa.\n* **Nhận diện chính xác 100% nhãn:** Phân loại đầy đủ Book, Best, Excellent, Good, Inaccuracy, Mistake, Blunder, Brilliant, Forced kèm phần trăm win probability loss.\n* **Chống dính cache:** Cập nhật phiên bản v2.0.17 mới hoàn toàn để Morphe nạp bundle chính xác.\n* **Author:** NNVC (@nncutett)",
-  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.17/patches-2.0.17.mpp",
+  "created_at": "2026-10-07T22:55:00",
+  "description": "## [2.0.18] (2026-10-07)\n\n### ⚡ NNVC v2.0.18 — Kiến trúc 5 Tab chuẩn Extension & Phân loại nước đi 100% độc lập bằng Torch Coach Engine\n\n* **Chia lại 5 Tab chuẩn 100% Extension:** Đưa toàn bộ cấu trúc giao diện bám sát Extension gồm: `[ LIVE | ENGINE | COACH | VISUAL | ARROWS ]`.\n* **Phân hệ COACH độc lập 100%:** Toàn bộ tính năng phân loại nước đi (Brilliant, Great, Best, Blunder...) do duy nhất Torch CEE 26MB (Komodo WebAssembly) đảm nhiệm. Tuyệt đối không can thiệp hay fallback sang Stockfish.\n* **Chẩn đoán & Báo lỗi trung thực:** Khi Torch chưa sẵn sàng hoặc thiếu chuỗi nước đi startpos, hệ thống ghi log và hiển thị thông báo lỗi rõ ràng thay vì gán nhãn bừa bãi.\n* **Author:** NNVC (@nncutett)",
+  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.18/patches-2.0.18.mpp",
   "signature_download_url": "",
-  "version": "2.0.17"
+  "version": "2.0.18"
 }

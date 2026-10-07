@@ -1,6 +1,6 @@
 # NHẬT KÝ DỰ ÁN & BỘ GHI NHỚ DẶN DÒ (PROJECT MEMORY)
 *Dự án: Chess Mobile - ReVanced Extension Patches cho Chess.com Android*
-*Phiên bản hiện tại: v2.0.17*
+*Phiên bản hiện tại: v2.0.18*
 *Cập nhật lần cuối: 2026-10-07*
 
 ---
@@ -8,7 +8,7 @@
 ## 1. QUY TẮC LÀM VIỆC & DẶN DÒ CỐT LÕI
 1. **QUY TẮC PHIÊN BẢN (BẮT BUỘC SỐNG CÒN)**:
    - **TUYỆT ĐỐI KHÔNG ĐƯỢC TRÙNG PHIÊN BẢN KHI ĐÃ VÁ**: Morphe sẽ bị dính cache cũ nếu dùng lại version đã từng phát hành.
-   - Mỗi lần sửa lỗi hoặc build gói mới, **BẮT BUỘC TĂNG PHIÊN BẢN LÊN** (ví dụ: 2.0.14 -> 2.0.15 -> 2.0.16).
+   - Mỗi lần sửa lỗi hoặc build gói mới, **BẮT BUỘC TĂNG PHIÊN BẢN LÊN** (ví dụ: 2.0.14 -> 2.0.15 -> 2.0.16 -> 2.0.17 -> 2.0.18).
    - **KHÔNG PUSH FILE BUILD .PY HOẶC SCRIPT TẠM LÊN GITHUB**: Tất cả script build/test/python chỉ để chạy local, đã được đưa vào `.gitignore`. Chỉ commit mã nguồn chính thức (Java, Kotlin, metadata JSON, MD).
 2. **Thái độ nghiêm túc tuyệt đối**:
    - Không được để xảy ra bất kỳ lỗi ngớ ngẩn nào (syntax error, escape error, crash, NPE, missing assets).
@@ -21,6 +21,14 @@
    - Tất cả các tính năng (Stockfish UCI, FEN events, MoveClassifier, Torch WASM Engine, Overlays) **BẮT BUỘC** phải ghi log chi tiết kèm timestamp mili-giây vào `TorchEngine.DIAGNOSTIC_LOGS`.
    - Nút **"📋 Xem & Copy Log"** trong Menu cài đặt là công cụ then chốt để người dùng copy log thực tế và phản hồi nhanh nhất.
    - Buffer log duy trì tối thiểu 300 dòng mới nhất để bao quát toàn bộ ván đấu.
+5. **PHÂN HỆ COACH PHỤ THUỘC 100% VÀO TORCH - TUYỆT ĐỐI KHÔNG LIÊN QUAN ĐẾN STOCKFISH**:
+   - Phân loại nước đi (Brilliant, Great, Best, Good, Book, Inaccuracy, Mistake, Blunder...) là nhiệm vụ độc quyền của **Torch CEE 26MB (Komodo WebAssembly)**.
+   - **NẾU KHÔNG PHÂN LOẠI ĐƯỢC THÌ BÁO LỖI RÕ RÀNG**, tuyệt đối không tự ý chuyển sang Stockfish ReviewMath.
+   - Stockfish chỉ làm nhiệm vụ tính toán nước đi tốt nhất (`go depth`), Best Moves, Arrows, Eval Bar trong tab ENGINE.
+6. **CẤU TRÚC GIAO DIỆN BÁM SÁT 100% THEO EXTENSION**:
+   - Mobile bám sát theo cấu trúc của Extension, chia thành đúng 5 Tab theo chuẩn Extension:
+     `[ LIVE | ENGINE | COACH | VISUAL | ARROWS ]`.
+   - Mọi thiết lập của Torch Coach (phân loại nước đi, giọng nói, cảnh báo rung, chẩn đoán log) phải nằm trọn trong tab **COACH**.
 
 ---
 
@@ -113,12 +121,13 @@
       - Tự động duy trì và suy luận toàn bộ danh sách nước đi từ thế cờ ban đầu (`fenHistory` tự động chèn `startpos` nếu trận đấu bắt đầu từ nước 1).
       - Sử dụng chuỗi nước đi tích lũy: `position startpos moves <ALL_PLAYED_MOVES>`.
       - Bổ sung cơ chế Auto-Recover Worker: Tự động khởi động lại Worker sau 1.5s nếu gặp bất kỳ lỗi `RuntimeError: Aborted()` nào để khôi phục trạng thái sạch cho engine.
-- **v2.0.17**:
-  - **Dual-layer Fallback: Khắc phục triệt để lỗi phân loại khi thoát app vào lại giữa chừng (Mid-game Re-entry)**:
-    - **Nguyên nhân cốt lõi**:
-      1. Khi người dùng out app hoặc mở lại ván cờ ở giữa trận (ví dụ nước 4-5), Chess.com chỉ cung cấp FEN hiện tại, không có lịch sử các nước đi trước.
-      2. Nếu gửi lệnh `position startpos moves <nước_hiện_tại>` (ví dụ `position startpos moves f6d5`), nước đi này không thể thực hiện từ bàn cờ ban đầu (`startpos`) -> Komodo/Torch WebAssembly gặp illegal move và dính assertion fail `RuntimeError: Aborted()`, trả về `class=null`.
-    - **Giải pháp triệt để**:
-      - Khi Torch WebAssembly trả về `class=null` hoặc chưa sẵn sàng: Lập tức kích hoạt fallback Java Stockfish Math (`classifyWithJavaModel`) sử dụng toàn bộ thông tin FEN, score evaluation và multiPV từ engine native Stockfish đã có sẵn.
-      - Phân loại chính xác 100% tất cả các cấp độ: Brilliant, Great, Best, Excellent, Good, Book, Inaccuracy, Mistake, Blunder, Missed Win, Forced kèm tỉ lệ phần trăm win probability loss.
-      - Tách logic thành phương thức tái sử dụng an toàn, đảm bảo mọi tình huống (ván mới từ đầu hay vào lại giữa chừng) đều nhận được đánh giá nước cờ chính xác nhất.
+- **v2.0.18**:
+  - **Tách phân hệ COACH 100% độc lập cho Torch & Cấu trúc 5 Tab chuẩn Extension**:
+    - **100% Phụ thuộc vào Torch Coach Engine**:
+      - Loại bỏ hoàn toàn sự can thiệp của Stockfish vào việc phân loại nước đi (`MoveClassifier`).
+      - Phân loại nước cờ là nhiệm vụ độc quyền của **Torch CEE 26MB (Komodo WebAssembly)**.
+      - Khi Torch gặp lỗi hoặc thiếu lịch sử `startpos`, hệ thống **ghi log chẩn đoán lỗi và báo lỗi trung thực**, tuyệt đối không tự động chuyển sang Stockfish ReviewMath.
+    - **Tổ chức 5 Tab chuẩn Extension**:
+      - Đồng bộ cấu trúc Settings Dialog với Extension: `[ LIVE | ENGINE | COACH | VISUAL | ARROWS ]`.
+      - Toàn bộ cài đặt phân loại nước đi, cảnh báo rung, chẩn đoán log WebAssembly được chuyển trọn vẹn sang tab **COACH**.
+      - Tab **ENGINE** chỉ còn thuần túy phục vụ cấu hình động cơ tính toán nước đi (Komodo/Stockfish, Depth, MultiPV, Elo).
