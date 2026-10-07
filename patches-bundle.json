@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-10-07T13:28:00",
-  "description": "## [2.0.4] (2026-10-07)\n\n### ⚡ NNVC v2.0.4 — Hiện điểm Eval trên mũi tên & Cơ chế né va chạm Cyber Badges\n\n* **Hiện điểm Eval trên mũi tên:** Hiển thị trực tiếp điểm đánh giá (+1.4, -0.8, M3, -M2...) của từng nước đi ứng với từng mũi tên gợi ý.\n* **Cơ chế né va chạm nhãn Eval (Anti-collision avoidance):** Thuật toán tự động tính toán đẩy giãn nhãn điểm khi nhiều mũi tên có điểm đến gần nhau, tránh đè chữ hoặc che khuất mũi tên.\n* **Tuỳ chỉnh linh hoạt:** Thêm công tắc bật/tắt hiển thị điểm Eval trên mũi tên trong tab Visual của menu cài đặt.\n* **Author:** NNVC (@nncutett)",
-  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.4/patches-2.0.4.mpp",
+  "created_at": "2026-10-07T14:30:00",
+  "description": "## [2.0.5] (2026-10-07)\n\n### ⚡ NNVC v2.0.5 — Cập nhật chuẩn 100% Thuật toán Extension NNVC\n\n* **Cơ chế 8 ứng viên né va chạm (8 Candidates):** Chuẩn hóa 100% thuật toán tránh va chạm như Extension browser, dạt nhãn ra các góc hoặc cạnh ngoài ô đích để không che quân cờ.\n* **Hành lang di chuyển (Passing Corridors):** Tự động phát hiện các nước đi dài xuyên ô để né nhãn khỏi hành lang mũi tên.\n* **Thụt lùi đầu mũi tên (Stepped targetOffset):** Khi nhiều mũi tên cùng trỏ 1 ô đích, tự động thụt lùi để không đè lên nhau.\n* **Màu sắc & Bo góc:** Phong cách Frosted Cyber Glass với JetBrains Mono in đậm.\n* **Author:** NNVC (@nncutett)",
+  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.5/patches-2.0.5.mpp",
   "signature_download_url": "",
-  "version": "2.0.4"
+  "version": "2.0.5"
 }
