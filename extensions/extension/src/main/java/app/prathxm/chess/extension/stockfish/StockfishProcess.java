@@ -58,6 +58,10 @@ public class StockfishProcess {
     private int curMultiPV = -1;
     private Boolean curLimitStrength = null;
     private int curElo = -1;
+    private int curSkillLevel = -1;
+    private int curSkillErr = -1;
+    private int curSkillProb = -1;
+    private String curEngineChoice = null;
 
     // ── Lifecycle ─────────────────────────────────────────────────────────────
 
@@ -223,31 +227,23 @@ public class StockfishProcess {
                                   int multiPV, int movetimeMs, boolean honorLimit,
                                   ProgressListener progress) {
         if (!isReady() || fen == null) return AnalysisResult.empty();
-        multiPV = Math.max(1, multiPV);
-        depth = Math.max(1, depth);
 
         final boolean whiteToMove = isWhiteToMove(fen, uciMoves);
+        final int elo = StockfishSettings.getElo(context);
+
+        // Auto depth according to Elo (exact Extension NNVC logic)
+        boolean isAutoDepth = StockfishSettings.isAutoDepthEnabled(context);
+        int effectiveDepth;
+        if (isAutoDepth && honorLimit) {
+            effectiveDepth = StockfishSettings.autoDepthForElo(elo);
+        } else {
+            effectiveDepth = Math.max(1, depth > 0 ? depth : StockfishSettings.getDepth(context));
+        }
 
         try {
             drainReady();
 
-            applyThreads(StockfishSettings.getThreads(context));
-            boolean limit = honorLimit && StockfishSettings.isLimitStrength(context);
-            if (curLimitStrength == null || curLimitStrength != limit) {
-                send("setoption name UCI_LimitStrength value " + limit);
-                curLimitStrength = limit;
-            }
-            if (limit) {
-                int elo = Math.max(1320, Math.min(3190, StockfishSettings.getElo(context)));
-                if (elo != curElo) {
-                    send("setoption name UCI_Elo value " + elo);
-                    curElo = elo;
-                }
-            }
-            if (multiPV != curMultiPV) {
-                send("setoption name MultiPV value " + multiPV);
-                curMultiPV = multiPV;
-            }
+            applyPlayEngineOptions(context, elo, multiPV, honorLimit);
 
             StringBuilder pos = new StringBuilder(fen.length() + 8 + (uciMoves != null ? uciMoves.size() * 6 : 0));
             pos.append("position fen ").append(fen);
@@ -256,11 +252,17 @@ public class StockfishProcess {
                 for (String m : uciMoves) pos.append(' ').append(m);
             }
             send(pos.toString());
-            send(movetimeMs > 0 ? ("go depth " + depth + " movetime " + movetimeMs) : ("go depth " + depth));
 
-            return readSearchOutput(multiPV, whiteToMove,
+            if (isAutoDepth && honorLimit) {
+                int softMs = movetimeMs > 0 ? movetimeMs : Math.max(700, Math.min(2400, effectiveDepth * 200));
+                send("go depth " + effectiveDepth + " movetime " + softMs);
+            } else {
+                send(movetimeMs > 0 ? ("go depth " + effectiveDepth + " movetime " + movetimeMs) : ("go depth " + effectiveDepth));
+            }
+
+            return readSearchOutput(Math.max(3, multiPV), whiteToMove,
                     movetimeMs > 0 ? movetimeMs + BESTMOVE_GRACE_MS : DEFAULT_SEARCH_TIMEOUT_MS,
-                    depth, progress);
+                    effectiveDepth, progress);
         } catch (IOException e) {
             Log.e(TAG, "analyze error: " + e.getMessage());
             ready = false;
@@ -519,6 +521,92 @@ public class StockfishProcess {
         curMultiPV = -1;
         curLimitStrength = null;
         curElo = -1;
+        curSkillLevel = -1;
+        curSkillErr = -1;
+        curSkillProb = -1;
+        curEngineChoice = null;
+    }
+
+    /**
+     * Exact UCI options logic from Extension NNVC (_applyPlayEngineOptions).
+     */
+    private void applyPlayEngineOptions(Context context, int elo, int multiPV, boolean honorLimit) {
+        String engineChoice = StockfishSettings.getEngineChoice(context);
+        boolean isKomodo = StockfishSettings.ENGINE_KOMODO.equals(engineChoice);
+
+        // MultiPV: min 3, max 8 (Extension: Math.max(3, arrowLimit))
+        int neededMpv = Math.max(3, multiPV);
+        int finalMpv = Math.max(1, Math.min(8, neededMpv));
+        if (finalMpv != curMultiPV) {
+            send("setoption name MultiPV value " + finalMpv);
+            curMultiPV = finalMpv;
+        }
+
+        // Hash: 16 MB (_KOMODO_HASH_DEFAULT = 16)
+        if (curHash != 16) {
+            send("setoption name Hash value 16");
+            curHash = 16;
+        }
+
+        // Threads: 1 (battery/thermals efficiency as in extension)
+        if (curThreads != 1) {
+            send("setoption name Threads value 1");
+            curThreads = 1;
+        }
+
+        send("setoption name Ponder value false");
+        send("setoption name Slow Mover value 100");
+
+        int skillFromElo = Math.max(0, Math.min(20, Math.round((elo - 600f) / 130f)));
+
+        if (isKomodo) {
+            if (curSkillLevel != skillFromElo) {
+                send("setoption name Skill Level value " + skillFromElo);
+                curSkillLevel = skillFromElo;
+            }
+            if (elo < 2000) {
+                int skillErr = Math.round((2000f - elo) / 70f) + 2;
+                int skillProb = Math.round((2000f - elo) / 50f) + 1;
+                if (curSkillErr != skillErr) {
+                    send("setoption name Skill Level Maximum Error value " + skillErr);
+                    curSkillErr = skillErr;
+                }
+                if (curSkillProb != skillProb) {
+                    send("setoption name Skill Level Probability value " + skillProb);
+                    curSkillProb = skillProb;
+                }
+            } else {
+                if (curSkillErr != 0) {
+                    send("setoption name Skill Level Maximum Error value 0");
+                    curSkillErr = 0;
+                }
+                if (curSkillProb != 0) {
+                    send("setoption name Skill Level Probability value 0");
+                    curSkillProb = 0;
+                }
+            }
+        } else {
+            // Stockfish 18 / 19 logic
+            if (elo >= 1320) {
+                if (curLimitStrength == null || !curLimitStrength) {
+                    send("setoption name UCI_LimitStrength value true");
+                    curLimitStrength = true;
+                }
+                if (curElo != elo) {
+                    send("setoption name UCI_Elo value " + elo);
+                    curElo = elo;
+                }
+            } else {
+                if (curLimitStrength == null || curLimitStrength) {
+                    send("setoption name UCI_LimitStrength value false");
+                    curLimitStrength = false;
+                }
+                if (curSkillLevel != skillFromElo) {
+                    send("setoption name Skill Level value " + skillFromElo);
+                    curSkillLevel = skillFromElo;
+                }
+            }
+        }
     }
 
     private void applyThreads(int threads) {

@@ -274,19 +274,64 @@ public class MoveClassifier {
             String classification;
             String emoji;
             boolean isBlunderOrMistake = false;
+            boolean isVi = "vi".equalsIgnoreCase(StockfishSettings.getLanguage(activity != null ? activity : context));
+
             switch (c) {
-                case ReviewMath.BEST: classification = "Best Move"; emoji = "🎯"; break;
-                case ReviewMath.EXCELLENT: classification = "Excellent"; emoji = "✨"; break;
-                case ReviewMath.GOOD: classification = "Good Move"; emoji = "👍"; break;
-                case ReviewMath.INACCURACY: classification = "Inaccuracy"; emoji = "⚠️"; break;
-                case ReviewMath.MISTAKE: classification = "Mistake"; emoji = "❌"; isBlunderOrMistake = true; break;
-                case ReviewMath.BLUNDER: classification = "Blunder"; emoji = "💀"; isBlunderOrMistake = true; break;
-                case ReviewMath.MISS: classification = "Miss"; emoji = "❎"; isBlunderOrMistake = true; break;
-                default: classification = "Good Move"; emoji = "👍"; break;
+                case ReviewMath.BRILLIANT:
+                    classification = isVi ? "Nước cờ thiên tài (Brilliant)" : "Brilliant Move";
+                    emoji = "!!";
+                    break;
+                case ReviewMath.GREAT:
+                    classification = isVi ? "Nước cờ xuất sắc (Great)" : "Great Move";
+                    emoji = "!";
+                    break;
+                case ReviewMath.BEST:
+                    classification = isVi ? "Nước cờ tốt nhất (Best)" : "Best Move";
+                    emoji = "★";
+                    break;
+                case ReviewMath.EXCELLENT:
+                    classification = isVi ? "Nước cờ tuyệt vời (Excellent)" : "Excellent";
+                    emoji = "👍";
+                    break;
+                case ReviewMath.GOOD:
+                    classification = isVi ? "Nước cờ hay (Good)" : "Good Move";
+                    emoji = "✓";
+                    break;
+                case ReviewMath.BOOK:
+                    classification = isVi ? "Nước cờ khai cuộc (Book)" : "Book Move";
+                    emoji = "📖";
+                    break;
+                case ReviewMath.INACCURACY:
+                    classification = isVi ? "Thiếu chính xác (Inaccuracy)" : "Inaccuracy";
+                    emoji = "?!";
+                    break;
+                case ReviewMath.MISTAKE:
+                    classification = isVi ? "Sai lầm (Mistake)" : "Mistake";
+                    emoji = "?";
+                    isBlunderOrMistake = true;
+                    break;
+                case ReviewMath.BLUNDER:
+                    classification = isVi ? "Sai lầm nghiêm trọng (Blunder)" : "Blunder";
+                    emoji = "??";
+                    isBlunderOrMistake = true;
+                    break;
+                case ReviewMath.MISS:
+                    classification = isVi ? "Bỏ lỡ cơ hội (Miss)" : "Miss";
+                    emoji = "✕";
+                    isBlunderOrMistake = true;
+                    break;
+                case ReviewMath.FORCED:
+                    classification = isVi ? "Nước bắt buộc (Forced)" : "Forced Move";
+                    emoji = "➔";
+                    break;
+                default:
+                    classification = isVi ? "Nước cờ hay (Good)" : "Good Move";
+                    emoji = "✓";
+                    break;
             }
 
             String lossText = (loss > 0.005f) ? String.format(java.util.Locale.US, " [-%.0f%%]", loss * 100f) : "";
-            final String toastText = emoji + " " + classification + (uciMove != null ? " (" + uciMove + ")" : "") + lossText;
+            final String toastText = "[" + emoji + "] " + classification + (uciMove != null ? " (" + uciMove + ")" : "") + lossText;
             final boolean triggerVibrate = isBlunderOrMistake;
 
             if (activity != null) {

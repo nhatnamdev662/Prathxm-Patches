@@ -111,6 +111,26 @@ public class I18n {
                 return isVi ? "Nước 5" : "Move 5";
             case "choose_color":
                 return isVi ? "Chọn màu" : "Pick Color";
+            case "engine_choice":
+                return isVi ? "Chọn Engine" : "Engine";
+            case "engine_choice_hint":
+                return isVi ? "Chọn động cơ phân tích (Komodo 3.3 hoặc Stockfish 18)." : "Select engine (Komodo 3.3 or Stockfish 18).";
+            case "engine_komodo":
+                return "Komodo 3.3";
+            case "engine_stockfish":
+                return "Stockfish 18";
+            case "auto_depth":
+                return isVi ? "Tự Động Độ Sâu Theo Elo" : "Auto Depth by Elo";
+            case "auto_depth_hint":
+                return isVi ? "Tự động gán độ sâu phù hợp nhất theo mức Elo (chuẩn Extension)." : "Automatically assign optimal depth based on Elo.";
+            case "komodo_style":
+                return isVi ? "Lối Chơi Komodo" : "Komodo Style";
+            case "style_default":
+                return isVi ? "Mặc định" : "Default";
+            case "style_aggressive":
+                return isVi ? "Tấn công" : "Aggressive";
+            case "style_defensive":
+                return isVi ? "Phòng thủ" : "Defensive";
             default:
                 return key;
         }

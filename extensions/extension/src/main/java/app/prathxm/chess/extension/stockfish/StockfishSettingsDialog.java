@@ -310,27 +310,175 @@ public class StockfishSettingsDialog {
         panelEngine.setVisibility(View.GONE);
         tabContentRoot.addView(panelEngine);
 
-        // Card: Engine Strength
+        // Card 1: Chọn Engine (Komodo 3.3 vs Stockfish 18)
+        LinearLayout engineChoiceCard = createGlassCard(activity, density);
+        panelEngine.addView(engineChoiceCard);
+
+        TextView engineChoiceTitle = new TextView(activity);
+        engineChoiceTitle.setText(I18n.get(activity, "engine_choice"));
+        engineChoiceTitle.setTextColor(COLOR_TEXT_PRIMARY);
+        engineChoiceTitle.setTextSize(13.5f);
+        engineChoiceTitle.setTypeface(Typeface.create("sans-serif-medium", Typeface.BOLD));
+        engineChoiceCard.addView(engineChoiceTitle);
+
+        TextView engineChoiceHint = new TextView(activity);
+        engineChoiceHint.setText(I18n.get(activity, "engine_choice_hint"));
+        engineChoiceHint.setTextColor(COLOR_TEXT_MUTED);
+        engineChoiceHint.setTextSize(10.5f);
+        LinearLayout.LayoutParams ecHintParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        ecHintParams.topMargin = (int) (2 * density);
+        ecHintParams.bottomMargin = (int) (8 * density);
+        engineChoiceHint.setLayoutParams(ecHintParams);
+        engineChoiceCard.addView(engineChoiceHint);
+
+        LinearLayout engineBtnRow = new LinearLayout(activity);
+        engineBtnRow.setOrientation(LinearLayout.HORIZONTAL);
+        engineBtnRow.setPadding(0, (int) (2 * density), 0, (int) (4 * density));
+        engineChoiceCard.addView(engineBtnRow);
+
+        final String[] curEngine = { StockfishSettings.getEngineChoice(activity) };
+        final TextView btnKomodo = createTabButton(activity, I18n.get(activity, "engine_komodo"), StockfishSettings.ENGINE_KOMODO.equals(curEngine[0]), density);
+        final TextView btnStockfish = createTabButton(activity, I18n.get(activity, "engine_stockfish"), StockfishSettings.ENGINE_STOCKFISH18.equals(curEngine[0]), density);
+        engineBtnRow.addView(btnKomodo);
+        View btnSpacing = new View(activity);
+        btnSpacing.setLayoutParams(new LinearLayout.LayoutParams((int) (8 * density), 1));
+        engineBtnRow.addView(btnSpacing);
+        engineBtnRow.addView(btnStockfish);
+
+        // Komodo Styles container
+        final LinearLayout komodoStyleLayout = new LinearLayout(activity);
+        komodoStyleLayout.setOrientation(LinearLayout.VERTICAL);
+        komodoStyleLayout.setVisibility(StockfishSettings.ENGINE_KOMODO.equals(curEngine[0]) ? View.VISIBLE : View.GONE);
+        komodoStyleLayout.setPadding(0, (int) (8 * density), 0, (int) (2 * density));
+        engineChoiceCard.addView(komodoStyleLayout);
+
+        TextView styleTitle = new TextView(activity);
+        styleTitle.setText(I18n.get(activity, "komodo_style"));
+        styleTitle.setTextColor(COLOR_TEXT_SECONDARY);
+        styleTitle.setTextSize(12f);
+        styleTitle.setTypeface(Typeface.create("sans-serif-medium", Typeface.BOLD));
+        komodoStyleLayout.addView(styleTitle);
+
+        LinearLayout styleBtnRow = new LinearLayout(activity);
+        styleBtnRow.setOrientation(LinearLayout.HORIZONTAL);
+        styleBtnRow.setPadding(0, (int) (4 * density), 0, 0);
+        komodoStyleLayout.addView(styleBtnRow);
+
+        final String[] curStyle = { StockfishSettings.getKomodoStyle(activity) };
+        final TextView btnStyleDef = createTabButton(activity, I18n.get(activity, "style_default"), StockfishSettings.STYLE_DEFAULT.equals(curStyle[0]), density);
+        final TextView btnStyleAgg = createTabButton(activity, I18n.get(activity, "style_aggressive"), StockfishSettings.STYLE_AGGRESSIVE.equals(curStyle[0]), density);
+        final TextView btnStyleDefens = createTabButton(activity, I18n.get(activity, "style_defensive"), StockfishSettings.STYLE_DEFENSIVE.equals(curStyle[0]), density);
+
+        styleBtnRow.addView(btnStyleDef);
+        View sSp1 = new View(activity); sSp1.setLayoutParams(new LinearLayout.LayoutParams((int) (6 * density), 1)); styleBtnRow.addView(sSp1);
+        styleBtnRow.addView(btnStyleAgg);
+        View sSp2 = new View(activity); sSp2.setLayoutParams(new LinearLayout.LayoutParams((int) (6 * density), 1)); styleBtnRow.addView(sSp2);
+        styleBtnRow.addView(btnStyleDefens);
+
+        btnKomodo.setOnClickListener(v -> {
+            HapticHelper.tick(activity, v);
+            curEngine[0] = StockfishSettings.ENGINE_KOMODO;
+            updateTabStyle(btnKomodo, true, density);
+            updateTabStyle(btnStockfish, false, density);
+            komodoStyleLayout.setVisibility(View.VISIBLE);
+        });
+
+        btnStockfish.setOnClickListener(v -> {
+            HapticHelper.tick(activity, v);
+            curEngine[0] = StockfishSettings.ENGINE_STOCKFISH18;
+            updateTabStyle(btnKomodo, false, density);
+            updateTabStyle(btnStockfish, true, density);
+            komodoStyleLayout.setVisibility(View.GONE);
+        });
+
+        btnStyleDef.setOnClickListener(v -> {
+            HapticHelper.tick(activity, v);
+            curStyle[0] = StockfishSettings.STYLE_DEFAULT;
+            updateTabStyle(btnStyleDef, true, density);
+            updateTabStyle(btnStyleAgg, false, density);
+            updateTabStyle(btnStyleDefens, false, density);
+        });
+        btnStyleAgg.setOnClickListener(v -> {
+            HapticHelper.tick(activity, v);
+            curStyle[0] = StockfishSettings.STYLE_AGGRESSIVE;
+            updateTabStyle(btnStyleDef, false, density);
+            updateTabStyle(btnStyleAgg, true, density);
+            updateTabStyle(btnStyleDefens, false, density);
+        });
+        btnStyleDefens.setOnClickListener(v -> {
+            HapticHelper.tick(activity, v);
+            curStyle[0] = StockfishSettings.STYLE_DEFENSIVE;
+            updateTabStyle(btnStyleDef, false, density);
+            updateTabStyle(btnStyleAgg, false, density);
+            updateTabStyle(btnStyleDefens, true, density);
+        });
+
+        // Card 2: Sức mạnh & Độ sâu (Auto Depth, Elo 100-3500)
         LinearLayout engineCard = createGlassCard(activity, density);
         panelEngine.addView(engineCard);
 
-        int currentElo = Math.max(1320, Math.min(3190, StockfishSettings.getElo(activity)));
-        final String eloPrefix = I18n.get(activity, "row_elo");
-        final SeekBar eloSeekBar = addGlassSeekBarWithBadge(engineCard, eloPrefix,
-                currentElo + " ELO",
-                currentElo - 1320, 3190 - 1320, 1320,
-                I18n.get(activity, "elo_hint"),
+        final CyberSwitchView autoDepthSwitch = addCyberSwitchRow(engineCard,
+                I18n.get(activity, "auto_depth"),
+                I18n.get(activity, "auto_depth_hint"),
+                StockfishSettings.isAutoDepthEnabled(activity),
                 density, activity);
 
         addCardSeparator(engineCard, density);
 
+        int currentElo = StockfishSettings.getElo(activity);
+        int eloProg = (currentElo - StockfishSettings.MIN_ELO) / StockfishSettings.ELO_STEP;
+        int eloMax = (StockfishSettings.MAX_ELO - StockfishSettings.MIN_ELO) / StockfishSettings.ELO_STEP;
+
+        final TextView[] depthBadgeHolder = new TextView[1];
+        final SeekBar[] depthSeekBarHolder = new SeekBar[1];
+
+        final SeekBar eloSeekBar = addEloSeekBarWithBadge(engineCard,
+                I18n.get(activity, "row_elo"),
+                currentElo, eloProg, eloMax,
+                I18n.get(activity, "elo_hint"),
+                density, activity,
+                (newElo) -> {
+                    if (autoDepthSwitch.isChecked() && depthBadgeHolder[0] != null) {
+                        int autoD = StockfishSettings.autoDepthForElo(newElo);
+                        depthBadgeHolder[0].setText(autoD + " (Auto)");
+                    }
+                });
+
+        addCardSeparator(engineCard, density);
+
         int currentDepth = StockfishSettings.getDepth(activity);
-        final String depthPrefix = I18n.get(activity, "depth");
-        final SeekBar depthSeekBar = addGlassSeekBarWithBadge(engineCard, depthPrefix,
-                String.valueOf(currentDepth),
+        boolean initialAuto = autoDepthSwitch.isChecked();
+        String initialDepthBadge = initialAuto
+                ? StockfishSettings.autoDepthForElo(currentElo) + " (Auto)"
+                : String.valueOf(currentDepth);
+
+        final SeekBar depthSeekBar = addDepthSeekBarWithBadge(engineCard,
+                I18n.get(activity, "depth"),
+                initialDepthBadge,
                 currentDepth - 1, StockfishSettings.MAX_DEPTH - 1, 1,
                 I18n.get(activity, "depth_hint"),
-                density, activity);
+                density, activity, depthBadgeHolder);
+        depthSeekBarHolder[0] = depthSeekBar;
+
+        if (initialAuto) {
+            depthSeekBar.setAlpha(0.35f);
+            depthSeekBar.setEnabled(false);
+        }
+
+        autoDepthSwitch.setOnCheckedChangeListener((view, isChecked) -> {
+            int elo = StockfishSettings.MIN_ELO + eloSeekBar.getProgress() * StockfishSettings.ELO_STEP;
+            if (isChecked) {
+                int autoD = StockfishSettings.autoDepthForElo(elo);
+                if (depthBadgeHolder[0] != null) depthBadgeHolder[0].setText(autoD + " (Auto)");
+                depthSeekBar.setAlpha(0.35f);
+                depthSeekBar.setEnabled(false);
+            } else {
+                int manualD = Math.max(1, depthSeekBar.getProgress() + 1);
+                if (depthBadgeHolder[0] != null) depthBadgeHolder[0].setText(String.valueOf(manualD));
+                depthSeekBar.setAlpha(1.0f);
+                depthSeekBar.setEnabled(true);
+            }
+        });
 
         addCardSeparator(engineCard, density);
 
@@ -584,11 +732,14 @@ public class StockfishSettingsDialog {
         saveBtn.setOnClickListener(v -> {
             HapticHelper.pop(activity, v);
             StockfishSettings.setEngineEnabled(activity, enabledSwitch.isChecked());
+            StockfishSettings.setEngineChoice(activity, curEngine[0]);
+            StockfishSettings.setKomodoStyle(activity, curStyle[0]);
+            StockfishSettings.setAutoDepthEnabled(activity, autoDepthSwitch.isChecked());
             StockfishSettings.setDepth(activity, Math.max(1, depthSeekBar.getProgress() + 1));
             StockfishSettings.setMultiPV(activity, Math.max(1, pvSeekBar.getProgress() + 1));
             StockfishSettings.setMySideOnly(activity, !oppArrowsSwitch.isChecked());
             StockfishSettings.setLimitStrength(activity, true);
-            StockfishSettings.setElo(activity, 1320 + eloSeekBar.getProgress());
+            StockfishSettings.setElo(activity, StockfishSettings.MIN_ELO + eloSeekBar.getProgress() * StockfishSettings.ELO_STEP);
             StockfishSettings.setPremiumEnabled(activity, true);
             StockfishSettings.setArrowsVisible(activity, arrowsSwitch.isChecked());
             StockfishSettings.setEvalBarEnabled(activity, evalBarSwitch.isChecked());
@@ -1017,5 +1168,189 @@ public class StockfishSettingsDialog {
 
         pickerDialog.setContentView(root);
         pickerDialog.show();
+    }
+
+    public interface OnEloChangeListener {
+        void onEloChanged(int newElo);
+    }
+
+    private static SeekBar addEloSeekBarWithBadge(LinearLayout layout, final String labelPrefix, int currentElo, int progress, int max, String hint, float density, Activity activity, OnEloChangeListener listener) {
+        LinearLayout headerRow = new LinearLayout(activity);
+        headerRow.setOrientation(LinearLayout.HORIZONTAL);
+        headerRow.setGravity(Gravity.CENTER_VERTICAL);
+        headerRow.setPadding(0, (int) (4 * density), 0, (int) (4 * density));
+
+        TextView labelTv = new TextView(activity);
+        labelTv.setText(labelPrefix);
+        labelTv.setTextColor(COLOR_TEXT_SECONDARY);
+        labelTv.setTextSize(13);
+        labelTv.setTypeface(Typeface.create("sans-serif-medium", Typeface.BOLD));
+        LinearLayout.LayoutParams labelParams = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1.0f);
+        labelTv.setLayoutParams(labelParams);
+        headerRow.addView(labelTv);
+
+        final TextView valBadge = new TextView(activity);
+        valBadge.setText(currentElo + " ELO · " + StockfishSettings.getEloTier(currentElo));
+        valBadge.setTextColor(COLOR_ACCENT_GOLD);
+        valBadge.setTextSize(11);
+        valBadge.setTypeface(Typeface.create("monospace", Typeface.BOLD));
+        valBadge.setPadding((int) (8 * density), (int) (2 * density), (int) (8 * density), (int) (2 * density));
+
+        GradientDrawable badgeBg = new GradientDrawable();
+        badgeBg.setColor(0x33FFD760);
+        badgeBg.setCornerRadius(6 * density);
+        badgeBg.setStroke((int) (1 * density), COLOR_ACCENT_GOLD);
+        valBadge.setBackground(badgeBg);
+        headerRow.addView(valBadge);
+
+        layout.addView(headerRow);
+
+        final SeekBar seekBar = new SeekBar(activity);
+        seekBar.setMax(max);
+        seekBar.setProgress(progress);
+        if (Build.VERSION.SDK_INT >= 21) {
+            seekBar.setProgressTintList(ColorStateList.valueOf(COLOR_ACCENT_BLUE));
+            seekBar.setThumbTintList(ColorStateList.valueOf(COLOR_ACCENT_CYAN));
+        }
+
+        int padH = (int) (16 * density);
+        int padV = (int) (8 * density);
+        seekBar.setPadding(padH, padV, padH, padV);
+        seekBar.setThumbOffset(padH);
+
+        LinearLayout.LayoutParams sbParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        sbParams.setMargins(0, (int) (2 * density), 0, (int) (4 * density));
+        seekBar.setLayoutParams(sbParams);
+
+        final int[] lastElo = { currentElo };
+
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar sb, int prog, boolean fromUser) {
+                int elo = StockfishSettings.MIN_ELO + prog * StockfishSettings.ELO_STEP;
+                valBadge.setText(elo + " ELO · " + StockfishSettings.getEloTier(elo));
+                if (listener != null) listener.onEloChanged(elo);
+
+                if (fromUser && elo != lastElo[0]) {
+                    lastElo[0] = elo;
+                    HapticHelper.tick(activity, sb);
+                }
+            }
+            @Override
+            public void onStartTrackingTouch(SeekBar sb) {
+                HapticHelper.tick(activity, sb);
+            }
+            @Override
+            public void onStopTrackingTouch(SeekBar sb) {
+                HapticHelper.pop(activity, sb);
+            }
+        });
+
+        layout.addView(seekBar);
+
+        if (hint != null && !hint.isEmpty()) {
+            TextView hintTv = new TextView(activity);
+            hintTv.setText(hint);
+            hintTv.setTextColor(COLOR_TEXT_MUTED);
+            hintTv.setTextSize(10.5f);
+            hintTv.setPadding((int) (4 * density), 0, (int) (4 * density), (int) (4 * density));
+            layout.addView(hintTv);
+        }
+
+        return seekBar;
+    }
+
+    private static SeekBar addDepthSeekBarWithBadge(LinearLayout layout, final String labelPrefix, String initialBadge, int progress, int max, final int minVal, String hint, float density, Activity activity, TextView[] badgeRef) {
+        LinearLayout headerRow = new LinearLayout(activity);
+        headerRow.setOrientation(LinearLayout.HORIZONTAL);
+        headerRow.setGravity(Gravity.CENTER_VERTICAL);
+        headerRow.setPadding(0, (int) (4 * density), 0, (int) (4 * density));
+
+        TextView labelTv = new TextView(activity);
+        labelTv.setText(labelPrefix);
+        labelTv.setTextColor(COLOR_TEXT_SECONDARY);
+        labelTv.setTextSize(13);
+        labelTv.setTypeface(Typeface.create("sans-serif-medium", Typeface.BOLD));
+        LinearLayout.LayoutParams labelParams = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1.0f);
+        labelTv.setLayoutParams(labelParams);
+        headerRow.addView(labelTv);
+
+        final TextView valBadge = new TextView(activity);
+        valBadge.setText(initialBadge);
+        valBadge.setTextColor(COLOR_ACCENT_GOLD);
+        valBadge.setTextSize(11);
+        valBadge.setTypeface(Typeface.create("monospace", Typeface.BOLD));
+        valBadge.setPadding((int) (8 * density), (int) (2 * density), (int) (8 * density), (int) (2 * density));
+
+        GradientDrawable badgeBg = new GradientDrawable();
+        badgeBg.setColor(0x33FFD760);
+        badgeBg.setCornerRadius(6 * density);
+        badgeBg.setStroke((int) (1 * density), COLOR_ACCENT_GOLD);
+        valBadge.setBackground(badgeBg);
+        headerRow.addView(valBadge);
+
+        if (badgeRef != null && badgeRef.length > 0) {
+            badgeRef[0] = valBadge;
+        }
+
+        layout.addView(headerRow);
+
+        final SeekBar seekBar = new SeekBar(activity);
+        seekBar.setMax(max);
+        seekBar.setProgress(progress);
+        if (Build.VERSION.SDK_INT >= 21) {
+            seekBar.setProgressTintList(ColorStateList.valueOf(COLOR_ACCENT_BLUE));
+            seekBar.setThumbTintList(ColorStateList.valueOf(COLOR_ACCENT_CYAN));
+        }
+
+        int padH = (int) (16 * density);
+        int padV = (int) (8 * density);
+        seekBar.setPadding(padH, padV, padH, padV);
+        seekBar.setThumbOffset(padH);
+
+        LinearLayout.LayoutParams sbParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        sbParams.setMargins(0, (int) (2 * density), 0, (int) (4 * density));
+        seekBar.setLayoutParams(sbParams);
+
+        final int[] lastVal = { Math.max(minVal, progress + minVal) };
+
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar sb, int prog, boolean fromUser) {
+                int val = Math.max(minVal, prog + minVal);
+                if (valBadge.getText().toString().contains("Auto")) return;
+                valBadge.setText(String.valueOf(val));
+
+                if (fromUser && val != lastVal[0]) {
+                    lastVal[0] = val;
+                    HapticHelper.tick(activity, sb);
+                }
+            }
+            @Override
+            public void onStartTrackingTouch(SeekBar sb) {
+                HapticHelper.tick(activity, sb);
+            }
+            @Override
+            public void onStopTrackingTouch(SeekBar sb) {
+                HapticHelper.pop(activity, sb);
+            }
+        });
+
+        layout.addView(seekBar);
+
+        if (hint != null && !hint.isEmpty()) {
+            TextView hintTv = new TextView(activity);
+            hintTv.setText(hint);
+            hintTv.setTextColor(COLOR_TEXT_MUTED);
+            hintTv.setTextSize(10.5f);
+            hintTv.setPadding((int) (4 * density), 0, (int) (4 * density), (int) (4 * density));
+            layout.addView(hintTv);
+        }
+
+        return seekBar;
     }
 }

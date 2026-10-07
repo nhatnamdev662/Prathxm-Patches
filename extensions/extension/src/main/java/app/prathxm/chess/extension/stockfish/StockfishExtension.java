@@ -382,10 +382,12 @@ public class StockfishExtension {
                 Context context = getContext();
                 if (context == null) return;
 
-                int depth = StockfishSettings.getDepth(context);
+                int depth = StockfishSettings.isAutoDepthEnabled(context)
+                        ? StockfishSettings.autoDepthForElo(StockfishSettings.getElo(context))
+                        : StockfishSettings.getDepth(context);
                 int multiPV = StockfishSettings.getMultiPV(context);
 
-                Log.d(TAG, "Analysing FEN at depth " + depth + " with MultiPV=" + multiPV + "…");
+                Log.d(TAG, "Analysing FEN with " + StockfishSettings.getEngineChoice(context) + " at depth " + depth + " with MultiPV=" + multiPV + "…");
                 // Stream intermediate depths to the board so deep searches feel instant.
                 StockfishProcess.AnalysisResult result = StockfishBridge.analyze(fen, depth, multiPV,
                         partial -> {

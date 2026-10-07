@@ -126,12 +126,90 @@ public class StockfishSettings {
         getPrefs(context).edit().putBoolean(KEY_LIMIT_STRENGTH, true).apply();
     }
 
+    /** Elo range & defaults matching Extension NNVC */
+    public static final int MIN_ELO = 100;
+    public static final int MAX_ELO = 3500;
+    public static final int DEFAULT_ELO = 2200;
+    public static final int ELO_STEP = 10;
+
+    // Engine Choices matching Extension NNVC (_ENGINE_SPECS)
+    public static final String ENGINE_KOMODO = "komodo"; // Komodo 3.3 (default)
+    public static final String ENGINE_STOCKFISH18 = "stockfish18"; // Stockfish 18 / 19
+    private static final String KEY_ENGINE_CHOICE = "engine_choice";
+
+    // Komodo Styles matching Extension NNVC (_KOMODO_STYLES)
+    public static final String STYLE_DEFAULT = "Default";
+    public static final String STYLE_AGGRESSIVE = "Aggressive";
+    public static final String STYLE_DEFENSIVE = "Defensive";
+    private static final String KEY_KOMODO_STYLE = "komodo_style";
+
+    private static final String KEY_AUTO_DEPTH = "auto_depth_enabled";
+
+    public static String getEngineChoice(Context context) {
+        return getPrefs(context).getString(KEY_ENGINE_CHOICE, ENGINE_KOMODO);
+    }
+
+    public static void setEngineChoice(Context context, String choice) {
+        getPrefs(context).edit().putString(KEY_ENGINE_CHOICE, choice).apply();
+    }
+
+    public static String getKomodoStyle(Context context) {
+        return getPrefs(context).getString(KEY_KOMODO_STYLE, STYLE_DEFAULT);
+    }
+
+    public static void setKomodoStyle(Context context, String style) {
+        getPrefs(context).edit().putString(KEY_KOMODO_STYLE, style).apply();
+    }
+
+    public static boolean isAutoDepthEnabled(Context context) {
+        return getPrefs(context).getBoolean(KEY_AUTO_DEPTH, true);
+    }
+
+    public static void setAutoDepthEnabled(Context context, boolean enabled) {
+        getPrefs(context).edit().putBoolean(KEY_AUTO_DEPTH, enabled).apply();
+    }
+
+    /**
+     * Exact auto depth calculation from Extension NNVC (_autoDepthForElo).
+     */
+    public static int autoDepthForElo(int effectiveElo) {
+        int e = Math.max(MIN_ELO, Math.min(MAX_ELO, effectiveElo));
+        if (e < 450) return 1;
+        if (e < 700) return 2;
+        if (e < 950) return 3;
+        if (e < 1200) return 4;
+        if (e < 1450) return 5;
+        if (e < 1700) return 6;
+        if (e < 1950) return 7;
+        if (e < 2200) return 8;
+        if (e < 2500) return 9;
+        if (e < 2850) return 10;
+        if (e < 3200) return 11;
+        return 12;
+    }
+
+    /**
+     * Elo Tier and class matching Extension NNVC (_eloRow).
+     */
+    public static String getEloTier(int elo) {
+        if (elo < 1200) return "Beginner (C)";
+        if (elo < 1600) return "Intermediate (B)";
+        if (elo < 1900) return "Advanced (A)";
+        if (elo < 2200) return "Expert (E)";
+        if (elo < 2400) return "Master (M)";
+        return "Grandmaster (G)";
+    }
+
     public static int getElo(Context context) {
-        return getPrefs(context).getInt(KEY_ELO, 2000);
+        int elo = getPrefs(context).getInt(KEY_ELO, DEFAULT_ELO);
+        int snapped = Math.round((float) elo / ELO_STEP) * ELO_STEP;
+        return Math.max(MIN_ELO, Math.min(MAX_ELO, snapped));
     }
 
     public static void setElo(Context context, int elo) {
-        getPrefs(context).edit().putInt(KEY_ELO, elo).apply();
+        int snapped = Math.round((float) elo / ELO_STEP) * ELO_STEP;
+        int clamped = Math.max(MIN_ELO, Math.min(MAX_ELO, snapped));
+        getPrefs(context).edit().putInt(KEY_ELO, clamped).apply();
     }
 
     private static final String KEY_PREMIUM_ENABLED = "premium_enabled";
