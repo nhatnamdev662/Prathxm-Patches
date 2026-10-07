@@ -4,9 +4,6 @@ import glob
 import subprocess
 import tempfile
 import zipfile
-import struct
-import hashlib
-import zlib
 
 def main():
     base_mpp = r"C:\Users\MAY1\AppData\Local\Temp\patches-2.0.0.mpp"
@@ -71,31 +68,47 @@ public final class BuildConfig {
             new_extension_mpe = f.read()
         print(f"extension.mpe built successfully: {len(new_extension_mpe)} bytes (header: {new_extension_mpe[:8]})")
 
-        print("Step 2: Patching classes.dex at Hook 5 boundary with return-void...")
+        print("Step 2: Clean JVM bytecode patching for StockfishPatchKt.class...")
         with zipfile.ZipFile(base_mpp, "r") as bz:
-            dex = bytearray(bz.read("classes.dex"))
+            b = bytearray(bz.read("app/prathxm/chess/patches/stockfish/StockfishPatchKt.class"))
             
-            patch_off = 89376
-            print(f"Original bytes at {patch_off}: {[hex(x) for x in dex[patch_off:patch_off+10]]}")
-            # Inject return-void (0x0e 0x00) immediately after Hook 5
-            dex[patch_off] = 0x0e
-            dex[patch_off + 1] = 0x00
-            print(f"Patched bytes at {patch_off}: {[hex(x) for x in dex[patch_off:patch_off+10]]}")
+            # Immediately return Unit.INSTANCE after Hook 5:
+            # 0xb2 0x00 0x34: getstatic kotlin/Unit.INSTANCE:Lkotlin/Unit;
+            # 0xb0: areturn
+            b[16345] = 0xb2
+            b[16346] = 0x00
+            b[16347] = 0x34
+            b[16348] = 0xb0
+            print("Patched StockfishPatchKt.class with clean return Unit.INSTANCE after Hook 5.")
 
-            # Recalculate SHA-1 (offset 0x0c, length 20, covers from 0x20 to EOF)
-            sha1 = hashlib.sha1(dex[0x20:]).digest()
-            dex[0x0c:0x20] = sha1
+            print("Step 3: Compiling root classes.dex cleanly with official d8...")
+            patch_jar = os.path.join(td, "patch_classes.jar")
+            with zipfile.ZipFile(patch_jar, "w") as pj:
+                for n in bz.namelist():
+                    if n == "app/prathxm/chess/patches/stockfish/StockfishPatchKt.class":
+                        pj.writestr(n, b)
+                    elif n.endswith(".class"):
+                        pj.writestr(n, bz.read(n))
 
-            # Recalculate Adler32 (offset 0x08, length 4, covers from 0x0c to EOF)
-            adler = zlib.adler32(dex[0x0c:]) & 0xffffffff
-            struct.pack_into("<I", dex, 0x08, adler)
-            print("Recalculated SHA-1 and Adler32 checksums successfully.")
+            root_dex_out = os.path.join(td, "root_dex")
+            os.makedirs(root_dex_out, exist_ok=True)
+            rd8_cmd = [d8, "--lib", android_jar, "--output", root_dex_out, patch_jar]
+            rd8_res = subprocess.run(rd8_cmd, capture_output=True, text=True)
+            if rd8_res.returncode != 0:
+                print("Root d8 failed:", rd8_res.stderr)
+                sys.exit(1)
 
-            print("Step 3: Writing final patches-2.0.3.mpp bundle (keeping all pristine .class files)...")
+            with open(os.path.join(root_dex_out, "classes.dex"), "rb") as f:
+                new_root_dex = f.read()
+            print(f"Root classes.dex compiled cleanly with d8: {len(new_root_dex)} bytes")
+
+            print("Step 4: Writing clean patches-2.0.3.mpp bundle...")
             with zipfile.ZipFile(target_mpp, "w", compression=zipfile.ZIP_DEFLATED) as oz:
                 for n in bz.namelist():
-                    if n == "classes.dex":
-                        oz.writestr(n, dex)
+                    if n == "app/prathxm/chess/patches/stockfish/StockfishPatchKt.class":
+                        oz.writestr(n, b)
+                    elif n == "classes.dex":
+                        oz.writestr(n, new_root_dex)
                     elif n == "extensions/extension.mpe":
                         oz.writestr(n, new_extension_mpe)
                     else:
