@@ -99,6 +99,17 @@ public class MoveClassifier {
         return fenHistory;
     }
 
+    public static List<String> getPlayedMoves() {
+        List<String> list = new ArrayList<>();
+        synchronized (fenHistory) {
+            for (int i = 0; i < fenHistory.size() - 1; i++) {
+                String uci = deduceUciMove(fenHistory.get(i), fenHistory.get(i + 1));
+                if (uci != null) list.add(uci);
+            }
+        }
+        return list;
+    }
+
     public static Map<String, Float> getFenToEvalMap() {
         return fenToEvalMap;
     }
@@ -286,6 +297,28 @@ public class MoveClassifier {
 
             String uciMove = deduceUciMove(prevKey, currentKey);
             if (uciMove == null) return;
+
+            final Activity currentAct = activity;
+
+            // ── 100% Real Torch WebAssembly Engine Execution ──
+            TorchEngine torch = TorchEngine.getInstance(context);
+            if (torch.isReady()) {
+                List<String> moves = getPlayedMoves();
+                String userColor = whiteMoved ? "white" : "black";
+                final String finalUci = uciMove;
+                final String transitionKey = transition;
+                torch.analyze(moves, userColor, (classificationName, playedMoveLan, bestMoveLan, speechText, rawJson) -> {
+                    if (currentAct != null) {
+                        classifiedMoves.add(transitionKey);
+                        currentAct.runOnUiThread(() -> {
+                            displayTorchClassification(currentAct, classificationName,
+                                    (playedMoveLan != null && !playedMoveLan.isEmpty()) ? playedMoveLan : finalUci,
+                                    speechText);
+                        });
+                    }
+                });
+                return;
+            }
             
             // Same expected-points model as the game review (win probability, mover POV).
             float winBefore = ReviewMath.win(prevEval, whiteMoved);
@@ -447,6 +480,90 @@ public class MoveClassifier {
             }
         } catch (Throwable t) {
             Log.e(TAG, "Error in classifyMoveIfPossible: " + t.getMessage());
+        }
+    }
+
+    private static void displayTorchClassification(Activity activity, String torchName, String uciMove, String speechText) {
+        if (activity == null || torchName == null) return;
+        boolean isVi = "vi".equalsIgnoreCase(StockfishSettings.getLanguage(activity));
+        String classification;
+        String emoji;
+        boolean isBlunderOrMistake = false;
+
+        String lower = torchName.toLowerCase(java.util.Locale.US).replace(" ", "_");
+        switch (lower) {
+            case "brilliant":
+                classification = isVi ? "Nước cờ thiên tài (Brilliant)" : "Brilliant Move";
+                emoji = "!!";
+                break;
+            case "great":
+                classification = isVi ? "Nước cờ xuất sắc (Great)" : "Great Move";
+                emoji = "!";
+                break;
+            case "best":
+                classification = isVi ? "Nước cờ tốt nhất (Best)" : "Best Move";
+                emoji = "★";
+                break;
+            case "excellent":
+                classification = isVi ? "Nước cờ tuyệt vời (Excellent)" : "Excellent";
+                emoji = "👍";
+                break;
+            case "good":
+                classification = isVi ? "Nước cờ hay (Good)" : "Good Move";
+                emoji = "✓";
+                break;
+            case "book":
+                classification = isVi ? "Nước cờ khai cuộc (Book)" : "Book Move";
+                emoji = "📖";
+                break;
+            case "inaccuracy":
+                classification = isVi ? "Thiếu chính xác (Inaccuracy)" : "Inaccuracy";
+                emoji = "?!";
+                break;
+            case "mistake":
+                classification = isVi ? "Sai lầm (Mistake)" : "Mistake";
+                emoji = "?";
+                isBlunderOrMistake = true;
+                break;
+            case "blunder":
+                classification = isVi ? "Sai lầm nghiêm trọng (Blunder)" : "Blunder";
+                emoji = "??";
+                isBlunderOrMistake = true;
+                break;
+            case "miss":
+                classification = isVi ? "Bỏ lỡ cơ hội (Miss)" : "Miss";
+                emoji = "✕";
+                isBlunderOrMistake = true;
+                break;
+            case "missed":
+            case "missed_win":
+                classification = isVi ? "Bỏ lỡ cơ hội thắng (Missed Win)" : "Missed Win";
+                emoji = "✕";
+                isBlunderOrMistake = true;
+                break;
+            case "forced":
+                classification = isVi ? "Nước bắt buộc (Forced)" : "Forced Move";
+                emoji = "➔";
+                break;
+            default:
+                classification = isVi ? "Nước cờ hay (Good)" : "Good Move";
+                emoji = "✓";
+                break;
+        }
+
+        String comment = (speechText != null && !speechText.trim().isEmpty()) ? "\n\"" + speechText.trim() + "\"" : "";
+        final String toastText = "[Torch] [" + emoji + "] " + classification + " (" + uciMove + ")" + comment;
+        Toast.makeText(activity, toastText, Toast.LENGTH_SHORT).show();
+
+        if (isBlunderOrMistake && StockfishSettings.isBlunderAlertsEnabled(activity)) {
+            Vibrator vibrator = (Vibrator) activity.getSystemService(Context.VIBRATOR_SERVICE);
+            if (vibrator != null && vibrator.hasVibrator()) {
+                if (Build.VERSION.SDK_INT >= 26) {
+                    vibrator.vibrate(VibrationEffect.createOneShot(150, VibrationEffect.DEFAULT_AMPLITUDE));
+                } else {
+                    vibrator.vibrate(150);
+                }
+            }
         }
     }
 }

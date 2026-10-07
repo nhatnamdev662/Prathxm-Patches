@@ -182,6 +182,11 @@ public class StockfishExtension {
                 @Override
                 public void run() {
                     try {
+                        try {
+                            TorchEngine.getInstance(ctx);
+                        } catch (Throwable te) {
+                            Log.e(TAG, "Failed to start TorchEngine early: " + te.getMessage());
+                        }
                         boolean ok = StockfishBridge.init(ctx);
                         engineReady = ok;
                         Log.i(TAG, ok
