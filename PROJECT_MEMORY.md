@@ -131,3 +131,25 @@
       - Đồng bộ cấu trúc Settings Dialog với Extension: `[ LIVE | ENGINE | COACH | VISUAL | ARROWS ]`.
       - Toàn bộ cài đặt phân loại nước đi, cảnh báo rung, chẩn đoán log WebAssembly được chuyển trọn vẹn sang tab **COACH**.
       - Tab **ENGINE** chỉ còn thuần túy phục vụ cấu hình động cơ tính toán nước đi (Komodo/Stockfish, Depth, MultiPV, Elo).
+
+---
+
+## 3. TRẠNG THÁI HIỆN TẠI & KẾ HOẠCH PHIÊN TIẾP THEO
+
+### 3.1. Trạng thái hiện tại (Tính đến hết phiên 2026-10-07)
+- **Phiên bản mới nhất**: **v2.0.18** (`patches-2.0.18.mpp`).
+- **Kho lưu trữ GitHub**: Đã commit và push sạch sẽ lên `main`, đã phát hành [Release v2.0.18](https://github.com/nhatnamdev662/Prathxm-Patches/releases/tag/v2.0.18).
+- **Trạng thái Repo**: 100% sạch, không có bất kỳ file script `.py` hay file rác nào.
+- **Tiến trình kỹ thuật**:
+  1. Menu cài đặt đã đồng bộ 5 Tab chuẩn Extension: `[ LIVE | ENGINE | COACH | VISUAL | ARROWS ]`.
+  2. Tab COACH đã được tách riêng để quản lý phân loại nước đi và chẩn đoán Torch WASM.
+  3. Phân loại nước đi đã được tách biệt 100% độc lập cho Torch CEE WebAssembly, ngắt hoàn toàn liên kết với Stockfish.
+
+### 3.2. Việc cần làm ngay khi mở phiên làm việc mới
+1. **Kiểm tra phản hồi thực tế từ người dùng sau khi test v2.0.18**:
+   - Giao diện 5 Tab hiển thị chuẩn xác và mượt mà trên thiết bị Android chưa.
+   - Ván đánh mới từ đầu: Torch CEE WASM phân loại nước đi (Brilliant, Great, Best, Good, Book...) có hiển thị Toast chuẩn không.
+   - Trường hợp vào lại giữa ván: Kiểm tra xem log và Toast báo lỗi trung thực hoạt động đúng thiết kế chưa.
+2. **Nhiệm vụ trọng tâm tiếp theo theo định hướng Extension**:
+   - **Hook sâu vào Android Game Controller**: Tìm vị trí lưu trữ `MoveHistory` hoặc PGN trong APK Chess.com (tương tự `game.getMoveHistory()` trên Extension Web) để nạp đủ chuỗi nước đi từ `startpos` cho Torch kể cả khi vào giữa chừng.
+   - **Bám sát cấu trúc của Extension**: Tiếp tục đồng bộ các tính năng còn lại của Extension (Coach Voice Speech, Tactical Alerts, v.v.) vào đúng 5 Tab tương ứng trên Mobile.
