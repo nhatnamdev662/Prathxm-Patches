@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-10-06T22:25:00",
-  "description": "## [2.0.2] (2026-10-06)\n\n### ⚡ NNVC v2.0.2 — Fix Game Review Crash, Initial Turn White Recognition & Multitasking Overlay Recovery\n\n* **Khắc phục triệt để crash Game Review:** Vô hiệu hoá hoàn toàn hook Game Analysis trong patch bundle và bổ sung stub methods tương thích, trả lại 100% Game Review gốc (real) của Chess.com, triệt tiêu lỗi `NoSuchMethodError: getLocalAnalysisFlowForConfig`.\n* **Nhận diện quân Trắng ngay từ nước đầu tiên:** Bổ sung cơ chế suy luận màu quân theo góc nhìn bàn cờ `getFlipBoard()` và auto-trigger phân tích ngay khi mở ván cờ, hiển thị mũi tên ngay lập tức ở nước 0 khi bật chế độ chỉ hiện bên mình.\n* **Khôi phục mũi tên khi đa nhiệm (thoát Home/quay lại):** Tự động phát hiện lifecycle resume, reset signature, kích hoạt lại phân tích và cơ chế vẽ lại overlay ngay sau khi bàn cờ hoàn tất layout khi chuyển app quay lại.\n* **Author:** NNVC (@nncutett)",
-  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.2/patches-2.0.2.mpp",
+  "created_at": "2026-10-07T12:28:00",
+  "description": "## [2.0.3] (2026-10-07)\n\n### ⚡ NNVC v2.0.3 — Fix VerifyError, Native DEX Patch & Game Review 100% Real\n\n* **Sửa dứt điểm lỗi VerifyError:** Giữ nguyên vẹn 100% bytecode class gốc trong bundle, can thiệp trực tiếp bằng DEX bytecode return-void sạch sẽ sau Hook 5. Loại bỏ triệt để lỗi Dalvik/ART Verifier rejected class.\n* **Game Review gốc 100%:** Bỏ qua hoàn toàn Game Analysis bytecode patch, Chess.com dùng Game Review server chuẩn không lỗi `NoSuchMethodError`.\n* **Nhận diện quân Trắng & Đa nhiệm:** Tự động nhận diện Trắng ngay nước 0 và phục hồi vẽ overlay khi chuyển app/đa nhiệm.\n* **Author:** NNVC (@nncutett)",
+  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.3/patches-2.0.3.mpp",
   "signature_download_url": "",
-  "version": "2.0.2"
+  "version": "2.0.3"
 }

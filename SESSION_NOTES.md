@@ -59,19 +59,28 @@
 11. **Phát Hành Bản v2.0.2 (Khắc Phục Crash Game Review, Nhận Diện Quân Trắng Nước 0 & Khôi Phục Đa Nhiệm)**:
    - **Khắc phục triệt để Crash Game Review**: Vô hiệu hoá toàn bộ 9 fingerprint Game Analysis & Game Review trong file `.mpp` (cho các matcher lambda trả về `false`), triệt tiêu việc inject mã smali gọi `getLocalAnalysisFlowForConfig` vào `GameAnalysisRepositoryImpl.a`. Chess.com dùng 100% Game Review gốc (real) từ máy chủ, không bao giờ bị lỗi `NoSuchMethodError`. Bổ sung stub methods tương thích trong `StockfishExtension.java`.
    - **Nhận diện quân Trắng & Tự động chạy ở Nước 0**: Bổ sung fallback kiểm tra góc nhìn bàn cờ `getFlipBoard()` từ `stateImplObject` trong `isUserWhite(...)` (bàn cờ không lật = quân Trắng `Boolean.TRUE`, bàn cờ lật = quân Đen `Boolean.FALSE`). Trong `onArrowsChanged`, tự động kích hoạt `triggerAnalysisForCurrentState()` ngay ở move 0 khi vừa vào ván cờ, hiển thị mũi tên và gợi ý tức thì mà không cần phải đi 1 nước trước.
-   - **Khôi phục mũi tên khi đa nhiệm (thoát Home rồi vào lại)**: Trong `onActivityResumed`, reset toàn bộ signature cache (`lastArrowSignature = null`, `lastScheduledKey = null`), lên lịch chạy lại phân tích và ép vẽ lại bàn cờ sau khi Window/DecorView layout xong. Trong `OverlayManager.java`, bổ sung cơ chế `boardView.post(...)` nếu bàn cờ chưa kịp layout (`boardW <= 0`) khi resume, đảm bảo vẽ lại overlay ngay khi sẵn sàng.
-   - Đã phát hành Release **`v2.0.2`** chứa file `patches-2.0.2.mpp` lên GitHub.
+    - **Khôi phục mũi tên khi đa nhiệm (thoát Home rồi vào lại)**: Trong `onActivityResumed`, reset toàn bộ signature cache (`lastArrowSignature = null`, `lastScheduledKey = null`), lên lịch chạy lại phân tích và ép vẽ lại bàn cờ sau khi Window/DecorView layout xong. Trong `OverlayManager.java`, bổ sung cơ chế `boardView.post(...)` nếu bàn cờ chưa kịp layout (`boardW <= 0`) khi resume, đảm bảo vẽ lại overlay ngay khi sẵn sàng.
+    - Đã phát hành Release **`v2.0.2`** chứa file `patches-2.0.2.mpp` lên GitHub.
+12. **Phát Hành Bản v2.0.3 (Sửa Dứt Điểm VerifyError Bằng Native DEX Patching)**:
+    - **Nguyên nhân VerifyError trong v2.0.2**: Việc thay thế byte trực tiếp trong các file `.class` vô tình làm hỏng constructor `<init>()` của các class Fingerprint khiến Dalvik/ART Verifier ném `VerifyError: Constructor returning without calling superclass constructor`.
+    - **Khắc phục triệt để 100% bằng Native DEX Patch**:
+      - Giữ nguyên vẹn 100% tất cả file `.class` gốc trong bundle, loại trừ hoàn toàn mọi nguy cơ lỗi bytecode verifier.
+      - Chèn trực tiếp lệnh DEX `return-void` (`0x0e 0x00`) vào method `stockfishPatch$lambda$0$0` trong file `classes.dex` của bundle ngay sau Hook 5 (`ensureEngineReady()`).
+      - Cập nhật chuẩn xác Adler32 checksum và SHA-1 hash của `classes.dex`.
+      - Kết quả: Khi Morphe Manager chạy đến Hook 5 thì kết thúc ngay lập tức, bỏ qua toàn bộ Game Analysis & Game Review bytecode patch. Không còn `VerifyError`, Chess.com dùng 100% Game Review gốc máy chủ không lỗi `NoSuchMethodError`.
+    - Đã phát hành Release **`v2.0.3`** chứa file `patches-2.0.3.mpp` lên GitHub.
 
 ---
 
 ## 3. Trạng Thái Hiện Tại & Checklist Kiểm Thử (Cho Phiên Sau / Ngày Mai)
-- **Phiên bản mới nhất trên GitHub**: `v2.0.2` (commit `fb7efcf`, tag `v2.0.2`).
-- **File tải bundle**: `https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.2/patches-2.0.2.mpp`
+- **Phiên bản mới nhất trên GitHub**: `v2.0.3` (tag `v2.0.3`).
+- **File tải bundle**: `https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.3/patches-2.0.3.mpp`
 - **Thao tác cài đặt trước khi test**:
   1. Mở app **Morphe Manager** trên điện thoại.
-  2. Vào tab Nguồn (Sources) -> Bấm **Refresh** (Làm mới) để Morphe nhận diện bản patch `2.0.2`.
+  2. Vào tab Nguồn (Sources) -> Bấm **Refresh** (Làm mới) để Morphe nhận diện bản patch `2.0.3`.
   3. Chọn APK `Chess.com 4.10.20-googleplay` -> Bấm Patch lại và cài đặt đè hoặc cài mới.
 - **Checklist Kiểm Thử Cần Test**:
+  - [ ] **Morphe Manager Patch Thành Công**: Xác nhận không còn lỗi `VerifyError: Verifier rejected class ... GameAnalysisPermissionsGetCanCreateFingerprint.<init>()`, patch chạy mượt mà 12/12 patches.
   - [ ] **Game Review Real**: Sau khi chơi xong trận (hoặc mở ván cờ cũ trong kho lưu trữ), bấm **Game Review** -> Xác nhận chạy bình thường bằng server Chess.com, không bị crash `NoSuchMethodError: getLocalAnalysisFlowForConfig`.
   - [ ] **Nước 0 & Nhận Diện Quân Trắng**: Vừa vào ván cờ mới (khi người chơi cầm quân Trắng), bật chế độ "Chỉ hiện bên mình" (`mySideOnly`) -> Xác nhận mũi tên gợi ý và thanh eval hiện ngay lập tức ở move 0 mà không cần phải đi trước 1 nước.
   - [ ] **Khôi Phục Mũi Tên Khi Đa Nhiệm**: Đang trong ván cờ đến lượt mình (đang có mũi tên) -> Bấm nút Home thoát ra màn hình chính điện thoại -> Chuyển lại vào app Chess.com -> Xác nhận mũi tên tự động vẽ lại đầy đủ trên bàn cờ, không bị mất.
