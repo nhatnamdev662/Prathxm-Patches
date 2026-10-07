@@ -95,7 +95,7 @@ public class StockfishSettings {
     }
 
     public static int getMultiPV(Context context) {
-        return getPrefs(context).getInt(KEY_MULTIPV, 1);
+        return getPrefs(context).getInt(KEY_MULTIPV, 3);
     }
 
     public static void setMultiPV(Context context, int count) {

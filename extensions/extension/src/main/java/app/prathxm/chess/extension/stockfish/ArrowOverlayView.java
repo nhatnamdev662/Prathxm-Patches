@@ -168,7 +168,8 @@ public class ArrowOverlayView extends View {
         for (int i = arrows.size() - 1; i >= 0; i--) {
             ArrowData arrow = arrows.get(i);
             float perpOffset = computePerpOffset(i, sqSize);
-            drawSingleArrow(canvas, arrow, sqSize, perpOffset);
+            float targetOffset = computeTargetOffset(i, sqSize);
+            drawSingleArrow(canvas, arrow, sqSize, perpOffset, targetOffset);
         }
 
         // 2. Draw Eval Badges with Anti-collision avoidance synchronized with arrows
@@ -204,7 +205,23 @@ public class ArrowOverlayView extends View {
         return offset;
     }
 
-    private void drawSingleArrow(Canvas canvas, ArrowData arrow, float sqSize, float perpOffset) {
+    /**
+     * Stepped offset for multiple arrows targeting the exact same destination square
+     * matching NNVC extension (prevDestCount * sqSize * 0.22).
+     */
+    private float computeTargetOffset(int currentIndex, float sqSize) {
+        if (currentIndex <= 0 || currentIndex >= arrows.size()) return 0f;
+        ArrowData current = arrows.get(currentIndex);
+        int count = 0;
+        for (int j = 0; j < currentIndex; j++) {
+            if (current.to.equals(arrows.get(j).to)) {
+                count++;
+            }
+        }
+        return count * (sqSize * 0.22f);
+    }
+
+    private void drawSingleArrow(Canvas canvas, ArrowData arrow, float sqSize, float perpOffset, float targetOffset) {
         float[] fromCenter = getSquareCenter(arrow.from, flipped, sqSize);
         float[] toCenter   = getSquareCenter(arrow.to,   flipped, sqSize);
         if (fromCenter == null || toCenter == null) return;
@@ -216,7 +233,7 @@ public class ArrowOverlayView extends View {
         int rankDelta = Math.abs(arrow.to.charAt(1) - arrow.from.charAt(1));
         boolean isKnight = (fileDelta == 1 && rankDelta == 2) || (fileDelta == 2 && rankDelta == 1);
 
-        float thicknessScale = Math.max(0.70f, 1.0f - 0.06f * (arrow.tier - 1));
+        float thicknessScale = 1.0f - 0.06f * (arrow.tier - 1);
         float baseShaftHalf = 0.042f;
         float baseHeadHalf = 0.17f;
         float baseHeadLen = 0.24f;
@@ -229,15 +246,15 @@ public class ArrowOverlayView extends View {
         float dx = x2 - x1, dy = y2 - y1;
         float len = (float) Math.hypot(dx, dy);
         float startOffset = Math.min(len * 0.25f, sqSize * 0.16f);
-        float edgeStroke = Math.max(1.8f, sqSize * 0.032f);
+        float edgeStroke = Math.max(1.5f, sqSize * 0.032f);
 
         Path arrowPath;
         if (isKnight) {
             arrowPath = buildKnightPath(x1, y1, x2, y2, fileDelta, rankDelta,
-                    startOffset, shaftHalf, neckHalf, headHalf, headLen, perpOffset);
+                    startOffset, shaftHalf, neckHalf, headHalf, headLen, perpOffset, targetOffset);
         } else {
             arrowPath = buildStraightPath(x1, y1, x2, y2, len,
-                    startOffset, shaftHalf, neckHalf, headHalf, headLen, perpOffset);
+                    startOffset, shaftHalf, neckHalf, headHalf, headLen, perpOffset, targetOffset);
         }
         if (arrowPath == null) return;
 
@@ -286,7 +303,7 @@ public class ArrowOverlayView extends View {
 
     private Path buildStraightPath(float x1, float y1, float x2, float y2, float len,
                                    float startOffset, float shaftHalf, float neckHalf,
-                                   float headHalf, float headLen, float perpOffset) {
+                                   float headHalf, float headLen, float perpOffset, float targetOffset) {
         if (len < 2.0f) return null;
 
         float ux = (x2 - x1) / len;
@@ -294,10 +311,10 @@ public class ArrowOverlayView extends View {
         float px = -uy;
         float py = ux;
 
-        float startX = x1 + ux * startOffset + px * perpOffset;
-        float startY = y1 + uy * startOffset + py * perpOffset;
-        float endX = x2 + px * perpOffset;
-        float endY = y2 + py * perpOffset;
+        float startX = x1 + ux * startOffset + px * (perpOffset * 0.25f);
+        float startY = y1 + uy * startOffset + py * (perpOffset * 0.25f);
+        float endX = x2 - ux * targetOffset + px * perpOffset;
+        float endY = y2 - uy * targetOffset + py * perpOffset;
 
         HeadPoints h = buildHeadPoints(endX, endY, ux, uy, px, py, headLen, headHalf, neckHalf);
 
@@ -321,7 +338,7 @@ public class ArrowOverlayView extends View {
     private Path buildKnightPath(float x1, float y1, float x2, float y2,
                                  int fileDelta, int rankDelta, float startOffset,
                                  float shaftHalf, float neckHalf, float headHalf, float headLen,
-                                 float perpOffset) {
+                                 float perpOffset, float targetOffset) {
         float elbowX = x1;
         float elbowY = y2;
         if (fileDelta == 2 && rankDelta == 1) {
@@ -335,8 +352,8 @@ public class ArrowOverlayView extends View {
         float u1x = s1dx / s1len, u1y = s1dy / s1len;
         float p1x = -u1y, p1y = u1x;
 
-        float startX = x1 + u1x * startOffset + p1x * perpOffset;
-        float startY = y1 + u1y * startOffset + p1y * perpOffset;
+        float startX = x1 + u1x * startOffset + p1x * (perpOffset * 0.25f);
+        float startY = y1 + u1y * startOffset + p1y * (perpOffset * 0.25f);
 
         float s2dx = x2 - elbowX, s2dy = y2 - elbowY;
         float s2len = (float) Math.hypot(s2dx, s2dy);
@@ -344,8 +361,8 @@ public class ArrowOverlayView extends View {
         float u2x = s2dx / s2len, u2y = s2dy / s2len;
         float p2x = -u2y, p2y = u2x;
 
-        float endX = x2 + p2x * perpOffset;
-        float endY = y2 + p2y * perpOffset;
+        float endX = x2 - u2x * targetOffset + p2x * perpOffset;
+        float endY = y2 - u2y * targetOffset + p2y * perpOffset;
 
         HeadPoints h = buildHeadPoints(endX, endY, u2x, u2y, p2x, p2y, headLen, headHalf, neckHalf);
 
@@ -457,14 +474,73 @@ public class ArrowOverlayView extends View {
      * - Clamped inside target square / board bounds.
      * - Extension style: shade(rgb, 0.58) background, tint(rgb, 0.54) border, JetBrains Mono font.
      */
+    private static class RectBox {
+        final float x, y, w, h;
+        RectBox(float x, float y, float w, float h) {
+            this.x = x; this.y = y; this.w = w; this.h = h;
+        }
+    }
+
+    private static boolean checkOverlap(RectBox b1, RectBox b2, float pad) {
+        return !(b1.x + b1.w + pad < b2.x
+                || b2.x + b2.w + pad < b1.x
+                || b1.y + b1.h + pad < b2.y
+                || b2.y + b2.h + pad < b1.y);
+    }
+
+    private static class Corridor {
+        final String sq;
+        final char axis; // 'v', 'h', 'd'
+        Corridor(String sq, char axis) {
+            this.sq = sq; this.axis = axis;
+        }
+    }
+
+    /**
+     * Renders cyberpunk frosted eval score badges on top of arrows
+     * matching NNVC browser extension logic 100%:
+     * - passingCorridors detection for moves cutting through intermediate squares
+     * - 8 Candidate positions per target square with corridor avoidance
+     * - checkOverlap collision avoidance across all placed labels
+     * - Exact extension dimensions, padding, colors (shade 0.58, tint 0.54), glow, and JetBrains Mono typography.
+     */
     private void drawEvalBadges(Canvas canvas, float sqSize) {
         float bWidth = getWidth();
         float bHeight = getHeight();
         if (bWidth <= 0 || bHeight <= 0) return;
 
+        // 1. Compute passing corridors (mũi tên dài đi xuyên qua các ô trung gian)
+        List<Corridor> passingCorridors = new ArrayList<>();
+        for (ArrowData a : arrows) {
+            if (a.from == null || a.to == null || a.from.length() < 2 || a.to.length() < 2) continue;
+            int fFile = a.from.charAt(0) - 'a';
+            int fRank = a.from.charAt(1) - '1';
+            int tFile = a.to.charAt(0) - 'a';
+            int tRank = a.to.charAt(1) - '1';
+            int dFile = tFile - fFile;
+            int dRank = tRank - fRank;
+            int stepX = dFile == 0 ? 0 : (dFile > 0 ? 1 : -1);
+            int stepY = dRank == 0 ? 0 : (dRank > 0 ? 1 : -1);
+
+            if (dFile == 0 || dRank == 0 || Math.abs(dFile) == Math.abs(dRank)) {
+                int dist = Math.max(Math.abs(dFile), Math.abs(dRank));
+                if (dist > 1) {
+                    char axis = dFile == 0 ? 'v' : (dRank == 0 ? 'h' : 'd');
+                    for (int s = 1; s < dist; s++) {
+                        int midFile = fFile + stepX * s;
+                        int midRank = fRank + stepY * s;
+                        String midSq = "" + (char) ('a' + midFile) + (char) ('1' + midRank);
+                        passingCorridors.add(new Corridor(midSq, axis));
+                    }
+                }
+            }
+        }
+
+        List<RectBox> placedLabelBoxes = new ArrayList<>();
+
         for (int i = 0; i < arrows.size(); i++) {
             ArrowData arrow = arrows.get(i);
-            if (arrow.evalText == null || arrow.evalText.isEmpty()) continue;
+            if (arrow.evalText == null || arrow.evalText.trim().isEmpty()) continue;
 
             float[] fromCenter = getSquareCenter(arrow.from, flipped, sqSize);
             float[] toCenter   = getSquareCenter(arrow.to,   flipped, sqSize);
@@ -474,8 +550,9 @@ public class ArrowOverlayView extends View {
             float x2 = toCenter[0],   y2 = toCenter[1];
 
             int tierVal = arrow.tier;
+            String lblText = arrow.evalText.trim();
 
-            // 1. Metric calculations matching Extension NNVC exactly:
+            // Sizing metrics matching NNVC Extension:
             // fontSize = Math.max(9, sqSize * 0.125)
             // padH = Math.max(4, sqSize * 0.065)
             // padV = Math.max(2, sqSize * 0.035)
@@ -486,73 +563,125 @@ public class ArrowOverlayView extends View {
             float padV = Math.max(2f, sqSize * 0.035f);
 
             badgeTextPaint.setTextSize(fontSize);
-            float measuredTextW = badgeTextPaint.measureText(arrow.evalText);
-            float calcW = (arrow.evalText.length() * 0.58f + 0.3f) * fontSize + padH * 2f;
+            float measuredTextW = badgeTextPaint.measureText(lblText);
+            float calcW = (lblText.length() * 0.58f + 0.3f) * fontSize + padH * 2f;
             float rawW = Math.max(calcW, measuredTextW + padH * 2f);
             float pillW = Math.max(24f, Math.min(sqSize * 0.62f, rawW));
             float pillH = fontSize * 1.1f + padV * 2f;
 
-            // 2. Target Square Corner Anchors matching Extension NNVC:
             float sqLeft = x2 - sqSize / 2f;
             float sqTop = y2 - sqSize / 2f;
             float sqRight = x2 + sqSize / 2f;
             float sqBottom = y2 + sqSize / 2f;
 
-            float baseX = sqLeft + sqSize * 0.05f;
-            float baseY = sqTop + sqSize * 0.05f;
-
-            if (tierVal == 2) {
-                // Bottom-Left
-                baseY = sqBottom - pillH - sqSize * 0.05f;
-            } else if (tierVal == 3) {
-                // Bottom-Right
-                baseX = sqRight - pillW - sqSize * 0.05f;
-                baseY = sqBottom - pillH - sqSize * 0.05f;
-            } else if (tierVal == 4) {
-                // Top-Right
-                baseX = sqRight - pillW - sqSize * 0.05f;
-                baseY = sqTop + sqSize * 0.05f;
-            } else if (tierVal >= 5) {
-                // Midpoint of arrow shaft
-                baseX = x1 + (x2 - x1) * 0.5f - pillW / 2f;
-                baseY = y1 + (y2 - y1) * 0.5f - pillH / 2f;
+            // Kiểm tra xem ô đích to có bị mũi tên nào khác đi xuyên qua không
+            Corridor passCorridor = null;
+            for (Corridor c : passingCorridors) {
+                if (c.sq.equals(arrow.to)) {
+                    passCorridor = c;
+                    break;
+                }
             }
 
-            // Clamping within bounds
-            float minX = Math.max(2f, sqLeft + 2f);
-            float maxX = Math.min(bWidth - pillW - 2f, sqRight - pillW - 2f);
-            float minY = Math.max(2f, sqTop + 2f);
-            float maxY = Math.min(bHeight - pillH - 2f, sqBottom - pillH - 2f);
+            // 8 Candidates quanh ô đích: Tuyệt đối không đặt trên thân mũi tên!
+            List<float[]> candidates = new ArrayList<>();
+            if (passCorridor != null && passCorridor.axis == 'v') {
+                // Mũi tên dài chạy dọc: dạt lệch hẳn sang Trái / Phải
+                candidates.add(new float[]{sqLeft + 2f, sqTop + sqSize * 0.06f});
+                candidates.add(new float[]{sqRight - pillW - 2f, sqTop + sqSize * 0.06f});
+                candidates.add(new float[]{sqLeft + 2f, sqBottom - pillH - sqSize * 0.06f});
+                candidates.add(new float[]{sqRight - pillW - 2f, sqBottom - pillH - sqSize * 0.06f});
+                candidates.add(new float[]{sqLeft - pillW - 2f, sqTop + (sqSize - pillH) / 2f});
+                candidates.add(new float[]{sqRight + 2f, sqTop + (sqSize - pillH) / 2f});
+            } else if (passCorridor != null && passCorridor.axis == 'h') {
+                // Mũi tên dài chạy ngang: dạt lệch hẳn lên Trên / Dưới
+                candidates.add(new float[]{sqLeft + sqSize * 0.06f, sqTop + 2f});
+                candidates.add(new float[]{sqRight - pillW - sqSize * 0.06f, sqTop + 2f});
+                candidates.add(new float[]{sqLeft + sqSize * 0.06f, sqBottom - pillH - 2f});
+                candidates.add(new float[]{sqRight - pillW - sqSize * 0.06f, sqBottom - pillH - 2f});
+                candidates.add(new float[]{sqLeft + (sqSize - pillW) / 2f, sqTop - pillH - 2f});
+                candidates.add(new float[]{sqLeft + (sqSize - pillW) / 2f, sqBottom + 2f});
+            } else {
+                // 0: Góc Trên - Trái ô đích
+                candidates.add(new float[]{sqLeft + sqSize * 0.04f, sqTop + sqSize * 0.04f});
+                // 1: Góc Trên - Phải ô đích
+                candidates.add(new float[]{sqRight - pillW - sqSize * 0.04f, sqTop + sqSize * 0.04f});
+                // 2: Góc Dưới - Trái ô đích
+                candidates.add(new float[]{sqLeft + sqSize * 0.04f, sqBottom - pillH - sqSize * 0.04f});
+                // 3: Góc Dưới - Phải ô đích
+                candidates.add(new float[]{sqRight - pillW - sqSize * 0.04f, sqBottom - pillH - sqSize * 0.04f});
+                // 4: Cạnh ngoài phía trên ô đích
+                candidates.add(new float[]{sqLeft + (sqSize - pillW) / 2f, sqTop - pillH - 2f});
+                // 5: Cạnh ngoài phía dưới ô đích
+                candidates.add(new float[]{sqLeft + (sqSize - pillW) / 2f, sqBottom + 2f});
+                // 6: Cạnh ngoài bên trái ô đích
+                candidates.add(new float[]{sqLeft - pillW - 2f, sqTop + (sqSize - pillH) / 2f});
+                // 7: Cạnh ngoài bên phải ô đích
+                candidates.add(new float[]{sqRight + 2f, sqTop + (sqSize - pillH) / 2f});
+            }
 
-            float labelX = maxX >= minX ? Math.max(minX, Math.min(maxX, baseX)) : Math.max(2f, Math.min(bWidth - pillW - 2f, baseX));
-            float labelY = maxY >= minY ? Math.max(minY, Math.min(maxY, baseY)) : Math.max(2f, Math.min(bHeight - pillH - 2f, baseY));
+            int prefIdx = tierVal == 1 ? 0 : (tierVal == 2 ? 1 : (tierVal == 3 ? 2 : (tierVal == 4 ? 3 : 0)));
+            if (prefIdx >= candidates.size()) prefIdx = 0;
 
-            // 3. Styling & Colors matching Extension NNVC:
-            // isBookLabel check
-            boolean isBookLabel = "BOOK".equals(arrow.evalText);
+            List<Integer> order = new ArrayList<>();
+            order.add(prefIdx);
+            for (int k = 0; k < candidates.size(); k++) {
+                if (k != prefIdx) order.add(k);
+            }
+
+            RectBox chosen = null;
+            for (int candIdx : order) {
+                float[] cand = candidates.get(candIdx);
+                float clampedX = Math.max(2f, Math.min(bWidth - pillW - 2f, cand[0]));
+                float clampedY = Math.max(2f, Math.min(bHeight - pillH - 2f, cand[1]));
+                RectBox box = new RectBox(clampedX, clampedY, pillW, pillH);
+
+                boolean hasCollision = false;
+                for (RectBox placed : placedLabelBoxes) {
+                    if (checkOverlap(box, placed, 3f)) {
+                        hasCollision = true;
+                        break;
+                    }
+                }
+                if (!hasCollision) {
+                    chosen = box;
+                    break;
+                }
+            }
+
+            if (chosen == null) {
+                float[] fallbackCand = candidates.get(prefIdx);
+                chosen = new RectBox(
+                        Math.max(2f, Math.min(bWidth - pillW - 2f, fallbackCand[0])),
+                        Math.max(2f, Math.min(bHeight - pillH - 2f, fallbackCand[1])),
+                        pillW, pillH
+                );
+            }
+            placedLabelBoxes.add(chosen);
+
+            float labelX = chosen.x;
+            float labelY = chosen.y;
+
+            // Styling & Colors matching NNVC Extension:
+            boolean isBookLabel = "BOOK".equals(lblText);
             int[] rawRgb = getBaseRgb(getContext(), arrow.tier, arrow.isThreat);
             int[] rgb = (arrow.tier == 2) ? tint(rawRgb, 0.12f)
                     : (arrow.tier >= 3) ? tint(rawRgb, 0.30f)
                     : rawRgb;
 
-            // bgCol = isBookLabel ? rgba(28, 25, 23, 0.94) : rgba(shade(rgb, .58), tierVal === 1 ? .92 : .82)
             int[] shadeRgb = shade(rgb, 0.58f);
             float bgAlpha = tierVal == 1 ? 0.92f : 0.82f;
             int bgCol = isBookLabel
                     ? Color.argb((int)(0.94f * 255), 28, 25, 23)
                     : Color.argb((int)(bgAlpha * 255), shadeRgb[0], shadeRgb[1], shadeRgb[2]);
 
-            // borderCol = isBookLabel ? rgba(245, 158, 11, 0.85) : rgba(tint(rgb, .54), tierVal === 1 ? .64 : .44)
             int[] tintBorder = tint(rgb, 0.54f);
             float borderAlpha = tierVal == 1 ? 0.64f : 0.44f;
             int borderCol = isBookLabel
                     ? Color.argb((int)(0.85f * 255), 245, 158, 11)
                     : Color.argb((int)(borderAlpha * 255), tintBorder[0], tintBorder[1], tintBorder[2]);
 
-            // text color: #fbbf24 for BOOK, #f8fbff for regular eval
             int textColor = isBookLabel ? 0xFFFBBF24 : 0xFFF8FBFF;
-
-            // corner radius = Math.max(5, sqSize * 0.09)
             float cornerRadius = Math.max(5f, sqSize * 0.09f);
 
             android.graphics.RectF rect = new android.graphics.RectF(labelX, labelY, labelX + pillW, labelY + pillH);
@@ -563,7 +692,7 @@ public class ArrowOverlayView extends View {
             badgeGlowPaint.setMaskFilter(new BlurMaskFilter(Math.max(1.5f, sqSize * 0.035f), BlurMaskFilter.Blur.NORMAL));
             canvas.drawRoundRect(rect, cornerRadius, cornerRadius, badgeGlowPaint);
 
-            // Background Fill
+            // Background Fill (Frosted Glass with tint/shade)
             badgeBgPaint.setColor(bgCol);
             canvas.drawRoundRect(rect, cornerRadius, cornerRadius, badgeBgPaint);
 
@@ -580,7 +709,7 @@ public class ArrowOverlayView extends View {
             Paint.FontMetrics fm = badgeTextPaint.getFontMetrics();
             float textBaseline = labelY + (pillH - (fm.ascent + fm.descent)) / 2f;
             float textX = labelX + pillW / 2f;
-            canvas.drawText(arrow.evalText, textX, textBaseline, badgeTextPaint);
+            canvas.drawText(lblText, textX, textBaseline, badgeTextPaint);
         }
     }
 }
