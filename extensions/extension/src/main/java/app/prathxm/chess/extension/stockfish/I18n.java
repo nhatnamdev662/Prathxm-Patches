@@ -13,66 +13,66 @@ public class I18n {
                 return isVi ? "AI ENGINE · CHESS.COM" : "AI ENGINE · CHESS.COM";
             case "tab_live":
                 return "LIVE";
-            case "tab_visual":
-                return "VISUAL";
             case "tab_engine":
                 return "ENGINE";
+            case "tab_arrows":
+                return "ARROWS";
+            case "tab_visual":
+                return "VISUAL";
             case "engine":
                 return isVi ? "Engine" : "Engine";
+            case "card_control":
+                return isVi ? "Điều Khiển" : "Controls";
             case "enable_stockfish":
-                return isVi ? "Bật Stockfish" : "Enable Stockfish";
+                return isVi ? "Bật Engine" : "Enable Engine";
             case "panic_hint":
                 return isVi ? "Chạm đúp vào thanh trên để bật/tắt ngay lập tức (chế độ ẩn)." : "Double-tap the top bar to switch it off or on instantly (panic mode).";
+            case "card_elo":
+                return isVi ? "Engine Strength" : "Engine Strength";
+            case "row_elo":
+                return isVi ? "Elo" : "Elo";
+            case "elo_hint":
+                return isVi ? "Điều chỉnh trình độ gợi ý của Engine theo mức Elo." : "Adjust the engine Elo.";
             case "depth":
-                return isVi ? "Độ sâu phân tích" : "Analysis depth";
+                return isVi ? "Độ Sâu (Depth)" : "Depth";
             case "depth_hint":
-                return isVi ? "Càng cao càng mạnh nhưng chậm hơn. Mức 18–22 phù hợp hầu hết điện thoại." : "Higher is stronger but slower. 18–22 suits most phones. Arrows update while the engine thinks.";
-            case "on_board":
-                return isVi ? "Hiển thị trên bàn cờ" : "On the board";
+                return isVi ? "Độ sâu tìm kiếm nước đi tối ưu của Engine." : "Search depth for optimal moves.";
+            case "card_arrow":
+                return isVi ? "Thiết Lập Mũi Tên" : "Arrow Settings";
             case "best_move_arrows":
-                return isVi ? "Mũi tên nước đi tốt nhất" : "Best-move arrows";
-            case "eval_bar":
-                return isVi ? "Thanh đánh giá thế cờ (Eval bar)" : "Evaluation bar";
-            case "rate_moves":
-                return isVi ? "Đánh giá từng nước đi (Best, Blunder…)" : "Rate each move (Best, Blunder…)";
-            case "show_advanced":
-                return isVi ? "Hiện cài đặt nâng cao ▾" : "Show advanced settings ▾";
-            case "hide_advanced":
-                return isVi ? "Ẩn cài đặt nâng cao ▴" : "Hide advanced settings ▴";
-            case "arrows_overlays":
-                return isVi ? "Mũi tên & Lớp phủ" : "Arrows & overlays";
+                return isVi ? "Bật / Tắt Mũi Tên" : "Toggle Arrows";
+            case "best_move_arrows_hint":
+                return isVi ? "Bật hoặc tắt toàn bộ mũi tên gợi ý trên bàn cờ." : "Toggle all suggestion arrows on board.";
             case "num_arrows":
-                return isVi ? "Số lượng mũi tên" : "Number of arrows";
+                return isVi ? "Số Lượng Mũi Tên" : "Arrow Limit";
             case "arrows_hint":
-                return isVi ? "Màu xanh lá là nước tối ưu, kế đến là xanh dương, cam và tím." : "Green is the best move, then blue, orange and purple. More arrows make each search a little slower.";
+                return isVi ? "Mũi tên 1 luôn bật tối ưu. Tăng số lượng để xem thêm các nước ứng viên." : "Move 1 is always optimal. Increase limit to view more candidate moves.";
             case "opponent_arrows":
-                return isVi ? "Mũi tên đối thủ" : "Opponent arrows";
+                return isVi ? "Mũi Tên Đối Thủ" : "Opponent Arrows";
             case "opponent_arrows_hint":
-                return isVi ? "Hiện mũi tên gợi ý khi đến lượt đối thủ." : "Show arrows when it is opponent's turn.";
+                return isVi ? "Hiện mũi tên gợi ý khi đến lượt đối thủ." : "Show suggestion arrows when it is opponent's turn.";
             case "threat_arrow":
-                return isVi ? "Mũi tên hiểm hoạ" : "Threat arrow";
+                return isVi ? "Mũi Tên Đe Dọa" : "Threat Arrow";
             case "threat_arrow_hint":
                 return isVi ? "Nước đi đáp trả nguy hiểm nhất của đối thủ (đỏ crimson)." : "Opponent's most dangerous reply (crimson).";
-            case "wdl_bar":
-                return isVi ? "Thanh Thắng / Hoà / Thua (WDL)" : "Win / Draw / Loss bar";
-            case "depth_score_above":
-                return isVi ? "Hiện độ sâu & điểm số phía trên bàn cờ" : "Depth & score above the board";
+            case "card_cfg":
+                return isVi ? "Giao Diện" : "Visual Interface";
+            case "eval_bar":
+                return isVi ? "Thanh Eval Bar" : "Eval Bar";
+            case "eval_bar_hint":
+                return isVi ? "Hiện thanh đánh giá cạnh bàn cờ." : "Show evaluation bar next to the board.";
             case "forced_mates":
-                return isVi ? "Thông báo nước chiếu hết bắt buộc" : "Announce forced mates";
+                return isVi ? "Thông Báo Chiếu Hết" : "Mate Announcement";
+            case "forced_mates_hint":
+                return isVi ? "Thông báo nước chiếu hết bắt buộc khi Engine phát hiện đòn Mate." : "Announce forced checkmate when detected.";
+            case "rate_moves":
+                return isVi ? "Đánh Giá Nước Đi" : "Rate Moves";
             case "vibrate_blunder":
-                return isVi ? "Rung khi mắc sai lầm & Blunder" : "Vibrate on mistakes & blunders";
+                return isVi ? "Rung Khi Mắc Sai Lầm" : "Vibrate on Mistakes";
             case "vibrate_hint":
-                return isVi ? "Cần bật \"Đánh giá từng nước đi\"." : "Needs \"Rate each move\" to be on.";
-            case "engine_strength":
-                return isVi ? "Sức mạnh Engine" : "Engine strength";
-            case "limit_strength":
-                return isVi ? "Giới hạn sức mạnh theo Elo" : "Limit strength to an Elo";
-            case "engine_elo":
-                return isVi ? "Elo Engine" : "Engine Elo";
-            case "elo_hint":
-                return isVi ? "Điều chỉnh trình độ gợi ý của Engine theo mức Elo." : "Adjusts the engine strength to a specific Elo rating.";
+                return isVi ? "Rung cảnh báo khi vừa đi nước đi không tối ưu hoặc Blunder." : "Vibrate warning on sub-optimal or blunder moves.";
             case "reset_defaults":
-                return isVi ? "Đặt lại cài đặt engine về mặc định" : "Reset engine settings to defaults";
+                return isVi ? "Đặt Lại Cài Đặt Mặc Định" : "Reset to Defaults";
             case "reset_title":
                 return isVi ? "Đặt lại cài đặt engine?" : "Reset engine settings?";
             case "reset_message":

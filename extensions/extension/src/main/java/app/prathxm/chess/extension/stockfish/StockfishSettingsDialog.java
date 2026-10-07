@@ -225,12 +225,14 @@ public class StockfishSettingsDialog {
         tabNav.setBackground(tabNavBg);
 
         final TextView tabLive = createTabButton(activity, I18n.get(activity, "tab_live"), true, density);
-        final TextView tabVisual = createTabButton(activity, I18n.get(activity, "tab_visual"), false, density);
         final TextView tabEngine = createTabButton(activity, I18n.get(activity, "tab_engine"), false, density);
+        final TextView tabArrows = createTabButton(activity, I18n.get(activity, "tab_arrows"), false, density);
+        final TextView tabVisual = createTabButton(activity, I18n.get(activity, "tab_visual"), false, density);
 
         tabNav.addView(tabLive);
-        tabNav.addView(tabVisual);
         tabNav.addView(tabEngine);
+        tabNav.addView(tabArrows);
+        tabNav.addView(tabVisual);
 
         windowRoot.addView(tabNav);
 
@@ -292,7 +294,7 @@ public class StockfishSettingsDialog {
 
         addDialogSpacer(panelLive, 8, density);
 
-        // Live options in Glass Card
+        // Card: Điều Khiển (Controls)
         LinearLayout liveCard = createGlassCard(activity, density);
         panelLive.addView(liveCard);
 
@@ -302,97 +304,32 @@ public class StockfishSettingsDialog {
                 StockfishSettings.isEngineEnabled(activity),
                 density, activity);
 
-        // ─── TAB 2: VISUAL (Mũi tên & Giao diện) ───
-        final LinearLayout panelVisual = new LinearLayout(activity);
-        panelVisual.setOrientation(LinearLayout.VERTICAL);
-        panelVisual.setVisibility(View.GONE);
-        tabContentRoot.addView(panelVisual);
-
-        LinearLayout visualCard = createGlassCard(activity, density);
-        panelVisual.addView(visualCard);
-
-        final CyberSwitchView arrowsSwitch = addCyberSwitchRow(visualCard,
-                I18n.get(activity, "best_move_arrows"),
-                null,
-                StockfishSettings.isArrowsVisible(activity),
-                density, activity);
-
-        addCardSeparator(visualCard, density);
-
-        // Mũi tên đối thủ (Bật: hiện cả đối thủ, Tắt: chỉ hiện bên mình)
-        final CyberSwitchView oppArrowsSwitch = addCyberSwitchRow(visualCard,
-                I18n.get(activity, "opponent_arrows"),
-                I18n.get(activity, "opponent_arrows_hint"),
-                !StockfishSettings.isMySideOnly(activity),
-                density, activity);
-
-        addCardSeparator(visualCard, density);
-
-        int currentPV = StockfishSettings.getMultiPV(activity);
-        final String pvPrefix = I18n.get(activity, "num_arrows");
-        final SeekBar pvSeekBar = addGlassSeekBarWithBadge(visualCard, pvPrefix,
-                currentPV + " PV",
-                currentPV - 1, 4, 1,
-                I18n.get(activity, "arrows_hint"),
-                density, activity);
-
-        addCardSeparator(visualCard, density);
-
-        // Mũi tên hiểm hoạ độc lập
-        final CyberSwitchView threatSwitch = addCyberSwitchRow(visualCard,
-                I18n.get(activity, "threat_arrow"),
-                I18n.get(activity, "threat_arrow_hint"),
-                StockfishSettings.isThreatArrowsEnabled(activity),
-                density, activity);
-
-        addCardSeparator(visualCard, density);
-
-        final CyberSwitchView evalBarSwitch = addCyberSwitchRow(visualCard,
-                I18n.get(activity, "eval_bar"),
-                null,
-                StockfishSettings.isEvalBarEnabled(activity),
-                density, activity);
-
-        addCardSeparator(visualCard, density);
-
-        final CyberSwitchView mateSwitch = addCyberSwitchRow(visualCard,
-                I18n.get(activity, "forced_mates"),
-                null,
-                StockfishSettings.isMateAnnouncementEnabled(activity),
-                density, activity);
-
-        // Bảng màu mũi tên gợi ý Cyber Luxury
-        LinearLayout paletteCard = createGlassCard(activity, density);
-        panelVisual.addView(paletteCard);
-
-        addArrowPaletteSection(paletteCard, density, activity);
-
-        // ─── TAB 3: ENGINE (Sức mạnh & Phân loại) ───
+        // ─── TAB 2: ENGINE (Sức mạnh & Phân loại) ───
         final LinearLayout panelEngine = new LinearLayout(activity);
         panelEngine.setOrientation(LinearLayout.VERTICAL);
         panelEngine.setVisibility(View.GONE);
         tabContentRoot.addView(panelEngine);
 
+        // Card: Engine Strength
         LinearLayout engineCard = createGlassCard(activity, density);
         panelEngine.addView(engineCard);
 
-        // Độ sâu phân tích (Depth) và Elo luôn hoạt động và nằm liền kề sát nhau
+        int currentElo = Math.max(1320, Math.min(3190, StockfishSettings.getElo(activity)));
+        final String eloPrefix = I18n.get(activity, "row_elo");
+        final SeekBar eloSeekBar = addGlassSeekBarWithBadge(engineCard, eloPrefix,
+                currentElo + " ELO",
+                currentElo - 1320, 3190 - 1320, 1320,
+                I18n.get(activity, "elo_hint"),
+                density, activity);
+
+        addCardSeparator(engineCard, density);
+
         int currentDepth = StockfishSettings.getDepth(activity);
         final String depthPrefix = I18n.get(activity, "depth");
         final SeekBar depthSeekBar = addGlassSeekBarWithBadge(engineCard, depthPrefix,
                 String.valueOf(currentDepth),
                 currentDepth - 1, StockfishSettings.MAX_DEPTH - 1, 1,
                 I18n.get(activity, "depth_hint"),
-                density, activity);
-
-        addCardSeparator(engineCard, density);
-
-        int currentElo = Math.max(1320, Math.min(3190, StockfishSettings.getElo(activity)));
-        final String eloPrefix = I18n.get(activity, "engine_elo");
-        final SeekBar eloSeekBar = addGlassSeekBarWithBadge(engineCard, eloPrefix,
-                currentElo + " ELO",
-                currentElo - 1320, 3190 - 1320, 1320,
-                I18n.get(activity, "elo_hint"),
                 density, activity);
 
         addCardSeparator(engineCard, density);
@@ -442,29 +379,108 @@ public class StockfishSettingsDialog {
         });
         engineCard.addView(resetBtn);
 
+        // ─── TAB 3: ARROWS (Thiết Lập Mũi Tên & Bảng Màu) ───
+        final LinearLayout panelArrows = new LinearLayout(activity);
+        panelArrows.setOrientation(LinearLayout.VERTICAL);
+        panelArrows.setVisibility(View.GONE);
+        tabContentRoot.addView(panelArrows);
+
+        // Card: Thiết Lập Mũi Tên
+        LinearLayout arrowCard = createGlassCard(activity, density);
+        panelArrows.addView(arrowCard);
+
+        final CyberSwitchView arrowsSwitch = addCyberSwitchRow(arrowCard,
+                I18n.get(activity, "best_move_arrows"),
+                I18n.get(activity, "best_move_arrows_hint"),
+                StockfishSettings.isArrowsVisible(activity),
+                density, activity);
+
+        addCardSeparator(arrowCard, density);
+
+        int currentPV = StockfishSettings.getMultiPV(activity);
+        final String pvPrefix = I18n.get(activity, "num_arrows");
+        final SeekBar pvSeekBar = addGlassSeekBarWithBadge(arrowCard, pvPrefix,
+                currentPV + " PV",
+                currentPV - 1, 4, 1,
+                I18n.get(activity, "arrows_hint"),
+                density, activity);
+
+        addCardSeparator(arrowCard, density);
+
+        // Mũi Tên Đối Thủ
+        final CyberSwitchView oppArrowsSwitch = addCyberSwitchRow(arrowCard,
+                I18n.get(activity, "opponent_arrows"),
+                I18n.get(activity, "opponent_arrows_hint"),
+                !StockfishSettings.isMySideOnly(activity),
+                density, activity);
+
+        addCardSeparator(arrowCard, density);
+
+        // Mũi Tên Đe Dọa
+        final CyberSwitchView threatSwitch = addCyberSwitchRow(arrowCard,
+                I18n.get(activity, "threat_arrow"),
+                I18n.get(activity, "threat_arrow_hint"),
+                StockfishSettings.isThreatArrowsEnabled(activity),
+                density, activity);
+
+        // Card: Bảng Màu Mũi Tên Gợi Ý Cyber Luxury
+        LinearLayout paletteCard = createGlassCard(activity, density);
+        panelArrows.addView(paletteCard);
+
+        addArrowPaletteSection(paletteCard, density, activity);
+
+        // ─── TAB 4: VISUAL (Giao Diện & Lớp Phủ) ───
+        final LinearLayout panelVisual = new LinearLayout(activity);
+        panelVisual.setOrientation(LinearLayout.VERTICAL);
+        panelVisual.setVisibility(View.GONE);
+        tabContentRoot.addView(panelVisual);
+
+        // Card: Giao Diện
+        LinearLayout visualCard = createGlassCard(activity, density);
+        panelVisual.addView(visualCard);
+
+        final CyberSwitchView evalBarSwitch = addCyberSwitchRow(visualCard,
+                I18n.get(activity, "eval_bar"),
+                I18n.get(activity, "eval_bar_hint"),
+                StockfishSettings.isEvalBarEnabled(activity),
+                density, activity);
+
+        addCardSeparator(visualCard, density);
+
+        final CyberSwitchView mateSwitch = addCyberSwitchRow(visualCard,
+                I18n.get(activity, "forced_mates"),
+                I18n.get(activity, "forced_mates_hint"),
+                StockfishSettings.isMateAnnouncementEnabled(activity),
+                density, activity);
+
         // Tab Switching Click Listeners kèm Hoạt ảnh Fade & Slide mượt mà + Phản hồi rung
         View.OnClickListener tabListener = v -> {
             HapticHelper.tick(activity, v);
             boolean isL = (v == tabLive);
-            boolean isV = (v == tabVisual);
             boolean isE = (v == tabEngine);
+            boolean isA = (v == tabArrows);
+            boolean isV = (v == tabVisual);
 
             updateTabStyle(tabLive, isL, density);
-            updateTabStyle(tabVisual, isV, density);
             updateTabStyle(tabEngine, isE, density);
+            updateTabStyle(tabArrows, isA, density);
+            updateTabStyle(tabVisual, isV, density);
 
             if (isL) {
-                switchTabWithAnim(panelLive, panelVisual, panelEngine);
-            } else if (isV) {
-                switchTabWithAnim(panelVisual, panelLive, panelEngine);
+                switchTabWithAnim(panelLive, panelEngine, panelArrows, panelVisual);
+            } else if (isE) {
+                switchTabWithAnim(panelEngine, panelLive, panelArrows, panelVisual);
+            } else if (isA) {
+                switchTabWithAnim(panelArrows, panelLive, panelEngine, panelVisual);
             } else {
-                switchTabWithAnim(panelEngine, panelLive, panelVisual);
+                switchTabWithAnim(panelVisual, panelLive, panelEngine, panelArrows);
             }
         };
 
         tabLive.setOnClickListener(tabListener);
-        tabVisual.setOnClickListener(tabListener);
         tabEngine.setOnClickListener(tabListener);
+        tabArrows.setOnClickListener(tabListener);
+        tabVisual.setOnClickListener(tabListener);
 
         windowRoot.addView(scrollView);
 
