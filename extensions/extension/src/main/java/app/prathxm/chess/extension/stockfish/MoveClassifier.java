@@ -24,6 +24,7 @@ public class MoveClassifier {
     private static final List<String> fenHistory = new ArrayList<>();
     private static final Map<String, Float> fenToEvalMap = new ConcurrentHashMap<>();
     private static final Map<String, List<String>> fenToBestMovesMap = new ConcurrentHashMap<>();
+    private static final Map<String, String> keyToFullFenMap = new ConcurrentHashMap<>();
     /** Line evaluations (MultiPV) for calculating gap between top lines. */
     private static final Map<String, float[]> fenToLineScoresMap = new ConcurrentHashMap<>();
     /** Principal variation lines from this position. */
@@ -53,6 +54,7 @@ public class MoveClassifier {
     private static void clearMaps() {
         fenToEvalMap.clear();
         fenToBestMovesMap.clear();
+        keyToFullFenMap.clear();
         fenToDepthMap.clear();
         fenToLineScoresMap.clear();
         fenToPvMap.clear();
@@ -121,6 +123,7 @@ public class MoveClassifier {
     public static void updateHistory(String fen) {
         String key = getFenKey(fen);
         if (key == null) return;
+        if (fen != null) keyToFullFenMap.put(key, fen);
         synchronized (fenHistory) {
             int idx = fenHistory.indexOf(key);
             if (idx >= 0) {
@@ -293,28 +296,49 @@ public class MoveClassifier {
                 return;
             }
 
+            if (currentFen != null) {
+                keyToFullFenMap.put(currentKey, currentFen);
+            }
+
             final Activity currentAct = activity;
             TorchEngine.log("[CLASSIFIER TRIGGER] Move=" + uciMove + ", whiteMoved=" + whiteMoved + ", torchReady=" + TorchEngine.getInstance(context).isReady());
 
             // ── 1. 100% Real Torch WebAssembly Engine Execution ──
             TorchEngine torch = TorchEngine.getInstance(context);
             if (torch.isReady()) {
-                List<String> moves = getPlayedMoves();
-                if (moves.isEmpty()) moves.add(uciMove);
                 String userColor = whiteMoved ? "white" : "black";
                 final String finalUci = uciMove;
                 final String transitionKey = transition;
                 classifiedMoves.add(transitionKey);
-                torch.analyze(moves, userColor, (classificationName, playedMoveLan, bestMoveLan, speechText, rawJson) -> {
-                    TorchEngine.log("[CLASSIFIER CALLBACK] class=" + classificationName + ", act=" + (currentAct != null));
-                    if (currentAct != null) {
-                        currentAct.runOnUiThread(() -> {
-                            displayTorchClassification(currentAct, classificationName,
-                                    (playedMoveLan != null && !playedMoveLan.isEmpty()) ? playedMoveLan : finalUci,
-                                    speechText);
-                        });
-                    }
-                });
+
+                String fullPrevFen = keyToFullFenMap.get(prevKey);
+                if (fullPrevFen != null && !fullPrevFen.isEmpty()) {
+                    String posCmd = "position fen " + fullPrevFen + " moves " + uciMove;
+                    TorchEngine.log("[ANALYZE POS CMD] " + posCmd);
+                    torch.analyzePosition(posCmd, userColor, 4, (classificationName, playedMoveLan, bestMoveLan, speechText, rawJson) -> {
+                        TorchEngine.log("[CLASSIFIER CALLBACK] class=" + classificationName + ", act=" + (currentAct != null));
+                        if (currentAct != null) {
+                            currentAct.runOnUiThread(() -> {
+                                displayTorchClassification(currentAct, classificationName,
+                                        (playedMoveLan != null && !playedMoveLan.isEmpty()) ? playedMoveLan : finalUci,
+                                        speechText);
+                            });
+                        }
+                    });
+                } else {
+                    List<String> moves = getPlayedMoves();
+                    if (moves.isEmpty()) moves.add(uciMove);
+                    torch.analyze(moves, userColor, (classificationName, playedMoveLan, bestMoveLan, speechText, rawJson) -> {
+                        TorchEngine.log("[CLASSIFIER CALLBACK] class=" + classificationName + ", act=" + (currentAct != null));
+                        if (currentAct != null) {
+                            currentAct.runOnUiThread(() -> {
+                                displayTorchClassification(currentAct, classificationName,
+                                        (playedMoveLan != null && !playedMoveLan.isEmpty()) ? playedMoveLan : finalUci,
+                                        speechText);
+                            });
+                        }
+                    });
+                }
                 return;
             }
 

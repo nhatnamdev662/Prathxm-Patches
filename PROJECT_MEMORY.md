@@ -1,6 +1,6 @@
 # NHẬT KÝ DỰ ÁN & BỘ GHI NHỚ DẶN DÒ (PROJECT MEMORY)
 *Dự án: Chess Mobile - ReVanced Extension Patches cho Chess.com Android*
-*Phiên bản hiện tại: v2.0.13*
+*Phiên bản hiện tại: v2.0.15*
 *Cập nhật lần cuối: 2026-10-07*
 
 ---
@@ -99,3 +99,11 @@
     - Áp dụng bộ lọc nghiêm ngặt (Strict Filter): Loại bỏ 100% đồng hồ thời gian (chứa dấu `:`, `|`), đơn vị thời gian (`min`, `sec`), điểm quân chênh lệch (`+1`, `-3`). Chỉ nhận đúng định dạng Elo số nguyên từ 100 đến 3800.
     - Tự động nhận diện hướng bàn cờ (Flipped board) để gán đúng `WhiteElo` và `BlackElo`.
     - Tự động đồng bộ vào Torch WebAssembly Engine qua `setoption name WhiteElo/BlackElo value ...`.
+- **v2.0.15**:
+  - **Khắc phục lỗi `RuntimeError: Aborted()` trong Torch WebAssembly**:
+    - **Nguyên nhân cốt lõi**: Khi tham gia ván cờ dở dang hoặc nhảy nước (ở nước đi thứ N), việc gửi `position startpos moves <uciMove>` khiến nước đi đó trở thành *Illegal Move* so với vị trí khởi đầu `startpos`, dẫn đến Engine Komodo/Torch WebAssembly kích hoạt assertion fail và bị abort (`RuntimeError: Aborted()`).
+    - **Giải pháp triệt để**:
+      - Lưu trữ toàn bộ chuỗi FEN hoàn chỉnh tương ứng với từng trạng thái bàn cờ (`keyToFullFenMap`).
+      - Dựng lệnh phân loại chuẩn xác theo vị trí thực tế trước nước đi: `position fen <PREV_FULL_FEN> moves <UCI_MOVE>`.
+      - Bổ sung cơ chế `analyzePosition(posCmd, ...)` trong `TorchEngine.java`.
+      - Bổ sung cơ chế Auto-Recover Worker: Tự động khởi động lại Worker sau 1.5s nếu gặp bất kỳ lỗi `RuntimeError: Aborted()` nào để khôi phục trạng thái sạch cho engine.

@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-10-07T21:40:00",
-  "description": "## [2.0.14] (2026-10-07)\n\n### ⚡ NNVC v2.0.14 — Tự động nhận diện Elo đối thủ & người chơi với bộ lọc nghiêm ngặt (Strict Filter)\n\n* **Tự động quét Elo 2 bên (EloScanner):** Quét chính xác vị trí hiển thị Elo của Player Top và Player Bottom quanh bàn cờ ChessBoardView, tự động đồng bộ hóa `WhiteElo` và `BlackElo` vào Torch WebAssembly Engine giống 100% bản Extension.\n* **Bộ lọc chống nhận diện nhầm (Strict Anti-Pollution Filter):** Loại bỏ triệt để đồng hồ thời gian (10:00, 3:15), thời lượng ván đấu, điểm số chênh lệch quân cờ (+1, -2), chỉ bắt đúng số Elo chuẩn trong phạm vi 100 - 3800.\n* **Tự động đảo chiều theo hướng bàn cờ:** Tương thích hoàn toàn với góc nhìn lật bàn cờ (Flipped board) của người cầm quân Trắng hay Đen.\n* **Author:** NNVC (@nncutett)",
-  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.14/patches-2.0.14.mpp",
+  "created_at": "2026-10-07T21:50:00",
+  "description": "## [2.0.15] (2026-10-07)\n\n### ⚡ NNVC v2.0.15 — Sửa triệt để RuntimeError Aborted trong Torch WebAssembly & đồng bộ FEN chuẩn xác\n\n* **Sửa dứt điểm lỗi Aborted() khi phân loại nước đi dở dang:** Khắc phục tình trạng gửi `position startpos moves <uciMove>` gây ra illegal move và crash Komodo/Torch WebAssembly runtime assertion.\n* **Chuyển sang cơ chế FEN chuẩn xác 100%:** Dựng lệnh `position fen <PREV_FULL_FEN> moves <UCI_MOVE>` đồng bộ tuyệt đối với thế cờ thực tế trên bàn cờ trước khi nước đi diễn ra.\n* **Cơ chế Auto-Recover Worker:** Tự động phát hiện và khôi phục Web Worker sau 1.5s nếu gặp bất kỳ lỗi runtime bất ngờ nào.\n* **Author:** NNVC (@nncutett)",
+  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.15/patches-2.0.15.mpp",
   "signature_download_url": "",
-  "version": "2.0.14"
+  "version": "2.0.15"
 }
