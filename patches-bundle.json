@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-10-07T21:00:00",
-  "description": "## [2.0.12] (2026-10-07)\n\n### ⚡ NNVC v2.0.12 — Bổ sung Nhật ký chẩn đoán Torch & Fix phản hồi phân loại nước đi\n\n* **Nút Xem & Copy Log trong Menu Cài Đặt:** Thêm tính năng chẩn đoán toàn diện (Diagnostic Logger), sao chép toàn bộ tiến trình nạp WASM/JS, lỗi console của WebView chỉ với 1 chạm.\n* **Bật mặc định phân loại nước cờ:** Đổi `show_move_classification` sang mặc định `true`.\n* **WebChromeClient & XHR polyfill hoàn thiện:** Bắt toàn diện log JS/WASM từ Torch Worker, hỗ trợ giả lập XHR đồng bộ/bất đồng bộ chuẩn 100% như trên tiện ích Extension.\n* **Author:** NNVC (@nncutett)",
-  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.12/patches-2.0.12.mpp",
+  "created_at": "2026-10-07T21:30:00",
+  "description": "## [2.0.13] (2026-10-07)\n\n### ⚡ NNVC v2.0.13 — Fix triệt để JS SyntaxError Worker, Nâng cấp Diagnostic Logger & Nhật ký dự án\n\n* **Fix triệt để SyntaxError line 41 trong Torch Worker:** Sử dụng công nghệ đóng gói Base64 Script độc lập thay vì template literal trong Java string, loại bỏ hoàn toàn lỗi escape line terminator (\\r\\n), giúp Torch WASM Worker khởi động trơn tru 100%.\n* **Toàn diện hóa hệ thống chẩn đoán (Diagnostic Logger):** Nâng dung lượng bộ nhớ đệm log lên 300 dòng; tự động ghi nhận mọi sự kiện Stockfish UCI commands, Board FEN updates, và MoveClassifier toast.\n* **Khởi tạo tài liệu dự án `PROJECT_MEMORY.md`:** Lưu trữ toàn bộ quy tắc làm việc, kiến trúc kỹ thuật và lịch sử phát triển để đảm bảo tính nhất quán tuyệt đối.\n* **Author:** NNVC (@nncutett)",
+  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.13/patches-2.0.13.mpp",
   "signature_download_url": "",
-  "version": "2.0.12"
+  "version": "2.0.13"
 }

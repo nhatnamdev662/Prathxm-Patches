@@ -53,7 +53,7 @@ public class TorchEngine {
     public static void log(String msg) {
         String entry = new java.text.SimpleDateFormat("HH:mm:ss.SSS", java.util.Locale.US).format(new java.util.Date()) + " " + msg;
         DIAGNOSTIC_LOGS.add(entry);
-        while (DIAGNOSTIC_LOGS.size() > 100) {
+        while (DIAGNOSTIC_LOGS.size() > 300) {
             DIAGNOSTIC_LOGS.remove(0);
         }
     }
@@ -204,85 +204,19 @@ public class TorchEngine {
 
             String html = "<!DOCTYPE html><html><head><meta charset='utf-8'></head><body><script>\n" +
                     "(function() {\n" +
-                    "    console.log('[Torch] Starting in-memory worker bootstrap...');\n" +
+                    "    console.log('[Torch] Starting bootstrap...');\n" +
                     "    Promise.all([\n" +
                     "        fetch('https://torch-engine.local/torch.js').then(r => r.text()),\n" +
                     "        fetch('https://torch-engine.local/torch.wasm').then(r => r.arrayBuffer())\n" +
                     "    ]).then(([jsText, wasmBuffer]) => {\n" +
-                    "        console.log('[Torch] JS and WASM fetched in main doc. Size: ' + wasmBuffer.byteLength);\n" +
-                    "        const workerScript = `\n" +
-                    "            let torchHandler = null;\n" +
-                    "            let ready = false;\n" +
-                    "            const queued = [];\n" +
-                    "            function bufferToBinaryString(buffer) {\n" +
-                    "                const bytes = new Uint8Array(buffer);\n" +
-                    "                let result = '';\n" +
-                    "                const chunkSize = 32768;\n" +
-                    "                for (let i = 0; i < bytes.length; i += chunkSize) result += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));\n" +
-                    "                return result;\n" +
-                    "            }\n" +
-                    "            function installWasmXhr(wasmBuffer) {\n" +
-                    "                const NativeXHR = self.XMLHttpRequest;\n" +
-                    "                const isWasmUrl = (url) => String(url || '').includes('torch.wasm');\n" +
-                    "                class WasmAwareXHR {\n" +
-                    "                    constructor() {\n" +
-                    "                        this.readyState = 0; this.response = null; this.responseText = ''; this.responseType = '';\n" +
-                    "                        this.status = 0; this.statusText = ''; this._async = true; this._headers = {};\n" +
-                    "                        this._native = NativeXHR ? new NativeXHR() : null; this._isWasm = false;\n" +
-                    "                    }\n" +
-                    "                    open(method, url, async = true) {\n" +
-                    "                        this._url = String(url || ''); this._async = async !== false;\n" +
-                    "                        this._isWasm = isWasmUrl(this._url);\n" +
-                    "                        if (this._isWasm) { this.readyState = 1; return; }\n" +
-                    "                        if (this._native) this._native.open(method, url, async);\n" +
-                    "                    }\n" +
-                    "                    send(body) {\n" +
-                    "                        if (!this._isWasm && this._native) return this._native.send(body);\n" +
-                    "                        const finish = () => {\n" +
-                    "                            this.status = 200; this.statusText = 'OK'; this.readyState = 4;\n" +
-                    "                            if (this.responseType === 'arraybuffer') this.response = wasmBuffer.slice(0);\n" +
-                    "                            else if (this.responseType === 'blob' && typeof Blob === 'function') this.response = new Blob([wasmBuffer], { type: 'application/wasm' });\n" +
-                    "                            else { this.responseText = bufferToBinaryString(wasmBuffer); this.response = this.responseText; }\n" +
-                    "                            if (typeof this.onreadystatechange === 'function') this.onreadystatechange();\n" +
-                    "                            if (typeof this.onload === 'function') this.onload();\n" +
-                    "                        };\n" +
-                    "                        if (this._async) setTimeout(finish, 0); else finish();\n" +
-                    "                    }\n" +
-                    "                    setRequestHeader(h, v) { if (!this._isWasm && this._native) this._native.setRequestHeader(h, v); }\n" +
-                    "                    getResponseHeader(name) { return String(name).toLowerCase() === 'content-type' ? 'application/wasm' : null; }\n" +
-                    "                    getAllResponseHeaders() { return 'content-type: application/wasm\\r\\n'; }\n" +
-                    "                }\n" +
-                    "                self.XMLHttpRequest = WasmAwareXHR;\n" +
-                    "            }\n" +
-                    "            self.onmessage = function(e) {\n" +
-                    "                if (e.data && e.data.__init_torch__) {\n" +
-                    "                    try {\n" +
-                    "                        installWasmXhr(e.data.wasm);\n" +
-                    "                        self.Module = self.Module || {};\n" +
-                    "                        self.Module.wasmBinary = e.data.wasm;\n" +
-                    "                        self.Module.onAbort = function(what) { self.postMessage('__TORCH_ERROR__:' + (what || 'abort')); };\n" +
-                    "                        (new Function(e.data.js))();\n" +
-                    "                        torchHandler = self.onmessage;\n" +
-                    "                        ready = true;\n" +
-                    "                        while (queued.length && typeof torchHandler === 'function') {\n" +
-                    "                            torchHandler.call(self, { data: queued.shift() });\n" +
-                    "                        }\n" +
-                    "                        self.postMessage('__TORCH_READY__');\n" +
-                    "                    } catch (err) {\n" +
-                    "                        self.postMessage('__TORCH_ERROR__:' + String(err));\n" +
-                    "                    }\n" +
-                    "                } else if (ready && typeof torchHandler === 'function') {\n" +
-                    "                    torchHandler.call(self, e);\n" +
-                    "                } else {\n" +
-                    "                    queued.push(e.data);\n" +
-                    "                }\n" +
-                    "            };\n" +
-                    "        `;\n" +
-                    "        const blob = new Blob([workerScript], { type: 'text/javascript' });\n" +
+                    "        console.log('[Torch] Assets loaded. WASM size: ' + wasmBuffer.byteLength);\n" +
+                    "        const workerCode = atob('" + getWorkerScriptBase64() + "');\n" +
+                    "        const blob = new Blob([workerCode], { type: 'application/javascript' });\n" +
                     "        const worker = new Worker(URL.createObjectURL(blob));\n" +
                     "        worker.onmessage = function(e) {\n" +
                     "            const data = e.data;\n" +
                     "            if (data === '__TORCH_READY__') {\n" +
+                    "                console.log('[Torch] Worker is READY!');\n" +
                     "                if (window.TorchBridge) window.TorchBridge.onTorchReady();\n" +
                     "                worker.postMessage('setoption name UseDeclarativePositionCommand value true');\n" +
                     "                worker.postMessage('setoption name BlackElo value 3200');\n" +
@@ -298,10 +232,15 @@ public class TorchEngine {
                     "                worker.postMessage('setoption name UCI_Chess960 value false');\n" +
                     "                worker.postMessage('setoption name UseRatingRanges value true');\n" +
                     "            } else if (typeof data === 'string' && data.startsWith('__TORCH_ERROR__:')) {\n" +
+                    "                console.error('[Torch] ' + data);\n" +
                     "                if (window.TorchBridge) window.TorchBridge.onTorchError(data.substring(16));\n" +
                     "            } else if (typeof data === 'string' && data.startsWith('json ')) {\n" +
                     "                if (window.TorchBridge) window.TorchBridge.onTorchResult(data.substring(5).trim());\n" +
                     "            }\n" +
+                    "        };\n" +
+                    "        worker.onerror = function(err) {\n" +
+                    "            console.error('[Torch Worker Error] ' + (err.message || err));\n" +
+                    "            if (window.TorchBridge) window.TorchBridge.onTorchError(String(err.message || err));\n" +
                     "        };\n" +
                     "        window.sendTorchMove = function(movesStr, userColor, depth) {\n" +
                     "            if (!worker) return;\n" +
@@ -313,6 +252,7 @@ public class TorchEngine {
                     "        };\n" +
                     "        worker.postMessage({ __init_torch__: true, js: jsText, wasm: wasmBuffer }, [wasmBuffer]);\n" +
                     "    }).catch(err => {\n" +
+                    "        console.error('[Torch Fetch Error] ' + err);\n" +
                     "        if (window.TorchBridge) window.TorchBridge.onTorchError(String(err));\n" +
                     "    });\n" +
                     "})();\n" +
@@ -492,5 +432,85 @@ public class TorchEngine {
         while ((read = in.read(buf)) != -1) {
             out.write(buf, 0, read);
         }
+    }
+
+    private static String getWorkerScriptBase64() {
+        String script = "var torchHandler = null;\n" +
+                "var ready = false;\n" +
+                "var queued = [];\n" +
+                "function bufferToBinaryString(buffer) {\n" +
+                "    var bytes = new Uint8Array(buffer);\n" +
+                "    var result = '';\n" +
+                "    var chunkSize = 32768;\n" +
+                "    for (var i = 0; i < bytes.length; i += chunkSize) {\n" +
+                "        result += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));\n" +
+                "    }\n" +
+                "    return result;\n" +
+                "}\n" +
+                "function installWasmXhr(wasmBuffer) {\n" +
+                "    var NativeXHR = self.XMLHttpRequest;\n" +
+                "    var isWasmUrl = function(url) { return String(url || '').indexOf('torch.wasm') !== -1; };\n" +
+                "    function WasmAwareXHR() {\n" +
+                "        this.readyState = 0; this.response = null; this.responseText = ''; this.responseType = '';\n" +
+                "        this.status = 0; this.statusText = ''; this._async = true; this._headers = {};\n" +
+                "        this._native = NativeXHR ? new NativeXHR() : null; this._isWasm = false;\n" +
+                "    }\n" +
+                "    WasmAwareXHR.prototype.open = function(method, url, async) {\n" +
+                "        this._url = String(url || ''); this._async = async !== false;\n" +
+                "        this._isWasm = isWasmUrl(this._url);\n" +
+                "        if (this._isWasm) { this.readyState = 1; return; }\n" +
+                "        if (this._native) this._native.open(method, url, async);\n" +
+                "    };\n" +
+                "    WasmAwareXHR.prototype.send = function(body) {\n" +
+                "        if (!this._isWasm && this._native) return this._native.send(body);\n" +
+                "        var selfXhr = this;\n" +
+                "        var finish = function() {\n" +
+                "            selfXhr.status = 200; selfXhr.statusText = 'OK'; selfXhr.readyState = 4;\n" +
+                "            if (selfXhr.responseType === 'arraybuffer') {\n" +
+                "                selfXhr.response = wasmBuffer.slice(0);\n" +
+                "            } else if (selfXhr.responseType === 'blob' && typeof Blob === 'function') {\n" +
+                "                selfXhr.response = new Blob([wasmBuffer], { type: 'application/wasm' });\n" +
+                "            } else {\n" +
+                "                selfXhr.responseText = bufferToBinaryString(wasmBuffer);\n" +
+                "                selfXhr.response = selfXhr.responseText;\n" +
+                "            }\n" +
+                "            if (typeof selfXhr.onreadystatechange === 'function') selfXhr.onreadystatechange();\n" +
+                "            if (typeof selfXhr.onload === 'function') selfXhr.onload();\n" +
+                "        };\n" +
+                "        if (this._async) setTimeout(finish, 0); else finish();\n" +
+                "    };\n" +
+                "    WasmAwareXHR.prototype.setRequestHeader = function(h, v) { if (!this._isWasm && this._native) this._native.setRequestHeader(h, v); };\n" +
+                "    WasmAwareXHR.prototype.getResponseHeader = function(name) { return String(name).toLowerCase() === 'content-type' ? 'application/wasm' : null; };\n" +
+                "    WasmAwareXHR.prototype.getAllResponseHeaders = function() { return 'content-type: application/wasm' + String.fromCharCode(13, 10); };\n" +
+                "    self.XMLHttpRequest = WasmAwareXHR;\n" +
+                "}\n" +
+                "self.onmessage = function(e) {\n" +
+                "    if (e.data && e.data.__init_torch__) {\n" +
+                "        try {\n" +
+                "            console.log('[Worker] Injected wasmBuffer, installing XHR...');\n" +
+                "            installWasmXhr(e.data.wasm);\n" +
+                "            self.Module = self.Module || {};\n" +
+                "            self.Module.wasmBinary = e.data.wasm;\n" +
+                "            self.Module.onAbort = function(what) { self.postMessage('__TORCH_ERROR__:' + (what || 'abort')); };\n" +
+                "            console.log('[Worker] Compiling & executing torch.js...');\n" +
+                "            (new Function(e.data.js))();\n" +
+                "            torchHandler = self.onmessage;\n" +
+                "            ready = true;\n" +
+                "            console.log('[Worker] Torch Engine initialized! Flushing queue (' + queued.length + ')...');\n" +
+                "            while (queued.length && typeof torchHandler === 'function') {\n" +
+                "                torchHandler.call(self, { data: queued.shift() });\n" +
+                "            }\n" +
+                "            self.postMessage('__TORCH_READY__');\n" +
+                "        } catch (err) {\n" +
+                "            console.error('[Worker Crash] ' + (err.stack || err));\n" +
+                "            self.postMessage('__TORCH_ERROR__:' + String(err));\n" +
+                "        }\n" +
+                "    } else if (ready && typeof torchHandler === 'function') {\n" +
+                "        torchHandler.call(self, e);\n" +
+                "    } else {\n" +
+                "        queued.push(e.data);\n" +
+                "    }\n" +
+                "};\n";
+        return android.util.Base64.encodeToString(script.getBytes(java.nio.charset.StandardCharsets.UTF_8), android.util.Base64.NO_WRAP);
     }
 }

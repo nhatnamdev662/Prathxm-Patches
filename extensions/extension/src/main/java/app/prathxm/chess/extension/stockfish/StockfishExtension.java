@@ -253,6 +253,7 @@ public class StockfishExtension {
         }
 
         Log.d(TAG, "Position changed → FEN: " + fen);
+        TorchEngine.log("[BOARD FEN] " + fen);
         MoveClassifier.updateHistory(fen);
         scheduleAnalysis(fen);
     }

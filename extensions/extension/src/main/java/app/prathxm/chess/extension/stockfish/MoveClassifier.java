@@ -559,6 +559,7 @@ public class MoveClassifier {
 
         String comment = (speechText != null && !speechText.trim().isEmpty()) ? "\n\"" + speechText.trim() + "\"" : "";
         final String toastText = "[Torch] [" + emoji + "] " + classification + " (" + uciMove + ")" + comment;
+        TorchEngine.log("[CLASSIFIED TOAST] " + emoji + " " + classification + " (" + uciMove + ")");
         Toast.makeText(activity, toastText, Toast.LENGTH_SHORT).show();
 
         if (isBlunderOrMistake && StockfishSettings.isBlunderAlertsEnabled(activity)) {

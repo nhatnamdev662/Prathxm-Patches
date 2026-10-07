@@ -253,12 +253,15 @@ public class StockfishProcess {
             }
             send(pos.toString());
 
+            String goCmd;
             if (isAutoDepth && honorLimit) {
                 int softMs = movetimeMs > 0 ? movetimeMs : Math.max(700, Math.min(2400, effectiveDepth * 200));
-                send("go depth " + effectiveDepth + " movetime " + softMs);
+                goCmd = "go depth " + effectiveDepth + " movetime " + softMs;
             } else {
-                send(movetimeMs > 0 ? ("go depth " + effectiveDepth + " movetime " + movetimeMs) : ("go depth " + effectiveDepth));
+                goCmd = movetimeMs > 0 ? ("go depth " + effectiveDepth + " movetime " + movetimeMs) : ("go depth " + effectiveDepth);
             }
+            send(goCmd);
+            TorchEngine.log("[STOCKFISH GO] " + goCmd + " (Elo=" + elo + ")");
 
             return readSearchOutput(Math.max(3, multiPV), whiteToMove,
                     movetimeMs > 0 ? movetimeMs + BESTMOVE_GRACE_MS : DEFAULT_SEARCH_TIMEOUT_MS,
@@ -342,6 +345,7 @@ public class StockfishProcess {
                 if (parts.length > 1 && !"(none)".equals(parts[1])) bestmove = parts[1];
                 if (parts.length > 3 && "ponder".equals(parts[2])) ponder = parts[3];
                 if (bestmove == null) terminal = true;
+                TorchEngine.log("[STOCKFISH BESTMOVE] best=" + bestmove + ", eval=" + scores[0] + ", depth=" + reachedDepth);
                 break;
             }
 
