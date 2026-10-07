@@ -31,6 +31,7 @@ public final class ReviewMath {
     public static final String MISTAKE = "mistake";
     public static final String BLUNDER = "blunder";
     public static final String MISS = "miss";
+    public static final String MISSED_WIN = "missedWin";
     public static final String FORCED = "forced";
     public static final String TRICKY = "tricky";
 
@@ -123,8 +124,9 @@ public final class ReviewMath {
         }
 
         if (missedMate) {
-            // Letting a forced mate go is a Miss unless the move is still totally winning.
-            return winAfter >= 0.97f ? EXCELLENT : MISS;
+            // Letting a forced mate go is a Missed Win / Miss unless the move is still totally winning.
+            if (winAfter >= 0.97f) return EXCELLENT;
+            return winBefore >= 0.85f ? MISSED_WIN : MISS;
         }
 
         if (loss < EXCELLENT_MAX) return EXCELLENT;
@@ -132,7 +134,9 @@ public final class ReviewMath {
 
         // Failing to punish the opponent's error.
         boolean chance = oppPrevLoss >= INACCURACY_MAX && winBefore >= 0.60f;
-        if (chance && loss >= INACCURACY_MAX && winAfter >= 0.20f) return MISS;
+        if (chance && loss >= INACCURACY_MAX && winAfter >= 0.20f) {
+            return winBefore >= 0.85f ? MISSED_WIN : MISS;
+        }
 
         if (loss < INACCURACY_MAX) return INACCURACY;
         if (loss < MISTAKE_MAX) return MISTAKE;

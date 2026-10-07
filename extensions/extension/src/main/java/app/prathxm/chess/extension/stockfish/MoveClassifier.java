@@ -24,10 +24,21 @@ public class MoveClassifier {
     private static final List<String> fenHistory = new ArrayList<>();
     private static final Map<String, Float> fenToEvalMap = new ConcurrentHashMap<>();
     private static final Map<String, List<String>> fenToBestMovesMap = new ConcurrentHashMap<>();
+    /** Line evaluations (MultiPV) for calculating gap between top lines. */
+    private static final Map<String, float[]> fenToLineScoresMap = new ConcurrentHashMap<>();
+    /** Principal variation lines from this position. */
+    private static final Map<String, List<String>> fenToPvMap = new ConcurrentHashMap<>();
+    /** Whether this position has a known mate in N. */
+    private static final Map<String, Boolean> fenToMateMap = new ConcurrentHashMap<>();
     /** Search depth behind each stored evaluation, so a shallower result never overwrites a deeper one. */
     private static final Map<String, Integer> fenToDepthMap = new ConcurrentHashMap<>();
     /** Moves ("prevKey|currentKey") that already produced a toast, so a move is rated only once. */
     private static final java.util.Set<String> classifiedMoves = ConcurrentHashMap.newKeySet();
+
+    /** Move and loss tracking across plies for recapture and missed win / miss detection. */
+    private static volatile String lastPlayedUci = null;
+    private static volatile boolean lastWasCapture = false;
+    private static volatile float lastOppLoss = -1f;
 
     /** Minimum depth for an interrupted / intermediate search to be trusted for a rating. */
     private static final int MIN_RATING_DEPTH = 8;
@@ -43,7 +54,13 @@ public class MoveClassifier {
         fenToEvalMap.clear();
         fenToBestMovesMap.clear();
         fenToDepthMap.clear();
+        fenToLineScoresMap.clear();
+        fenToPvMap.clear();
+        fenToMateMap.clear();
         classifiedMoves.clear();
+        lastPlayedUci = null;
+        lastWasCapture = false;
+        lastOppLoss = -1f;
     }
 
     /**
@@ -62,6 +79,13 @@ public class MoveClassifier {
         fenToEvalMap.put(key, r.score);
         fenToBestMovesMap.put(key, new ArrayList<>(r.moves));
         fenToDepthMap.put(key, r.depth);
+        if (r.lineScores != null && r.lineScores.length > 0) {
+            fenToLineScoresMap.put(key, r.lineScores.clone());
+        }
+        if (r.pv != null && !r.pv.isEmpty()) {
+            fenToPvMap.put(key, new ArrayList<>(r.pv));
+        }
+        fenToMateMap.put(key, r.hasMate && r.mateIn != 0);
     }
 
     /** True if an interrupted/intermediate result is deep enough to rate a move with. */
@@ -261,15 +285,80 @@ public class MoveClassifier {
             boolean whiteMoved = prevKey.endsWith(" w");
 
             String uciMove = deduceUciMove(prevKey, currentKey);
+            if (uciMove == null) return;
             
             // Same expected-points model as the game review (win probability, mover POV).
             float winBefore = ReviewMath.win(prevEval, whiteMoved);
             float winAfter = ReviewMath.win(currentEval, whiteMoved);
-            boolean isBest = uciMove != null && uciMove.equals(prevBestMoves.get(0));
+            boolean isBest = !prevBestMoves.isEmpty() && uciMove.equals(prevBestMoves.get(0));
             boolean deliversMate = currentResult.terminal && currentResult.hasMate;
             float loss = (isBest || deliversMate) ? 0f : Math.max(0f, winBefore - winAfter);
-            String c = ReviewMath.classify(isBest || deliversMate, false, loss, winBefore, winAfter,
-                    -1f, false, false, -1f, false);
+
+            // 1. secondGap: win probability difference between line 1 and line 2 (for Great Move)
+            float secondGap = -1f;
+            float[] prevLineScores = fenToLineScoresMap.get(prevKey);
+            if (prevLineScores != null && prevLineScores.length >= 2) {
+                float winL1 = ReviewMath.win(prevLineScores[0], whiteMoved);
+                float winL2 = ReviewMath.win(prevLineScores[1], whiteMoved);
+                secondGap = Math.max(0f, winL1 - winL2);
+            }
+
+            // 2. Parse board before the move
+            char[] beforeBoard = BoardUtil.parseBoard(prevKey);
+
+            // 3. Recapture detection
+            boolean recapture = false;
+            if (lastPlayedUci != null && lastWasCapture) {
+                recapture = BoardUtil.isRecapture(lastPlayedUci, true, uciMove);
+            }
+
+            // 4. Sacrifice detection (engine reply PV after played move)
+            boolean sacrifice = false;
+            List<String> replyPv = (currentResult.pv != null && !currentResult.pv.isEmpty())
+                    ? currentResult.pv
+                    : currentResult.moves;
+            if (beforeBoard != null && replyPv != null && !replyPv.isEmpty()) {
+                sacrifice = BoardUtil.isSacrifice(beforeBoard, whiteMoved, uciMove, replyPv, 4);
+            }
+
+            // 5. Missed mate detection
+            Boolean prevHadMate = fenToMateMap.get(prevKey);
+            boolean prevMoverHadWinningMate = (prevHadMate != null && prevHadMate)
+                    && (whiteMoved ? prevEval > 50f : prevEval < -50f);
+            boolean currentMoverHasWinningMate = currentResult.hasMate
+                    && (whiteMoved ? currentResult.score > 50f : currentResult.score < -50f);
+            boolean missedMate = prevMoverHadWinningMate && !currentMoverHasWinningMate;
+
+            // 6. Forced move detection
+            Integer prevDepth = fenToDepthMap.get(prevKey);
+            boolean forced = false;
+            if (prevBestMoves.size() == 1 && (prevLineScores == null || prevLineScores.length <= 1)
+                    && prevDepth != null && prevDepth >= 10) {
+                forced = true;
+            }
+
+            // 7. Opponent previous loss
+            float oppPrevLoss = lastOppLoss;
+
+            // Compute classification
+            String c = ReviewMath.classify(isBest || deliversMate, forced, loss, winBefore, winAfter,
+                    secondGap, sacrifice, recapture, oppPrevLoss, missedMate);
+
+            // 8. Book move detection: first 16 plies (8 moves each) with theoretical play
+            int ply = fenHistory.size();
+            if (ply <= 16 && (isBest || loss < 0.02f) && ReviewMath.isBookEligible(c) && !sacrifice) {
+                c = ReviewMath.BOOK;
+            }
+
+            // Update state tracking for the next move
+            lastOppLoss = loss;
+            lastPlayedUci = uciMove;
+            if (beforeBoard != null && uciMove.length() >= 4) {
+                int toSq = BoardUtil.square(uciMove, 2);
+                lastWasCapture = (toSq >= 0 && toSq < 64 && beforeBoard[toSq] != '.');
+            } else {
+                lastWasCapture = false;
+            }
 
             String classification;
             String emoji;
@@ -320,6 +409,11 @@ public class MoveClassifier {
                     emoji = "✕";
                     isBlunderOrMistake = true;
                     break;
+                case ReviewMath.MISSED_WIN:
+                    classification = isVi ? "Bỏ lỡ cơ hội thắng (Missed Win)" : "Missed Win";
+                    emoji = "✕";
+                    isBlunderOrMistake = true;
+                    break;
                 case ReviewMath.FORCED:
                     classification = isVi ? "Nước bắt buộc (Forced)" : "Forced Move";
                     emoji = "➔";
@@ -331,7 +425,7 @@ public class MoveClassifier {
             }
 
             String lossText = (loss > 0.005f) ? String.format(java.util.Locale.US, " [-%.0f%%]", loss * 100f) : "";
-            final String toastText = "[" + emoji + "] " + classification + (uciMove != null ? " (" + uciMove + ")" : "") + lossText;
+            final String toastText = "[" + emoji + "] " + classification + " (" + uciMove + ")" + lossText;
             final boolean triggerVibrate = isBlunderOrMistake;
 
             if (activity != null) {

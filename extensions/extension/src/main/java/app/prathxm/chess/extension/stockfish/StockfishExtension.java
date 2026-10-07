@@ -386,6 +386,9 @@ public class StockfishExtension {
                         ? StockfishSettings.autoDepthForElo(StockfishSettings.getElo(context))
                         : StockfishSettings.getDepth(context);
                 int multiPV = StockfishSettings.getMultiPV(context);
+                if (StockfishSettings.isMoveClassificationEnabled(context)) {
+                    multiPV = Math.max(multiPV, 2);
+                }
 
                 Log.d(TAG, "Analysing FEN with " + StockfishSettings.getEngineChoice(context) + " at depth " + depth + " with MultiPV=" + multiPV + "…");
                 // Stream intermediate depths to the board so deep searches feel instant.
