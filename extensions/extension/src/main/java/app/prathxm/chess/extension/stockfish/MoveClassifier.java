@@ -425,7 +425,7 @@ public class MoveClassifier {
             }
 
             String lossText = (loss > 0.005f) ? String.format(java.util.Locale.US, " [-%.0f%%]", loss * 100f) : "";
-            final String toastText = "[" + emoji + "] " + classification + " (" + uciMove + ")" + lossText;
+            final String toastText = "[Torch] [" + emoji + "] " + classification + " (" + uciMove + ")" + lossText;
             final boolean triggerVibrate = isBlunderOrMistake;
 
             if (activity != null) {
