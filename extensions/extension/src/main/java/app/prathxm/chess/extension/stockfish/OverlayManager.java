@@ -87,10 +87,14 @@ public class OverlayManager {
                                 if (lineScores != null && i < lineScores.length) {
                                     float score = lineScores[i];
                                     if (i == 0 && hasMate && mateIn != 0) {
-                                        evalText = (mateIn > 0 ? "M" : "-M") + Math.abs(mateIn);
+                                        evalText = mateIn > 0 ? ("#" + mateIn) : ("#-" + Math.abs(mateIn));
                                     } else {
                                         float relativeScore = whiteToMove ? score : -score;
-                                        evalText = String.format(java.util.Locale.US, "%+.1f", relativeScore);
+                                        float rounded = Math.round(relativeScore * 10f) / 10f;
+                                        String fixed = Math.abs(rounded) >= 10f
+                                                ? String.format(java.util.Locale.US, "%.0f", (float) Math.abs(rounded))
+                                                : String.format(java.util.Locale.US, "%.1f", (float) Math.abs(rounded));
+                                        evalText = (rounded > 0 ? "+" : (rounded < 0 ? "-" : "")) + fixed;
                                     }
                                 }
                                 list.add(new ArrowOverlayView.ArrowData(m, i + 1, false, evalText));

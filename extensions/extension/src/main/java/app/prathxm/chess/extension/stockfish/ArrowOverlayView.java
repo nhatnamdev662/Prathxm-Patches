@@ -74,15 +74,6 @@ public class ArrowOverlayView extends View {
         }
     }
 
-    private static class BadgeLayout {
-        float x;
-        float y;
-        float width;
-        float height;
-        String text;
-        int tier;
-        boolean isThreat;
-    }
 
     private final List<ArrowData> arrows = new ArrayList<>();
     private boolean flipped = false;
@@ -456,12 +447,21 @@ public class ArrowOverlayView extends View {
 
     /**
      * Renders cyberpunk frosted eval score badges on top of arrows
-     * with anti-collision lane separation matching NNVC browser extension logic.
+     * matching NNVC browser extension logic 100%:
+     * - Target square corner anchors per tier:
+     *     Tier 1: Top-Left
+     *     Tier 2: Bottom-Left
+     *     Tier 3: Bottom-Right
+     *     Tier 4: Top-Right
+     *     Tier 5+: Midpoint of arrow shaft
+     * - Clamped inside target square / board bounds.
+     * - Extension style: shade(rgb, 0.58) background, tint(rgb, 0.54) border, JetBrains Mono font.
      */
     private void drawEvalBadges(Canvas canvas, float sqSize) {
-        List<BadgeLayout> layouts = new ArrayList<>();
+        float bWidth = getWidth();
+        float bHeight = getHeight();
+        if (bWidth <= 0 || bHeight <= 0) return;
 
-        // 1. Calculate ideal initial badge position along arrow shaft
         for (int i = 0; i < arrows.size(); i++) {
             ArrowData arrow = arrows.get(i);
             if (arrow.evalText == null || arrow.evalText.isEmpty()) continue;
@@ -473,124 +473,114 @@ public class ArrowOverlayView extends View {
             float x1 = fromCenter[0], y1 = fromCenter[1];
             float x2 = toCenter[0],   y2 = toCenter[1];
 
-            int fileDelta = Math.abs(arrow.to.charAt(0) - arrow.from.charAt(0));
-            int rankDelta = Math.abs(arrow.to.charAt(1) - arrow.from.charAt(1));
-            boolean isKnight = (fileDelta == 1 && rankDelta == 2) || (fileDelta == 2 && rankDelta == 1);
+            int tierVal = arrow.tier;
 
-            float badgeCenterX;
-            float badgeCenterY;
+            // 1. Metric calculations matching Extension NNVC exactly:
+            // fontSize = Math.max(9, sqSize * 0.125)
+            // padH = Math.max(4, sqSize * 0.065)
+            // padV = Math.max(2, sqSize * 0.035)
+            // pillW = Math.max(24, Math.min(sqSize * 0.62, (lblText.length * 0.58 + 0.3) * fontSize + padH * 2))
+            // pillH = fontSize * 1.1 + padV * 2
+            float fontSize = Math.max(9f, sqSize * 0.125f);
+            float padH = Math.max(4f, sqSize * 0.065f);
+            float padV = Math.max(2f, sqSize * 0.035f);
 
-            if (isKnight) {
-                // For knight moves, anchor along the second leg near the target
-                float elbowX = x1;
-                float elbowY = y2;
-                if (fileDelta == 2 && rankDelta == 1) {
-                    elbowX = x2;
-                    elbowY = y1;
-                }
-                // Place badge at 60% of second leg
-                badgeCenterX = elbowX + (x2 - elbowX) * 0.60f;
-                badgeCenterY = elbowY + (y2 - elbowY) * 0.60f;
-            } else {
-                // Straight move: Anchor at 62% along the line towards target (near head but clear of tip)
-                badgeCenterX = x1 + (x2 - x1) * 0.62f;
-                badgeCenterY = y1 + (y2 - y1) * 0.62f;
+            badgeTextPaint.setTextSize(fontSize);
+            float measuredTextW = badgeTextPaint.measureText(arrow.evalText);
+            float calcW = (arrow.evalText.length() * 0.58f + 0.3f) * fontSize + padH * 2f;
+            float rawW = Math.max(calcW, measuredTextW + padH * 2f);
+            float pillW = Math.max(24f, Math.min(sqSize * 0.62f, rawW));
+            float pillH = fontSize * 1.1f + padV * 2f;
+
+            // 2. Target Square Corner Anchors matching Extension NNVC:
+            float sqLeft = x2 - sqSize / 2f;
+            float sqTop = y2 - sqSize / 2f;
+            float sqRight = x2 + sqSize / 2f;
+            float sqBottom = y2 + sqSize / 2f;
+
+            float baseX = sqLeft + sqSize * 0.05f;
+            float baseY = sqTop + sqSize * 0.05f;
+
+            if (tierVal == 2) {
+                // Bottom-Left
+                baseY = sqBottom - pillH - sqSize * 0.05f;
+            } else if (tierVal == 3) {
+                // Bottom-Right
+                baseX = sqRight - pillW - sqSize * 0.05f;
+                baseY = sqBottom - pillH - sqSize * 0.05f;
+            } else if (tierVal == 4) {
+                // Top-Right
+                baseX = sqRight - pillW - sqSize * 0.05f;
+                baseY = sqTop + sqSize * 0.05f;
+            } else if (tierVal >= 5) {
+                // Midpoint of arrow shaft
+                baseX = x1 + (x2 - x1) * 0.5f - pillW / 2f;
+                baseY = y1 + (y2 - y1) * 0.5f - pillH / 2f;
             }
 
-            // Text measurement
-            float textSize = Math.max(16f, sqSize * 0.22f);
-            badgeTextPaint.setTextSize(textSize);
-            float textWidth = badgeTextPaint.measureText(arrow.evalText);
-            Paint.FontMetrics fm = badgeTextPaint.getFontMetrics();
-            float textHeight = fm.descent - fm.ascent;
+            // Clamping within bounds
+            float minX = Math.max(2f, sqLeft + 2f);
+            float maxX = Math.min(bWidth - pillW - 2f, sqRight - pillW - 2f);
+            float minY = Math.max(2f, sqTop + 2f);
+            float maxY = Math.min(bHeight - pillH - 2f, sqBottom - pillH - 2f);
 
-            float padH = sqSize * 0.10f;
-            float padV = sqSize * 0.05f;
-            float badgeW = textWidth + padH * 2f;
-            float badgeH = textHeight + padV * 2f;
+            float labelX = maxX >= minX ? Math.max(minX, Math.min(maxX, baseX)) : Math.max(2f, Math.min(bWidth - pillW - 2f, baseX));
+            float labelY = maxY >= minY ? Math.max(minY, Math.min(maxY, baseY)) : Math.max(2f, Math.min(bHeight - pillH - 2f, baseY));
 
-            BadgeLayout bl = new BadgeLayout();
-            bl.x = badgeCenterX;
-            bl.y = badgeCenterY;
-            bl.width = badgeW;
-            bl.height = badgeH;
-            bl.text = arrow.evalText;
-            bl.tier = arrow.tier;
-            bl.isThreat = arrow.isThreat;
+            // 3. Styling & Colors matching Extension NNVC:
+            // isBookLabel check
+            boolean isBookLabel = "BOOK".equals(arrow.evalText);
+            int[] rawRgb = getBaseRgb(getContext(), arrow.tier, arrow.isThreat);
+            int[] rgb = (arrow.tier == 2) ? tint(rawRgb, 0.12f)
+                    : (arrow.tier >= 3) ? tint(rawRgb, 0.30f)
+                    : rawRgb;
 
-            layouts.add(bl);
-        }
+            // bgCol = isBookLabel ? rgba(28, 25, 23, 0.94) : rgba(shade(rgb, .58), tierVal === 1 ? .92 : .82)
+            int[] shadeRgb = shade(rgb, 0.58f);
+            float bgAlpha = tierVal == 1 ? 0.92f : 0.82f;
+            int bgCol = isBookLabel
+                    ? Color.argb((int)(0.94f * 255), 28, 25, 23)
+                    : Color.argb((int)(bgAlpha * 255), shadeRgb[0], shadeRgb[1], shadeRgb[2]);
 
-        // 2. Anti-collision relaxation: Resolve overlaps between badges
-        float minSeparation = sqSize * 0.35f;
-        int maxPasses = 5;
-        for (int pass = 0; pass < maxPasses; pass++) {
-            boolean shifted = false;
-            for (int i = 0; i < layouts.size(); i++) {
-                BadgeLayout b1 = layouts.get(i);
-                for (int j = i + 1; j < layouts.size(); j++) {
-                    BadgeLayout b2 = layouts.get(j);
-                    float dx = b2.x - b1.x;
-                    float dy = b2.y - b1.y;
-                    float dist = (float) Math.hypot(dx, dy);
-                    float minDist = Math.max(minSeparation, (b1.width + b2.width) * 0.45f);
+            // borderCol = isBookLabel ? rgba(245, 158, 11, 0.85) : rgba(tint(rgb, .54), tierVal === 1 ? .64 : .44)
+            int[] tintBorder = tint(rgb, 0.54f);
+            float borderAlpha = tierVal == 1 ? 0.64f : 0.44f;
+            int borderCol = isBookLabel
+                    ? Color.argb((int)(0.85f * 255), 245, 158, 11)
+                    : Color.argb((int)(borderAlpha * 255), tintBorder[0], tintBorder[1], tintBorder[2]);
 
-                    if (dist < minDist) {
-                        float push = (minDist - dist) * 0.5f;
-                        if (dist < 1e-3f) {
-                            dx = 0f;
-                            dy = 1f;
-                            dist = 1f;
-                        }
-                        float nx = dx / dist;
-                        float ny = dy / dist;
+            // text color: #fbbf24 for BOOK, #f8fbff for regular eval
+            int textColor = isBookLabel ? 0xFFFBBF24 : 0xFFF8FBFF;
 
-                        // Lower tier (b2) yields more than higher tier (b1)
-                        b1.x -= nx * push * 0.3f;
-                        b1.y -= ny * push * 0.3f;
-                        b2.x += nx * push * 0.7f;
-                        b2.y += ny * push * 0.7f;
-                        shifted = true;
-                    }
-                }
-            }
-            if (!shifted) break;
-        }
+            // corner radius = Math.max(5, sqSize * 0.09)
+            float cornerRadius = Math.max(5f, sqSize * 0.09f);
 
-        // 3. Draw each badge: Cyber Frosted Pill with Neon Glow & Crisp Monospace Text
-        for (BadgeLayout b : layouts) {
-            int[] rawRgb = getBaseRgb(getContext(), b.tier, b.isThreat);
-            int primaryColor = Color.rgb(rawRgb[0], rawRgb[1], rawRgb[2]);
+            android.graphics.RectF rect = new android.graphics.RectF(labelX, labelY, labelX + pillW, labelY + pillH);
 
-            float left = b.x - b.width / 2f;
-            float top = b.y - b.height / 2f;
-            float right = left + b.width;
-            float bottom = top + b.height;
-            float cornerRadius = b.height / 2f;
-
-            // Ambient Glow
-            badgeGlowPaint.setColor(Color.argb(90, rawRgb[0], rawRgb[1], rawRgb[2]));
-            badgeGlowPaint.setStrokeWidth(sqSize * 0.04f);
-            badgeGlowPaint.setMaskFilter(new BlurMaskFilter(Math.max(1f, sqSize * 0.05f), BlurMaskFilter.Blur.NORMAL));
-            android.graphics.RectF rect = new android.graphics.RectF(left, top, right, bottom);
+            // Subtle drop shadow matching extension (0 5px 16px rgba(0,0,0,0.32))
+            badgeGlowPaint.setColor(Color.argb(82, 0, 0, 0));
+            badgeGlowPaint.setStrokeWidth(Math.max(1f, sqSize * 0.02f));
+            badgeGlowPaint.setMaskFilter(new BlurMaskFilter(Math.max(1.5f, sqSize * 0.035f), BlurMaskFilter.Blur.NORMAL));
             canvas.drawRoundRect(rect, cornerRadius, cornerRadius, badgeGlowPaint);
 
-            // Frosted Dark Glass Pill Background
-            badgeBgPaint.setColor(0xE60C0F16);
+            // Background Fill
+            badgeBgPaint.setColor(bgCol);
             canvas.drawRoundRect(rect, cornerRadius, cornerRadius, badgeBgPaint);
 
-            // Cyber Neon Outline
-            badgeStrokePaint.setColor(primaryColor);
-            badgeStrokePaint.setStrokeWidth(Math.max(1.5f, sqSize * 0.024f));
+            // 1px Border Stroke
+            badgeStrokePaint.setColor(borderCol);
+            badgeStrokePaint.setStrokeWidth(Math.max(1.0f, sqSize * 0.012f));
             badgeStrokePaint.setMaskFilter(null);
             canvas.drawRoundRect(rect, cornerRadius, cornerRadius, badgeStrokePaint);
 
-            // Monospace Eval Text with High Contrast
-            badgeTextPaint.setColor(0xFFFFFFFF);
-            badgeTextPaint.setTextSize(Math.max(16f, sqSize * 0.22f));
+            // Text Draw
+            badgeTextPaint.setColor(textColor);
+            badgeTextPaint.setTextSize(fontSize);
+            badgeTextPaint.setFakeBoldText(true);
             Paint.FontMetrics fm = badgeTextPaint.getFontMetrics();
-            float textBaseline = b.y - (fm.ascent + fm.descent) / 2f;
-            canvas.drawText(b.text, b.x, textBaseline, badgeTextPaint);
+            float textBaseline = labelY + (pillH - (fm.ascent + fm.descent)) / 2f;
+            float textX = labelX + pillW / 2f;
+            canvas.drawText(arrow.evalText, textX, textBaseline, badgeTextPaint);
         }
     }
 }
