@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-10-07T20:12:00",
-  "description": "## [2.0.10] (2026-10-07)\n\n### ⚡ NNVC v2.0.10 — Khắc phục Triệt để Kích hoạt Phân loại Nước đi Torch Engine\n\n* **Khắc phục phân loại Torch:** Chuyển lời gọi `TorchEngine` lên đầu ngay khi nước đi được thực hiện, không còn phụ thuộc vào việc Stockfish phải tính xong thế cờ trước đó hay cache `prevBestMoves`.\n* **Kiến trúc In-Memory Transferable ArrayBuffer cho WebView Worker:** Loại bỏ hoàn toàn lỗi mạng/CORS trên Android WebView, nạp trực tiếp `torch.wasm` (26MB) và `torch.js` vào Worker trong bộ nhớ RAM.\n* **Đồng bộ 100% Setting & Depth với Extension NNVC:**\n  - Bảng Auto Depth theo Elo trùng khớp 1-1 với thuật toán `_autoDepthForElo` của Extension.\n  - Dải Elo 100 - 3500 (Step 50).\n  - Ép MultiPV >= 2 khi bật phân loại nước đi để tính gap và nước Great (!).\n* **Author:** NNVC (@nncutett)",
-  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.10/patches-2.0.10.mpp",
+  "created_at": "2026-10-07T20:25:00",
+  "description": "## [2.0.11] (2026-10-07)\n\n### ⚡ NNVC v2.0.11 — Tối ưu Torch Engine Depth 4 cho Live Review & Move Classification\n\n* **Chuẩn hóa Depth 4 cho Torch Live Review:** Đưa tham số `HandleContinuationsDepth` về mức 4 (mặc định) cho phản hồi tức thì (~0.2s - 0.4s), bắt trọn nước cờ thiên tài (Brilliant `!!`) và nước cờ xuất sắc (Great `!`).\n* **Hỗ trợ Dynamic Depth:** Cho phép điều chỉnh độ sâu phân loại linh hoạt từ 2 đến 10.\n* **Author:** NNVC (@nncutett)",
+  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.11/patches-2.0.11.mpp",
   "signature_download_url": "",
-  "version": "2.0.10"
+  "version": "2.0.11"
 }

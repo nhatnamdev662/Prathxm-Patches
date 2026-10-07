@@ -214,7 +214,7 @@ public class TorchEngine {
                     "                worker.postMessage('setoption name BlackElo value 3200');\n" +
                     "                worker.postMessage('setoption name WhiteElo value 3200');\n" +
                     "                worker.postMessage('setoption name HandleContinuations value true');\n" +
-                    "                worker.postMessage('setoption name HandleContinuationsDepth value 18');\n" +
+                    "                worker.postMessage('setoption name HandleContinuationsDepth value 4');\n" +
                     "                worker.postMessage('setoption name UserColor value white');\n" +
                     "                worker.postMessage('setoption name BotChatPrioritizePlayerMove value true');\n" +
                     "                worker.postMessage('setoption name AllowBoardEventsWithoutSpeech value true');\n" +
@@ -229,9 +229,11 @@ public class TorchEngine {
                     "                if (window.TorchBridge) window.TorchBridge.onTorchResult(data.substring(5).trim());\n" +
                     "            }\n" +
                     "        };\n" +
-                    "        window.sendTorchMove = function(movesStr, userColor) {\n" +
+                    "        window.sendTorchMove = function(movesStr, userColor, depth) {\n" +
                     "            if (!worker) return;\n" +
                     "            if (userColor) worker.postMessage('setoption name UserColor value ' + userColor);\n" +
+                    "            const d = depth || 4;\n" +
+                    "            worker.postMessage('setoption name HandleContinuationsDepth value ' + d);\n" +
                     "            worker.postMessage('position startpos moves ' + movesStr);\n" +
                     "            worker.postMessage('fetch analysis');\n" +
                     "        };\n" +
@@ -250,6 +252,10 @@ public class TorchEngine {
     }
 
     public void analyze(List<String> moves, String userColor, TorchClassificationCallback callback) {
+        analyze(moves, userColor, 4, callback);
+    }
+
+    public void analyze(List<String> moves, String userColor, int depth, TorchClassificationCallback callback) {
         if (!isReady || webView == null || moves == null || moves.isEmpty()) {
             return;
         }
@@ -261,10 +267,11 @@ public class TorchEngine {
         }
         final String movesStr = sb.toString();
         final String color = (userColor != null) ? userColor : "white";
+        final int targetDepth = Math.max(2, Math.min(10, depth > 0 ? depth : 4));
 
         mainHandler.post(() -> {
             try {
-                String js = "window.sendTorchMove('" + movesStr + "', '" + color + "');";
+                String js = "window.sendTorchMove('" + movesStr + "', '" + color + "', " + targetDepth + ");";
                 webView.evaluateJavascript(js, null);
             } catch (Throwable t) {
                 Log.e(TAG, "evaluateJavascript failed: " + t.getMessage());
