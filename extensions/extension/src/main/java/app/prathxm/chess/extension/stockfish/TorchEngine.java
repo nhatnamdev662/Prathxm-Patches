@@ -82,7 +82,7 @@ public class TorchEngine {
     }
 
     public File getWasmFile() {
-        // 1. App files
+        // 1. App internal files
         File f = new File(getTorchDir(), "torch.wasm");
         if (f.exists() && f.length() > 10_000_000) return f;
 
@@ -172,67 +172,73 @@ public class TorchEngine {
 
             String html = "<!DOCTYPE html><html><head><meta charset='utf-8'></head><body><script>\n" +
                     "(function() {\n" +
-                    "    const wasmUrl = 'https://torch-engine.local/torch.wasm';\n" +
-                    "    const torchUrl = 'https://torch-engine.local/torch.js';\n" +
-                    "    const workerBlob = `\n" +
-                    "        let torchHandler = null;\n" +
-                    "        let ready = false;\n" +
-                    "        const queued = [];\n" +
-                    "        self.onmessage = function(e) {\n" +
-                    "            if (ready && typeof torchHandler === 'function') {\n" +
-                    "                torchHandler.call(self, e);\n" +
-                    "            } else {\n" +
-                    "                queued.push(e.data);\n" +
+                    "    console.log('[Torch] Starting in-memory worker bootstrap...');\n" +
+                    "    Promise.all([\n" +
+                    "        fetch('https://torch-engine.local/torch.js').then(r => r.text()),\n" +
+                    "        fetch('https://torch-engine.local/torch.wasm').then(r => r.arrayBuffer())\n" +
+                    "    ]).then(([jsText, wasmBuffer]) => {\n" +
+                    "        console.log('[Torch] JS and WASM fetched in main document. Size:', wasmBuffer.byteLength);\n" +
+                    "        const workerScript = `\n" +
+                    "            let torchHandler = null;\n" +
+                    "            let ready = false;\n" +
+                    "            const queued = [];\n" +
+                    "            self.onmessage = function(e) {\n" +
+                    "                if (e.data && e.data.__init_torch__) {\n" +
+                    "                    try {\n" +
+                    "                        self.Module = self.Module || {};\n" +
+                    "                        self.Module.wasmBinary = e.data.wasm;\n" +
+                    "                        (new Function(e.data.js))();\n" +
+                    "                        torchHandler = self.onmessage;\n" +
+                    "                        ready = true;\n" +
+                    "                        while (queued.length && typeof torchHandler === 'function') {\n" +
+                    "                            torchHandler.call(self, { data: queued.shift() });\n" +
+                    "                        }\n" +
+                    "                        self.postMessage('__TORCH_READY__');\n" +
+                    "                    } catch (err) {\n" +
+                    "                        self.postMessage('__TORCH_ERROR__:' + String(err));\n" +
+                    "                    }\n" +
+                    "                } else if (ready && typeof torchHandler === 'function') {\n" +
+                    "                    torchHandler.call(self, e);\n" +
+                    "                } else {\n" +
+                    "                    queued.push(e.data);\n" +
+                    "                }\n" +
+                    "            };\n" +
+                    "        `;\n" +
+                    "        const blob = new Blob([workerScript], { type: 'text/javascript' });\n" +
+                    "        const worker = new Worker(URL.createObjectURL(blob));\n" +
+                    "        worker.onmessage = function(e) {\n" +
+                    "            const data = e.data;\n" +
+                    "            if (data === '__TORCH_READY__') {\n" +
+                    "                if (window.TorchBridge) window.TorchBridge.onTorchReady();\n" +
+                    "                worker.postMessage('setoption name UseDeclarativePositionCommand value true');\n" +
+                    "                worker.postMessage('setoption name BlackElo value 3200');\n" +
+                    "                worker.postMessage('setoption name WhiteElo value 3200');\n" +
+                    "                worker.postMessage('setoption name HandleContinuations value true');\n" +
+                    "                worker.postMessage('setoption name HandleContinuationsDepth value 18');\n" +
+                    "                worker.postMessage('setoption name UserColor value white');\n" +
+                    "                worker.postMessage('setoption name BotChatPrioritizePlayerMove value true');\n" +
+                    "                worker.postMessage('setoption name AllowBoardEventsWithoutSpeech value true');\n" +
+                    "                worker.postMessage('setoption name ServeCommandV2 value true');\n" +
+                    "                worker.postMessage('setoption name SpeechV3 value true');\n" +
+                    "                worker.postMessage('setoption name ClassificationV3 value true');\n" +
+                    "                worker.postMessage('setoption name UCI_Chess960 value false');\n" +
+                    "                worker.postMessage('setoption name UseRatingRanges value true');\n" +
+                    "            } else if (typeof data === 'string' && data.startsWith('__TORCH_ERROR__:')) {\n" +
+                    "                if (window.TorchBridge) window.TorchBridge.onTorchError(data.substring(16));\n" +
+                    "            } else if (typeof data === 'string' && data.startsWith('json ')) {\n" +
+                    "                if (window.TorchBridge) window.TorchBridge.onTorchResult(data.substring(5).trim());\n" +
                     "            }\n" +
                     "        };\n" +
-                    "        fetch('${wasmUrl}')\n" +
-                    "            .then(r => r.arrayBuffer())\n" +
-                    "            .then(buf => {\n" +
-                    "                self.Module = self.Module || {};\n" +
-                    "                self.Module.wasmBinary = buf;\n" +
-                    "                importScripts('${torchUrl}');\n" +
-                    "                torchHandler = self.onmessage;\n" +
-                    "                ready = true;\n" +
-                    "                while (queued.length && typeof torchHandler === 'function') {\n" +
-                    "                    torchHandler.call(self, { data: queued.shift() });\n" +
-                    "                }\n" +
-                    "                self.postMessage('__TORCH_READY__');\n" +
-                    "            })\n" +
-                    "            .catch(err => {\n" +
-                    "                self.postMessage('__TORCH_ERROR__:' + String(err));\n" +
-                    "            });\n" +
-                    "    `;\n" +
-                    "    const blob = new Blob([workerBlob], { type: 'text/javascript' });\n" +
-                    "    const worker = new Worker(URL.createObjectURL(blob));\n" +
-                    "    worker.onmessage = function(e) {\n" +
-                    "        const data = e.data;\n" +
-                    "        if (data === '__TORCH_READY__') {\n" +
-                    "            if (window.TorchBridge) window.TorchBridge.onTorchReady();\n" +
-                    "            worker.postMessage('setoption name UseDeclarativePositionCommand value true');\n" +
-                    "            worker.postMessage('setoption name BlackElo value 3200');\n" +
-                    "            worker.postMessage('setoption name WhiteElo value 3200');\n" +
-                    "            worker.postMessage('setoption name HandleContinuations value true');\n" +
-                    "            worker.postMessage('setoption name HandleContinuationsDepth value 18');\n" +
-                    "            worker.postMessage('setoption name UserColor value white');\n" +
-                    "            worker.postMessage('setoption name BotChatPrioritizePlayerMove value true');\n" +
-                    "            worker.postMessage('setoption name AllowBoardEventsWithoutSpeech value true');\n" +
-                    "            worker.postMessage('setoption name ServeCommandV2 value true');\n" +
-                    "            worker.postMessage('setoption name SpeechV3 value true');\n" +
-                    "            worker.postMessage('setoption name ClassificationV3 value true');\n" +
-                    "            worker.postMessage('setoption name UCI_Chess960 value false');\n" +
-                    "            worker.postMessage('setoption name UseRatingRanges value true');\n" +
-                    "        } else if (typeof data === 'string' && data.startsWith('__TORCH_ERROR__:')) {\n" +
-                    "            if (window.TorchBridge) window.TorchBridge.onTorchError(data.substring(16));\n" +
-                    "        } else if (typeof data === 'string' && data.startsWith('json ')) {\n" +
-                    "            if (window.TorchBridge) window.TorchBridge.onTorchResult(data.substring(5).trim());\n" +
-                    "        }\n" +
-                    "    };\n" +
-                    "    window.sendTorchMove = function(movesStr, userColor) {\n" +
-                    "        if (!worker) return;\n" +
-                    "        if (userColor) worker.postMessage('setoption name UserColor value ' + userColor);\n" +
-                    "        worker.postMessage('position startpos moves ' + movesStr);\n" +
-                    "        worker.postMessage('fetch analysis');\n" +
-                    "    };\n" +
+                    "        window.sendTorchMove = function(movesStr, userColor) {\n" +
+                    "            if (!worker) return;\n" +
+                    "            if (userColor) worker.postMessage('setoption name UserColor value ' + userColor);\n" +
+                    "            worker.postMessage('position startpos moves ' + movesStr);\n" +
+                    "            worker.postMessage('fetch analysis');\n" +
+                    "        };\n" +
+                    "        worker.postMessage({ __init_torch__: true, js: jsText, wasm: wasmBuffer }, [wasmBuffer]);\n" +
+                    "    }).catch(err => {\n" +
+                    "        if (window.TorchBridge) window.TorchBridge.onTorchError(String(err));\n" +
+                    "    });\n" +
                     "})();\n" +
                     "</script></body></html>";
 
@@ -271,7 +277,7 @@ public class TorchEngine {
         public void onTorchReady() {
             isReady = true;
             Log.i(TAG, "Torch WebAssembly engine is READY (100% authentic CEE)");
-            mainHandler.post(() -> Toast.makeText(context, "[Torch] Engine WASM sẵn sàng", Toast.LENGTH_SHORT).show());
+            mainHandler.post(() -> Toast.makeText(context, "[Torch] Engine WASM sẵn sàng (100% Real)", Toast.LENGTH_SHORT).show());
         }
 
         @JavascriptInterface

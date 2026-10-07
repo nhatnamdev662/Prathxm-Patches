@@ -286,30 +286,23 @@ public class MoveClassifier {
             final String transition = prevKey + "|" + currentKey;
             if (classifiedMoves.contains(transition)) return;
 
-            Float prevEvalVal = fenToEvalMap.get(prevKey);
-            List<String> prevBestMoves = fenToBestMovesMap.get(prevKey);
-            if (prevEvalVal == null || prevBestMoves == null || prevBestMoves.isEmpty()) return;
-
-            float prevEval = prevEvalVal;
-            float currentEval = currentResult.score;
-
             boolean whiteMoved = prevKey.endsWith(" w");
-
             String uciMove = deduceUciMove(prevKey, currentKey);
             if (uciMove == null) return;
 
             final Activity currentAct = activity;
 
-            // ── 100% Real Torch WebAssembly Engine Execution ──
+            // ── 1. 100% Real Torch WebAssembly Engine Execution ──
             TorchEngine torch = TorchEngine.getInstance(context);
             if (torch.isReady()) {
                 List<String> moves = getPlayedMoves();
+                if (moves.isEmpty()) moves.add(uciMove);
                 String userColor = whiteMoved ? "white" : "black";
                 final String finalUci = uciMove;
                 final String transitionKey = transition;
+                classifiedMoves.add(transitionKey);
                 torch.analyze(moves, userColor, (classificationName, playedMoveLan, bestMoveLan, speechText, rawJson) -> {
                     if (currentAct != null) {
-                        classifiedMoves.add(transitionKey);
                         currentAct.runOnUiThread(() -> {
                             displayTorchClassification(currentAct, classificationName,
                                     (playedMoveLan != null && !playedMoveLan.isEmpty()) ? playedMoveLan : finalUci,
@@ -319,6 +312,14 @@ public class MoveClassifier {
                 });
                 return;
             }
+
+            // ── 2. Immediate Java Fallback if Torch is not ready ──
+            Float prevEvalVal = fenToEvalMap.get(prevKey);
+            List<String> prevBestMoves = fenToBestMovesMap.get(prevKey);
+            if (prevEvalVal == null || prevBestMoves == null || prevBestMoves.isEmpty()) return;
+
+            float prevEval = prevEvalVal;
+            float currentEval = currentResult.score;
             
             // Same expected-points model as the game review (win probability, mover POV).
             float winBefore = ReviewMath.win(prevEval, whiteMoved);
