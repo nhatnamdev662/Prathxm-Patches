@@ -33,13 +33,19 @@ public class ArrowOverlayView extends View {
         public final String to;
         public final int tier;
         public final boolean isThreat;
+        public final String evalText;
 
         public ArrowData(String move, int tier, boolean isThreat) {
+            this(move, tier, isThreat, null);
+        }
+
+        public ArrowData(String move, int tier, boolean isThreat, String evalText) {
             this.move = move;
             this.from = move.substring(0, 2);
             this.to = move.substring(2, 4);
             this.tier = tier;
             this.isThreat = isThreat;
+            this.evalText = evalText;
         }
     }
 
@@ -68,12 +74,27 @@ public class ArrowOverlayView extends View {
         }
     }
 
+    private static class BadgeLayout {
+        float x;
+        float y;
+        float width;
+        float height;
+        String text;
+        int tier;
+        boolean isThreat;
+    }
+
     private final List<ArrowData> arrows = new ArrayList<>();
     private boolean flipped = false;
 
     private final Paint glowPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint fillPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint edgePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+
+    private final Paint badgeBgPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint badgeStrokePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint badgeTextPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint badgeGlowPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 
     public ArrowOverlayView(Context context) {
         super(context);
@@ -91,6 +112,17 @@ public class ArrowOverlayView extends View {
         glowPaint.setStyle(Paint.Style.STROKE);
         glowPaint.setStrokeJoin(Paint.Join.ROUND);
         glowPaint.setStrokeCap(Paint.Cap.ROUND);
+
+        badgeBgPaint.setStyle(Paint.Style.FILL);
+
+        badgeStrokePaint.setStyle(Paint.Style.STROKE);
+        badgeStrokePaint.setStrokeJoin(Paint.Join.ROUND);
+
+        badgeGlowPaint.setStyle(Paint.Style.STROKE);
+        badgeGlowPaint.setStrokeJoin(Paint.Join.ROUND);
+
+        badgeTextPaint.setTypeface(android.graphics.Typeface.create("monospace", android.graphics.Typeface.BOLD));
+        badgeTextPaint.setTextAlign(Paint.Align.CENTER);
     }
 
     @Override
@@ -141,11 +173,16 @@ public class ArrowOverlayView extends View {
 
         float sqSize = Math.min(w, h) / 8.0f;
 
-        // Draw in reverse order (Tier 5 first, Tier 1 last so Tier 1 is on top)
+        // 1. Draw arrows in reverse order (Tier 5 first, Tier 1 last so Tier 1 is on top)
         for (int i = arrows.size() - 1; i >= 0; i--) {
             ArrowData arrow = arrows.get(i);
             float perpOffset = computePerpOffset(i, sqSize);
             drawSingleArrow(canvas, arrow, sqSize, perpOffset);
+        }
+
+        // 2. Draw Eval Badges with Anti-collision avoidance if enabled
+        if (StockfishSettings.isArrowEvalEnabled(getContext())) {
+            drawEvalBadges(canvas, sqSize);
         }
     }
 
@@ -417,5 +454,145 @@ public class ArrowOverlayView extends View {
                 clamp((int)(c[1] * (1.0f - amt))),
                 clamp((int)(c[2] * (1.0f - amt)))
         };
+    }
+
+    /**
+     * Renders cyberpunk frosted eval score badges on top of arrows
+     * with anti-collision lane separation matching NNVC browser extension logic.
+     */
+    private void drawEvalBadges(Canvas canvas, float sqSize) {
+        List<BadgeLayout> layouts = new ArrayList<>();
+
+        // 1. Calculate ideal initial badge position along arrow shaft
+        for (int i = 0; i < arrows.size(); i++) {
+            ArrowData arrow = arrows.get(i);
+            if (arrow.evalText == null || arrow.evalText.isEmpty()) continue;
+
+            float[] fromCenter = getSquareCenter(arrow.from, flipped, sqSize);
+            float[] toCenter   = getSquareCenter(arrow.to,   flipped, sqSize);
+            if (fromCenter == null || toCenter == null) continue;
+
+            float x1 = fromCenter[0], y1 = fromCenter[1];
+            float x2 = toCenter[0],   y2 = toCenter[1];
+
+            int fileDelta = Math.abs(arrow.to.charAt(0) - arrow.from.charAt(0));
+            int rankDelta = Math.abs(arrow.to.charAt(1) - arrow.from.charAt(1));
+            boolean isKnight = (fileDelta == 1 && rankDelta == 2) || (fileDelta == 2 && rankDelta == 1);
+
+            float badgeCenterX;
+            float badgeCenterY;
+
+            if (isKnight) {
+                // For knight moves, anchor along the second leg near the target
+                float elbowX = x1;
+                float elbowY = y2;
+                if (fileDelta == 2 && rankDelta == 1) {
+                    elbowX = x2;
+                    elbowY = y1;
+                }
+                // Place badge at 60% of second leg
+                badgeCenterX = elbowX + (x2 - elbowX) * 0.60f;
+                badgeCenterY = elbowY + (y2 - elbowY) * 0.60f;
+            } else {
+                // Straight move: Anchor at 62% along the line towards target (near head but clear of tip)
+                badgeCenterX = x1 + (x2 - x1) * 0.62f;
+                badgeCenterY = y1 + (y2 - y1) * 0.62f;
+            }
+
+            // Text measurement
+            float textSize = Math.max(16f, sqSize * 0.22f);
+            badgeTextPaint.setTextSize(textSize);
+            float textWidth = badgeTextPaint.measureText(arrow.evalText);
+            Paint.FontMetrics fm = badgeTextPaint.getFontMetrics();
+            float textHeight = fm.descent - fm.ascent;
+
+            float padH = sqSize * 0.10f;
+            float padV = sqSize * 0.05f;
+            float badgeW = textWidth + padH * 2f;
+            float badgeH = textHeight + padV * 2f;
+
+            BadgeLayout bl = new BadgeLayout();
+            bl.x = badgeCenterX;
+            bl.y = badgeCenterY;
+            bl.width = badgeW;
+            bl.height = badgeH;
+            bl.text = arrow.evalText;
+            bl.tier = arrow.tier;
+            bl.isThreat = arrow.isThreat;
+
+            layouts.add(bl);
+        }
+
+        // 2. Anti-collision relaxation: Resolve overlaps between badges
+        float minSeparation = sqSize * 0.35f;
+        int maxPasses = 5;
+        for (int pass = 0; pass < maxPasses; pass++) {
+            boolean shifted = false;
+            for (int i = 0; i < layouts.size(); i++) {
+                BadgeLayout b1 = layouts.get(i);
+                for (int j = i + 1; j < layouts.size(); j++) {
+                    BadgeLayout b2 = layouts.get(j);
+                    float dx = b2.x - b1.x;
+                    float dy = b2.y - b1.y;
+                    float dist = (float) Math.hypot(dx, dy);
+                    float minDist = Math.max(minSeparation, (b1.width + b2.width) * 0.45f);
+
+                    if (dist < minDist) {
+                        float push = (minDist - dist) * 0.5f;
+                        if (dist < 1e-3f) {
+                            dx = 0f;
+                            dy = 1f;
+                            dist = 1f;
+                        }
+                        float nx = dx / dist;
+                        float ny = dy / dist;
+
+                        // Lower tier (b2) yields more than higher tier (b1)
+                        b1.x -= nx * push * 0.3f;
+                        b1.y -= ny * push * 0.3f;
+                        b2.x += nx * push * 0.7f;
+                        b2.y += ny * push * 0.7f;
+                        shifted = true;
+                    }
+                }
+            }
+            if (!shifted) break;
+        }
+
+        // 3. Draw each badge: Cyber Frosted Pill with Neon Glow & Crisp Monospace Text
+        for (BadgeLayout b : layouts) {
+            int[] rawRgb = getBaseRgb(getContext(), b.tier, b.isThreat);
+            int primaryColor = Color.rgb(rawRgb[0], rawRgb[1], rawRgb[2]);
+
+            float left = b.x - b.width / 2f;
+            float top = b.y - b.height / 2f;
+            float right = left + b.width;
+            float bottom = top + b.height;
+            float cornerRadius = b.height / 2f;
+
+            // Ambient Glow
+            badgeGlowPaint.setColor(Color.argb(90, rawRgb[0], rawRgb[1], rawRgb[2]));
+            badgeGlowPaint.setStrokeWidth(sqSize * 0.04f);
+            badgeGlowPaint.setMaskFilter(new BlurMaskFilter(Math.max(1f, sqSize * 0.05f), BlurMaskFilter.Blur.NORMAL));
+            android.graphics.RectF rect = new android.graphics.RectF(left, top, right, bottom);
+            canvas.drawRoundRect(rect, cornerRadius, cornerRadius, badgeGlowPaint);
+
+            // Frosted Dark Glass Pill Background
+            badgeBgPaint.setColor(0xE60C0F16);
+            canvas.drawRoundRect(rect, cornerRadius, cornerRadius, badgeBgPaint);
+
+            // Cyber Neon Outline
+            badgeStrokePaint.setColor(primaryColor);
+            badgeStrokePaint.setStrokeWidth(Math.max(1.5f, sqSize * 0.024f));
+            badgeStrokePaint.setMaskFilter(null);
+            canvas.drawRoundRect(rect, cornerRadius, cornerRadius, badgeStrokePaint);
+
+            // Monospace Eval Text with High Contrast
+            badgeTextPaint.setColor(0xFFFFFFFF);
+            badgeTextPaint.setTextSize(Math.max(16f, sqSize * 0.22f));
+            Paint.FontMetrics fm = badgeTextPaint.getFontMetrics();
+            float textBaseline = b.y - (fm.ascent + fm.descent) / 2f;
+            canvas.drawText(b.text, b.x, textBaseline, badgeTextPaint);
+        }
     }
 }

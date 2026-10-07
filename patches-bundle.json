@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-10-07T12:28:00",
-  "description": "## [2.0.3] (2026-10-07)\n\n### ⚡ NNVC v2.0.3 — Fix VerifyError, Native DEX Patch & Game Review 100% Real\n\n* **Sửa dứt điểm lỗi VerifyError:** Giữ nguyên vẹn 100% bytecode class gốc trong bundle, can thiệp trực tiếp bằng DEX bytecode return-void sạch sẽ sau Hook 5. Loại bỏ triệt để lỗi Dalvik/ART Verifier rejected class.\n* **Game Review gốc 100%:** Bỏ qua hoàn toàn Game Analysis bytecode patch, Chess.com dùng Game Review server chuẩn không lỗi `NoSuchMethodError`.\n* **Nhận diện quân Trắng & Đa nhiệm:** Tự động nhận diện Trắng ngay nước 0 và phục hồi vẽ overlay khi chuyển app/đa nhiệm.\n* **Author:** NNVC (@nncutett)",
-  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.3/patches-2.0.3.mpp",
+  "created_at": "2026-10-07T13:28:00",
+  "description": "## [2.0.4] (2026-10-07)\n\n### ⚡ NNVC v2.0.4 — Hiện điểm Eval trên mũi tên & Cơ chế né va chạm Cyber Badges\n\n* **Hiện điểm Eval trên mũi tên:** Hiển thị trực tiếp điểm đánh giá (+1.4, -0.8, M3, -M2...) của từng nước đi ứng với từng mũi tên gợi ý.\n* **Cơ chế né va chạm nhãn Eval (Anti-collision avoidance):** Thuật toán tự động tính toán đẩy giãn nhãn điểm khi nhiều mũi tên có điểm đến gần nhau, tránh đè chữ hoặc che khuất mũi tên.\n* **Tuỳ chỉnh linh hoạt:** Thêm công tắc bật/tắt hiển thị điểm Eval trên mũi tên trong tab Visual của menu cài đặt.\n* **Author:** NNVC (@nncutett)",
+  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.4/patches-2.0.4.mpp",
   "signature_download_url": "",
-  "version": "2.0.3"
+  "version": "2.0.4"
 }

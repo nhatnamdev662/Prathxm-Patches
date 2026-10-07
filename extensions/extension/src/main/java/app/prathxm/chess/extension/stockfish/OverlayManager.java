@@ -28,6 +28,15 @@ public class OverlayManager {
     private static final String TAG = "OverlayManager";
 
     public static void updateArrowOverlay(final List<String> moves, final Object stateImpl) {
+        updateArrowOverlay(moves, null, false, 0, true, stateImpl);
+    }
+
+    public static void updateArrowOverlay(final List<String> moves,
+                                          final float[] lineScores,
+                                          final boolean hasMate,
+                                          final int mateIn,
+                                          final boolean whiteToMove,
+                                          final Object stateImpl) {
         new Handler(Looper.getMainLooper()).post(new Runnable() {
             @Override
             public void run() {
@@ -52,7 +61,7 @@ public class OverlayManager {
                         boardView.post(new Runnable() {
                             @Override
                             public void run() {
-                                updateArrowOverlay(moves, stateImpl);
+                                updateArrowOverlay(moves, lineScores, hasMate, mateIn, whiteToMove, stateImpl);
                             }
                         });
                         return;
@@ -74,7 +83,17 @@ public class OverlayManager {
                         for (int i = 0; i < moves.size(); i++) {
                             String m = moves.get(i);
                             if (m != null && m.matches("^[a-h][1-8][a-h][1-8][qrbn]?$")) {
-                                list.add(new ArrowOverlayView.ArrowData(m, i + 1, false));
+                                String evalText = null;
+                                if (lineScores != null && i < lineScores.length) {
+                                    float score = lineScores[i];
+                                    if (i == 0 && hasMate && mateIn != 0) {
+                                        evalText = (mateIn > 0 ? "M" : "-M") + Math.abs(mateIn);
+                                    } else {
+                                        float relativeScore = whiteToMove ? score : -score;
+                                        evalText = String.format(java.util.Locale.US, "%+.1f", relativeScore);
+                                    }
+                                }
+                                list.add(new ArrowOverlayView.ArrowData(m, i + 1, false, evalText));
                             }
                         }
                     }

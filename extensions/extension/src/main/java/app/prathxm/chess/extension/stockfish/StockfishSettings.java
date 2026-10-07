@@ -253,6 +253,17 @@ public class StockfishSettings {
         getPrefs(context).edit().putBoolean(KEY_SHOW_ENGINE_INFO, enabled).apply();
     }
 
+    private static final String KEY_SHOW_ARROW_EVAL = "show_arrow_eval";
+
+    /** Display eval score badge on each suggestion arrow. */
+    public static boolean isArrowEvalEnabled(Context context) {
+        return getPrefs(context).getBoolean(KEY_SHOW_ARROW_EVAL, true);
+    }
+
+    public static void setArrowEvalEnabled(Context context, boolean enabled) {
+        getPrefs(context).edit().putBoolean(KEY_SHOW_ARROW_EVAL, enabled).apply();
+    }
+
     /** Restores every engine setting to its default (the tour flag is kept). */
     public static void resetToDefaults(Context context) {
         boolean tour = isTourShown(context);

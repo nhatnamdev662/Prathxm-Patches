@@ -479,7 +479,8 @@ public class StockfishExtension {
                     ArrowInjector.clearEngineArrows(getStateImpl());
                 }
                 if (showArrows && !movesToInject.isEmpty()) {
-                    OverlayManager.updateArrowOverlay(movesToInject, getStateImpl());
+                    boolean whiteTurn = isWhiteTurnFromFen(fen);
+                    OverlayManager.updateArrowOverlay(movesToInject, result.lineScores, result.hasMate, result.mateIn, whiteTurn, getStateImpl());
                 } else {
                     OverlayManager.hideArrowOverlay();
                 }
