@@ -243,13 +243,16 @@ public class TorchEngine {
                     "            console.error('[Torch Worker Error] ' + (err.message || err));\n" +
                     "            if (window.TorchBridge) window.TorchBridge.onTorchError(String(err.message || err));\n" +
                     "        };\n" +
-                    "        window.sendTorchMove = function(movesStr, userColor, depth) {\n" +
+                    "        window.sendTorchPosition = function(posCmd, userColor, depth) {\n" +
                     "            if (!worker) return;\n" +
                     "            if (userColor) worker.postMessage('setoption name UserColor value ' + userColor);\n" +
                     "            const d = depth || 4;\n" +
                     "            worker.postMessage('setoption name HandleContinuationsDepth value ' + d);\n" +
-                    "            worker.postMessage('position startpos moves ' + movesStr);\n" +
+                    "            worker.postMessage(posCmd);\n" +
                     "            worker.postMessage('fetch analysis');\n" +
+                    "        };\n" +
+                    "        window.sendTorchMove = function(movesStr, userColor, depth) {\n" +
+                    "            window.sendTorchPosition('position startpos moves ' + movesStr, userColor, depth);\n" +
                     "        };\n" +
                     "        worker.postMessage({ __init_torch__: true, js: jsText, wasm: wasmBuffer }, [wasmBuffer]);\n" +
                     "    }).catch(err => {\n" +
@@ -267,35 +270,45 @@ public class TorchEngine {
         }
     }
 
-    public void analyze(List<String> moves, String userColor, TorchClassificationCallback callback) {
-        analyze(moves, userColor, 4, callback);
+    public void analyzePosition(String positionCmd, String userColor, TorchClassificationCallback callback) {
+        analyzePosition(positionCmd, userColor, 4, callback);
     }
 
-    public void analyze(List<String> moves, String userColor, int depth, TorchClassificationCallback callback) {
-        if (!isReady || webView == null || moves == null || moves.isEmpty()) {
-            log("[ANALYZE SKIP] isReady=" + isReady + ", webView=" + (webView != null) + ", moves=" + (moves != null ? moves.size() : 0));
+    public void analyzePosition(String positionCmd, String userColor, int depth, TorchClassificationCallback callback) {
+        if (!isReady || webView == null || positionCmd == null || positionCmd.trim().isEmpty()) {
+            log("[ANALYZE SKIP] isReady=" + isReady + ", webView=" + (webView != null) + ", posCmd=" + (positionCmd != null));
             return;
         }
         this.activeCallback = callback;
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < moves.size(); i++) {
-            if (i > 0) sb.append(' ');
-            sb.append(moves.get(i));
-        }
-        final String movesStr = sb.toString();
+        final String cmd = positionCmd.trim();
         final String color = (userColor != null) ? userColor : "white";
         final int targetDepth = Math.max(2, Math.min(10, depth > 0 ? depth : 4));
-        log("[ANALYZE SEND] Moves=" + movesStr + ", Color=" + color + ", Depth=" + targetDepth);
+        log("[ANALYZE SEND] Cmd=" + cmd + ", Color=" + color + ", Depth=" + targetDepth);
 
         mainHandler.post(() -> {
             try {
-                String js = "window.sendTorchMove('" + movesStr + "', '" + color + "', " + targetDepth + ");";
+                String safeCmd = cmd.replace("'", "\\'");
+                String js = "if (window.sendTorchPosition) window.sendTorchPosition('" + safeCmd + "', '" + color + "', " + targetDepth + ");";
                 webView.evaluateJavascript(js, null);
             } catch (Throwable t) {
                 log("[EVAL JS ERROR] " + t.getMessage());
                 Log.e(TAG, "evaluateJavascript failed: " + t.getMessage());
             }
         });
+    }
+
+    public void analyze(List<String> moves, String userColor, TorchClassificationCallback callback) {
+        analyze(moves, userColor, 4, callback);
+    }
+
+    public void analyze(List<String> moves, String userColor, int depth, TorchClassificationCallback callback) {
+        if (moves == null || moves.isEmpty()) return;
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < moves.size(); i++) {
+            if (i > 0) sb.append(' ');
+            sb.append(moves.get(i));
+        }
+        analyzePosition("position startpos moves " + sb.toString(), userColor, depth, callback);
     }
 
     public void updateRatings(int whiteElo, int blackElo) {
@@ -329,6 +342,11 @@ public class TorchEngine {
         public void onTorchError(String error) {
             log("[BRIDGE ERROR] onTorchError: " + error);
             Log.e(TAG, "Torch Engine runtime error: " + error);
+            if (error != null && (error.contains("Aborted") || error.contains("RuntimeError"))) {
+                isReady = false;
+                log("[TORCH AUTO-RECOVER] Phát hiện WebAssembly Abort -> Tự động khởi động lại Worker sau 1.5s...");
+                mainHandler.postDelayed(() -> initWebView(), 1500);
+            }
         }
 
         @JavascriptInterface

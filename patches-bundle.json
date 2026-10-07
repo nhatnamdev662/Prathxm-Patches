@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-10-07T21:40:00",
-  "description": "## [2.0.14] (2026-10-07)\n\n### ⚡ NNVC v2.0.14 — Tự động nhận diện Elo đối thủ & người chơi với bộ lọc nghiêm ngặt (Strict Filter)\n\n* **Tự động quét Elo 2 bên (EloScanner):** Quét chính xác vị trí hiển thị Elo của Player Top và Player Bottom quanh bàn cờ ChessBoardView, tự động đồng bộ hóa `WhiteElo` và `BlackElo` vào Torch WebAssembly Engine giống 100% bản Extension.\n* **Bộ lọc chống nhận diện nhầm (Strict Anti-Pollution Filter):** Loại bỏ triệt để đồng hồ thời gian (10:00, 3:15), thời lượng ván đấu, điểm số chênh lệch quân cờ (+1, -2), chỉ bắt đúng số Elo chuẩn trong phạm vi 100 - 3800.\n* **Tự động đảo chiều theo hướng bàn cờ:** Tương thích hoàn toàn với góc nhìn lật bàn cờ (Flipped board) của người cầm quân Trắng hay Đen.\n* **Author:** NNVC (@nncutett)",
-  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.14/patches-2.0.14.mpp",
+  "created_at": "2026-10-07T22:20:00",
+  "description": "## [2.0.16] (2026-10-07)\n\n### ⚡ NNVC v2.0.16 — Khắc phục triệt để lỗi phân loại nước đi Torch CEE bằng danh sách nước đi tích lũy (Cumulative Moves Sequence)\n\n* **Sửa dứt điểm lỗi Aborted() khi phân loại nước đi:** Chuyển từ lệnh đơn lẻ sang chuỗi nước đi tích lũy từ thế cờ ban đầu `position startpos moves <ALL_MOVES>`, khớp 100% với đặc tả của Komodo/Torch WebAssembly và Extension.\n* **Nhận diện chính xác 100% nhãn:** Trả về đầy đủ Book, Best, Good, Inaccuracy, Mistake, Blunder, Brilliant mà không bị văng runtime exception.\n* **Tự động khôi phục Worker:** Bổ sung cơ chế auto-recover nếu Web Worker gặp lỗi bất ngờ.\n* **Author:** NNVC (@nncutett)",
+  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.16/patches-2.0.16.mpp",
   "signature_download_url": "",
-  "version": "2.0.14"
+  "version": "2.0.16"
 }

@@ -24,6 +24,7 @@ public class MoveClassifier {
     private static final List<String> fenHistory = new ArrayList<>();
     private static final Map<String, Float> fenToEvalMap = new ConcurrentHashMap<>();
     private static final Map<String, List<String>> fenToBestMovesMap = new ConcurrentHashMap<>();
+    private static final Map<String, String> keyToFullFenMap = new ConcurrentHashMap<>();
     /** Line evaluations (MultiPV) for calculating gap between top lines. */
     private static final Map<String, float[]> fenToLineScoresMap = new ConcurrentHashMap<>();
     /** Principal variation lines from this position. */
@@ -53,6 +54,7 @@ public class MoveClassifier {
     private static void clearMaps() {
         fenToEvalMap.clear();
         fenToBestMovesMap.clear();
+        keyToFullFenMap.clear();
         fenToDepthMap.clear();
         fenToLineScoresMap.clear();
         fenToPvMap.clear();
@@ -121,6 +123,7 @@ public class MoveClassifier {
     public static void updateHistory(String fen) {
         String key = getFenKey(fen);
         if (key == null) return;
+        if (fen != null) keyToFullFenMap.put(key, fen);
         synchronized (fenHistory) {
             int idx = fenHistory.indexOf(key);
             if (idx >= 0) {
@@ -132,13 +135,28 @@ public class MoveClassifier {
                 // Stepped back (take-back / navigation): allow the next move to be rated again.
                 if (truncated) classifiedMoves.clear();
             } else {
-                if (!fenHistory.isEmpty()) {
+                if (fenHistory.isEmpty()) {
+                    String startPosKey = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w";
+                    if (!startPosKey.equals(key)) {
+                        String fromStart = deduceUciMove(startPosKey, key);
+                        if (fromStart != null) {
+                            fenHistory.add(startPosKey);
+                        }
+                    }
+                } else {
                     String lastKey = fenHistory.get(fenHistory.size() - 1);
                     String deduced = deduceUciMove(lastKey, key);
                     if (deduced == null) {
                         fenHistory.clear();
                         clearMaps();
                         StockfishExtension.isReviewMode = false;
+                        String startPosKey = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w";
+                        if (!startPosKey.equals(key)) {
+                            String fromStart = deduceUciMove(startPosKey, key);
+                            if (fromStart != null) {
+                                fenHistory.add(startPosKey);
+                            }
+                        }
                     }
                 }
                 fenHistory.add(key);
@@ -293,18 +311,26 @@ public class MoveClassifier {
                 return;
             }
 
+            if (currentFen != null) {
+                keyToFullFenMap.put(currentKey, currentFen);
+            }
+
             final Activity currentAct = activity;
             TorchEngine.log("[CLASSIFIER TRIGGER] Move=" + uciMove + ", whiteMoved=" + whiteMoved + ", torchReady=" + TorchEngine.getInstance(context).isReady());
 
             // ── 1. 100% Real Torch WebAssembly Engine Execution ──
             TorchEngine torch = TorchEngine.getInstance(context);
             if (torch.isReady()) {
-                List<String> moves = getPlayedMoves();
-                if (moves.isEmpty()) moves.add(uciMove);
                 String userColor = whiteMoved ? "white" : "black";
                 final String finalUci = uciMove;
                 final String transitionKey = transition;
                 classifiedMoves.add(transitionKey);
+
+                List<String> moves = getPlayedMoves();
+                if (moves.isEmpty() || !moves.get(moves.size() - 1).equals(uciMove)) {
+                    moves.add(uciMove);
+                }
+
                 torch.analyze(moves, userColor, (classificationName, playedMoveLan, bestMoveLan, speechText, rawJson) -> {
                     TorchEngine.log("[CLASSIFIER CALLBACK] class=" + classificationName + ", act=" + (currentAct != null));
                     if (currentAct != null) {

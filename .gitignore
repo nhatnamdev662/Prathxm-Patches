@@ -142,3 +142,15 @@ morphe-data/
 lichess_offline_puzzles_all.csv.gz
 
 *.mpp
+
+# Build and temporary python scripts
+build_*.py
+build.py
+check_*.py
+inspect_*.py
+dump_*.py
+find_*.py
+debug_*.py
+parse_*.py
+extract_*.py
+*.html
