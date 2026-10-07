@@ -318,6 +318,10 @@ public class MoveClassifier {
             final Activity currentAct = activity;
             TorchEngine.log("[CLASSIFIER TRIGGER] Move=" + uciMove + ", whiteMoved=" + whiteMoved + ", torchReady=" + TorchEngine.getInstance(context).isReady());
 
+            final String finalPrevKey = prevKey;
+            final boolean finalWhiteMoved = whiteMoved;
+            final StockfishProcess.AnalysisResult finalResult = currentResult;
+
             // ── 1. 100% Real Torch WebAssembly Engine Execution ──
             TorchEngine torch = TorchEngine.getInstance(context);
             if (torch.isReady()) {
@@ -333,18 +337,33 @@ public class MoveClassifier {
 
                 torch.analyze(moves, userColor, (classificationName, playedMoveLan, bestMoveLan, speechText, rawJson) -> {
                     TorchEngine.log("[CLASSIFIER CALLBACK] class=" + classificationName + ", act=" + (currentAct != null));
-                    if (currentAct != null) {
-                        currentAct.runOnUiThread(() -> {
-                            displayTorchClassification(currentAct, classificationName,
-                                    (playedMoveLan != null && !playedMoveLan.isEmpty()) ? playedMoveLan : finalUci,
-                                    speechText);
-                        });
+                    if (classificationName != null && !classificationName.isEmpty() && !"null".equalsIgnoreCase(classificationName)) {
+                        if (currentAct != null) {
+                            currentAct.runOnUiThread(() -> {
+                                displayTorchClassification(currentAct, classificationName,
+                                        (playedMoveLan != null && !playedMoveLan.isEmpty()) ? playedMoveLan : finalUci,
+                                        speechText);
+                            });
+                        }
+                    } else {
+                        // Torch was unable to evaluate (e.g. out app mid-game): Fall back immediately to exact Java Stockfish Math
+                        TorchEngine.log("[TORCH FALLBACK] Torch returned null -> Using Java Stockfish ReviewMath calculation");
+                        classifyWithJavaModel(context, finalPrevKey, finalResult, finalUci, finalWhiteMoved, currentAct, transitionKey);
                     }
                 });
                 return;
             }
 
             // ── 2. Immediate Java Fallback if Torch is not ready ──
+            classifyWithJavaModel(context, prevKey, currentResult, uciMove, whiteMoved, activity, transition);
+        } catch (Throwable t) {
+            Log.e(TAG, "Error in classifyMoveIfPossible: " + t.getMessage());
+        }
+    }
+
+    private static void classifyWithJavaModel(Context context, String prevKey, StockfishProcess.AnalysisResult currentResult,
+                                              String uciMove, boolean whiteMoved, Activity activity, String transition) {
+        try {
             Float prevEvalVal = fenToEvalMap.get(prevKey);
             List<String> prevBestMoves = fenToBestMovesMap.get(prevKey);
             if (prevEvalVal == null || prevBestMoves == null || prevBestMoves.isEmpty()) return;
@@ -511,7 +530,7 @@ public class MoveClassifier {
                 });
             }
         } catch (Throwable t) {
-            Log.e(TAG, "Error in classifyMoveIfPossible: " + t.getMessage());
+            Log.e(TAG, "Error in classifyWithJavaModel: " + t.getMessage());
         }
     }
 

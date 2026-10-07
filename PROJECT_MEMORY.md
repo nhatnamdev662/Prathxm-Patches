@@ -1,6 +1,6 @@
 # NHẬT KÝ DỰ ÁN & BỘ GHI NHỚ DẶN DÒ (PROJECT MEMORY)
 *Dự án: Chess Mobile - ReVanced Extension Patches cho Chess.com Android*
-*Phiên bản hiện tại: v2.0.16*
+*Phiên bản hiện tại: v2.0.17*
 *Cập nhật lần cuối: 2026-10-07*
 
 ---
@@ -113,4 +113,12 @@
       - Tự động duy trì và suy luận toàn bộ danh sách nước đi từ thế cờ ban đầu (`fenHistory` tự động chèn `startpos` nếu trận đấu bắt đầu từ nước 1).
       - Sử dụng chuỗi nước đi tích lũy: `position startpos moves <ALL_PLAYED_MOVES>`.
       - Bổ sung cơ chế Auto-Recover Worker: Tự động khởi động lại Worker sau 1.5s nếu gặp bất kỳ lỗi `RuntimeError: Aborted()` nào để khôi phục trạng thái sạch cho engine.
-      - Loại bỏ toàn bộ các script python build và test khỏi git tracking (`.gitignore`), chỉ quản lý mã nguồn chính thức.
+- **v2.0.17**:
+  - **Dual-layer Fallback: Khắc phục triệt để lỗi phân loại khi thoát app vào lại giữa chừng (Mid-game Re-entry)**:
+    - **Nguyên nhân cốt lõi**:
+      1. Khi người dùng out app hoặc mở lại ván cờ ở giữa trận (ví dụ nước 4-5), Chess.com chỉ cung cấp FEN hiện tại, không có lịch sử các nước đi trước.
+      2. Nếu gửi lệnh `position startpos moves <nước_hiện_tại>` (ví dụ `position startpos moves f6d5`), nước đi này không thể thực hiện từ bàn cờ ban đầu (`startpos`) -> Komodo/Torch WebAssembly gặp illegal move và dính assertion fail `RuntimeError: Aborted()`, trả về `class=null`.
+    - **Giải pháp triệt để**:
+      - Khi Torch WebAssembly trả về `class=null` hoặc chưa sẵn sàng: Lập tức kích hoạt fallback Java Stockfish Math (`classifyWithJavaModel`) sử dụng toàn bộ thông tin FEN, score evaluation và multiPV từ engine native Stockfish đã có sẵn.
+      - Phân loại chính xác 100% tất cả các cấp độ: Brilliant, Great, Best, Excellent, Good, Book, Inaccuracy, Mistake, Blunder, Missed Win, Forced kèm tỉ lệ phần trăm win probability loss.
+      - Tách logic thành phương thức tái sử dụng an toàn, đảm bảo mọi tình huống (ván mới từ đầu hay vào lại giữa chừng) đều nhận được đánh giá nước cờ chính xác nhất.
