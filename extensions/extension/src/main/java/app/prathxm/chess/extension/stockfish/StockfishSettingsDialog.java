@@ -639,13 +639,21 @@ public class StockfishSettingsDialog {
         footerLayout.setOrientation(LinearLayout.VERTICAL);
         footerLayout.setPadding((int) (14 * density), (int) (8 * density), (int) (14 * density), (int) (12 * density));
 
+        // Row: Telegram & Diagnostic Log Buttons
+        LinearLayout socialRow = new LinearLayout(activity);
+        socialRow.setOrientation(LinearLayout.HORIZONTAL);
+        socialRow.setGravity(Gravity.CENTER);
+
         // Telegram Button (.hdr-btn style)
         LinearLayout telegramBtn = new LinearLayout(activity);
         telegramBtn.setOrientation(LinearLayout.HORIZONTAL);
         telegramBtn.setGravity(Gravity.CENTER);
-        int tgPadH = (int) (14 * density);
+        int tgPadH = (int) (12 * density);
         int tgPadV = (int) (7 * density);
         telegramBtn.setPadding(tgPadH, tgPadV, tgPadH, tgPadV);
+        LinearLayout.LayoutParams tgParams = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1.0f);
+        tgParams.rightMargin = (int) (6 * density);
+        telegramBtn.setLayoutParams(tgParams);
 
         GradientDrawable tgBg = new GradientDrawable();
         tgBg.setColor(0xCC0A84FF); // 80% Cyber Blue
@@ -653,16 +661,16 @@ public class StockfishSettingsDialog {
         tgBg.setStroke((int) (1.2f * density), COLOR_ACCENT_CYAN);
         telegramBtn.setBackground(tgBg);
 
-        ImageView tgIcon = TelegramIconHelper.createTelegramLogoView(activity, (int) (18 * density));
-        LinearLayout.LayoutParams tgIconParams = new LinearLayout.LayoutParams((int) (18 * density), (int) (18 * density));
-        tgIconParams.rightMargin = (int) (8 * density);
+        ImageView tgIcon = TelegramIconHelper.createTelegramLogoView(activity, (int) (16 * density));
+        LinearLayout.LayoutParams tgIconParams = new LinearLayout.LayoutParams((int) (16 * density), (int) (16 * density));
+        tgIconParams.rightMargin = (int) (6 * density);
         tgIcon.setLayoutParams(tgIconParams);
         telegramBtn.addView(tgIcon);
 
         TextView tgText = new TextView(activity);
         tgText.setText(I18n.get(activity, "contact_telegram"));
         tgText.setTextColor(COLOR_TEXT_PRIMARY);
-        tgText.setTextSize(12.5f);
+        tgText.setTextSize(11.5f);
         tgText.setTypeface(Typeface.create("sans-serif-medium", Typeface.BOLD));
         telegramBtn.addView(tgText);
 
@@ -679,7 +687,36 @@ public class StockfishSettingsDialog {
                 Toast.makeText(activity, "Telegram: @nncutett", Toast.LENGTH_LONG).show();
             }
         });
-        footerLayout.addView(telegramBtn);
+        socialRow.addView(telegramBtn);
+
+        // Diagnostic Log Button (📋 Log)
+        LinearLayout logBtn = new LinearLayout(activity);
+        logBtn.setOrientation(LinearLayout.HORIZONTAL);
+        logBtn.setGravity(Gravity.CENTER);
+        logBtn.setPadding(tgPadH, tgPadV, tgPadH, tgPadV);
+        LinearLayout.LayoutParams logParams = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1.0f);
+        logBtn.setLayoutParams(logParams);
+
+        GradientDrawable logBg = new GradientDrawable();
+        logBg.setColor(0x3364D2FF);
+        logBg.setCornerRadius(14 * density);
+        logBg.setStroke((int) (1.2f * density), COLOR_ACCENT_CYAN);
+        logBtn.setBackground(logBg);
+
+        TextView logText = new TextView(activity);
+        logText.setText("📋 Xem & Copy Log");
+        logText.setTextColor(COLOR_ACCENT_CYAN);
+        logText.setTextSize(11.5f);
+        logText.setTypeface(Typeface.create("sans-serif-medium", Typeface.BOLD));
+        logBtn.addView(logText);
+
+        logBtn.setOnClickListener(v -> {
+            HapticHelper.pop(activity, v);
+            showDiagnosticLogDialog(activity);
+        });
+        socialRow.addView(logBtn);
+
+        footerLayout.addView(socialRow);
 
         addDialogSpacer(footerLayout, 6, density);
 
@@ -1353,4 +1390,112 @@ public class StockfishSettingsDialog {
 
         return seekBar;
     }
+
+    public static void showDiagnosticLogDialog(Activity activity) {
+        if (activity == null) return;
+        DisplayMetrics dm = activity.getResources().getDisplayMetrics();
+        float density = dm.density;
+
+        final Dialog logDialog = new Dialog(activity);
+        logDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+
+        final GradientDrawable bg = new GradientDrawable();
+        bg.setColor(0xF20A0D14);
+        bg.setCornerRadius(18 * density);
+        bg.setStroke((int) (1.2f * density), COLOR_ACCENT_CYAN);
+        logDialog.getWindow().setBackgroundDrawable(bg);
+
+        LinearLayout root = new LinearLayout(activity);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setPadding((int) (16 * density), (int) (16 * density), (int) (16 * density), (int) (16 * density));
+
+        // Header Title
+        TextView titleTv = new TextView(activity);
+        titleTv.setText("📋 NHẬT KÝ CHẨN ĐOÁN (TORCH & ENGINE)");
+        titleTv.setTextColor(COLOR_ACCENT_CYAN);
+        titleTv.setTextSize(13.5f);
+        titleTv.setTypeface(Typeface.create("monospace", Typeface.BOLD));
+        root.addView(titleTv);
+
+        TextView subTv = new TextView(activity);
+        subTv.setText("Ghi lại tiến trình khởi động WASM, tải file và phân loại nước đi.");
+        subTv.setTextColor(COLOR_TEXT_MUTED);
+        subTv.setTextSize(11f);
+        subTv.setPadding(0, (int) (2 * density), 0, (int) (8 * density));
+        root.addView(subTv);
+
+        // Scrollable Log Box
+        ScrollView sv = new ScrollView(activity);
+        sv.setLayoutParams(new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, (int) (dm.heightPixels * 0.45f)
+        ));
+        sv.setBackgroundColor(0xCC05070A);
+        sv.setPadding((int) (10 * density), (int) (10 * density), (int) (10 * density), (int) (10 * density));
+
+        final TextView logContentTv = new TextView(activity);
+        final String currentLogs = TorchEngine.getFormattedLogs();
+        logContentTv.setText(currentLogs);
+        logContentTv.setTextColor(COLOR_TEXT_SECONDARY);
+        logContentTv.setTextSize(10.5f);
+        logContentTv.setTypeface(Typeface.create("monospace", Typeface.NORMAL));
+        logContentTv.setTextIsSelectable(true);
+        sv.addView(logContentTv);
+        root.addView(sv);
+
+        addDialogSpacer(root, 12, density);
+
+        // Action Buttons Row
+        LinearLayout btnRow = new LinearLayout(activity);
+        btnRow.setOrientation(LinearLayout.HORIZONTAL);
+        btnRow.setGravity(Gravity.END);
+
+        // Close Button
+        TextView closeBtn = new TextView(activity);
+        closeBtn.setText("Đóng");
+        closeBtn.setTextColor(COLOR_TEXT_MUTED);
+        closeBtn.setTextSize(13);
+        closeBtn.setPadding((int) (14 * density), (int) (8 * density), (int) (14 * density), (int) (8 * density));
+        closeBtn.setOnClickListener(v -> logDialog.dismiss());
+        btnRow.addView(closeBtn);
+
+        View sp = new View(activity);
+        sp.setLayoutParams(new LinearLayout.LayoutParams((int) (8 * density), 1));
+        btnRow.addView(sp);
+
+        // Copy Button
+        TextView copyBtn = new TextView(activity);
+        copyBtn.setText("📋 Sao chép Log");
+        copyBtn.setTextColor(COLOR_TEXT_PRIMARY);
+        copyBtn.setTextSize(13);
+        copyBtn.setTypeface(Typeface.create("sans-serif-medium", Typeface.BOLD));
+        copyBtn.setPadding((int) (18 * density), (int) (8 * density), (int) (18 * density), (int) (8 * density));
+
+        GradientDrawable copyBg = new GradientDrawable();
+        copyBg.setColor(COLOR_ACCENT_BLUE);
+        copyBg.setCornerRadius(10 * density);
+        copyBg.setStroke((int) (1 * density), COLOR_ACCENT_CYAN);
+        copyBtn.setBackground(copyBg);
+
+        copyBtn.setOnClickListener(v -> {
+            HapticHelper.pop(activity, v);
+            try {
+                android.content.ClipboardManager cm = (android.content.ClipboardManager) activity.getSystemService(android.content.Context.CLIPBOARD_SERVICE);
+                if (cm != null) {
+                    android.content.ClipData clip = android.content.ClipData.newPlainText("Torch Diagnostics", currentLogs);
+                    cm.setPrimaryClip(clip);
+                    Toast.makeText(activity, "Đã sao chép Log vào bộ nhớ tạm!", Toast.LENGTH_SHORT).show();
+                }
+            } catch (Throwable t) {
+                Toast.makeText(activity, "Lỗi sao chép: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+        btnRow.addView(copyBtn);
+
+        root.addView(btnRow);
+
+        logDialog.setContentView(root);
+        logDialog.show();
+        logDialog.getWindow().setLayout((int) (dm.widthPixels * 0.92f), ViewGroup.LayoutParams.WRAP_CONTENT);
+    }
 }
+

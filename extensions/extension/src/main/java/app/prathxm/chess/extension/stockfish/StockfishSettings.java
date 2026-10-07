@@ -293,7 +293,7 @@ public class StockfishSettings {
     private static final String KEY_SHOW_MOVE_CLASSIFICATION = "show_move_classification";
 
     public static boolean isMoveClassificationEnabled(Context context) {
-        return getPrefs(context).getBoolean(KEY_SHOW_MOVE_CLASSIFICATION, false);
+        return getPrefs(context).getBoolean(KEY_SHOW_MOVE_CLASSIFICATION, true);
     }
 
     public static void setMoveClassificationEnabled(Context context, boolean enabled) {

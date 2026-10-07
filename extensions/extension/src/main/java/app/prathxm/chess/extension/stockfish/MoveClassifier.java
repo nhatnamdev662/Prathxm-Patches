@@ -288,9 +288,13 @@ public class MoveClassifier {
 
             boolean whiteMoved = prevKey.endsWith(" w");
             String uciMove = deduceUciMove(prevKey, currentKey);
-            if (uciMove == null) return;
+            if (uciMove == null) {
+                TorchEngine.log("[CLASSIFIER DEDUCE NULL] prev=" + prevKey + ", curr=" + currentKey);
+                return;
+            }
 
             final Activity currentAct = activity;
+            TorchEngine.log("[CLASSIFIER TRIGGER] Move=" + uciMove + ", whiteMoved=" + whiteMoved + ", torchReady=" + TorchEngine.getInstance(context).isReady());
 
             // ── 1. 100% Real Torch WebAssembly Engine Execution ──
             TorchEngine torch = TorchEngine.getInstance(context);
@@ -302,6 +306,7 @@ public class MoveClassifier {
                 final String transitionKey = transition;
                 classifiedMoves.add(transitionKey);
                 torch.analyze(moves, userColor, (classificationName, playedMoveLan, bestMoveLan, speechText, rawJson) -> {
+                    TorchEngine.log("[CLASSIFIER CALLBACK] class=" + classificationName + ", act=" + (currentAct != null));
                     if (currentAct != null) {
                         currentAct.runOnUiThread(() -> {
                             displayTorchClassification(currentAct, classificationName,
