@@ -31,10 +31,6 @@ public class I18n {
                 return isVi ? "Hiển thị trên bàn cờ" : "On the board";
             case "best_move_arrows":
                 return isVi ? "Mũi tên nước đi tốt nhất" : "Best-move arrows";
-            case "arrow_eval":
-                return isVi ? "Hiện điểm Eval trên mũi tên" : "Show Eval on arrows";
-            case "arrow_eval_hint":
-                return isVi ? "Hiển thị điểm đánh giá (+1.2, M3...) né va chạm trên từng mũi tên." : "Show collision-avoiding eval badges (+1.2, M3...) on arrows.";
             case "eval_bar":
                 return isVi ? "Thanh đánh giá thế cờ (Eval bar)" : "Evaluation bar";
             case "rate_moves":

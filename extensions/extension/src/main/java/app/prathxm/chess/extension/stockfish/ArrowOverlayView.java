@@ -180,10 +180,8 @@ public class ArrowOverlayView extends View {
             drawSingleArrow(canvas, arrow, sqSize, perpOffset);
         }
 
-        // 2. Draw Eval Badges with Anti-collision avoidance if enabled
-        if (StockfishSettings.isArrowEvalEnabled(getContext())) {
-            drawEvalBadges(canvas, sqSize);
-        }
+        // 2. Draw Eval Badges with Anti-collision avoidance synchronized with arrows
+        drawEvalBadges(canvas, sqSize);
     }
 
     /**

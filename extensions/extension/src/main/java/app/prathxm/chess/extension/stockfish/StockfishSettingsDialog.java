@@ -319,14 +319,6 @@ public class StockfishSettingsDialog {
 
         addCardSeparator(visualCard, density);
 
-        final CyberSwitchView arrowEvalSwitch = addCyberSwitchRow(visualCard,
-                I18n.get(activity, "arrow_eval"),
-                I18n.get(activity, "arrow_eval_hint"),
-                StockfishSettings.isArrowEvalEnabled(activity),
-                density, activity);
-
-        addCardSeparator(visualCard, density);
-
         // Mũi tên đối thủ (Bật: hiện cả đối thủ, Tắt: chỉ hiện bên mình)
         final CyberSwitchView oppArrowsSwitch = addCyberSwitchRow(visualCard,
                 I18n.get(activity, "opponent_arrows"),
@@ -583,7 +575,6 @@ public class StockfishSettingsDialog {
             StockfishSettings.setElo(activity, 1320 + eloSeekBar.getProgress());
             StockfishSettings.setPremiumEnabled(activity, true);
             StockfishSettings.setArrowsVisible(activity, arrowsSwitch.isChecked());
-            StockfishSettings.setArrowEvalEnabled(activity, arrowEvalSwitch.isChecked());
             StockfishSettings.setEvalBarEnabled(activity, evalBarSwitch.isChecked());
             StockfishSettings.setWdlEnabled(activity, false); // Gỡ bỏ WDL
             StockfishSettings.setEngineInfoEnabled(activity, false); // Gỡ bỏ điểm số trên bàn cờ
