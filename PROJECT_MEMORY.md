@@ -1,6 +1,6 @@
 # NHẬT KÝ DỰ ÁN & BỘ GHI NHỚ DẶN DÒ (PROJECT MEMORY)
 *Dự án: Chess Mobile - ReVanced Extension Patches cho Chess.com Android*
-*Phiên bản hiện tại: v2.0.36*
+*Phiên bản hiện tại: v2.0.37*
 *Cập nhật lần cuối: 2026-10-08*
 
 ---
@@ -207,18 +207,24 @@
   - **Vô hiệu hóa triệt để StockfishTourOverlay**: Loại bỏ hoàn toàn overlay hướng dẫn tự động kích hoạt gây bóng elip tối mờ 80% màn hình trong trận đấu.
   - **Ghim Layout Thẻ Bằng Translation**: Sửa `OverlayManager` dùng `FrameLayout.LayoutParams` và `setTranslationX/Y()` để ghim chặt thẻ phía trên và dưới bàn cờ, không bị trôi hay co giật.
   - **Reset MaskFilter & Mutate Drawable**: Đảm bảo vẽ shadow và nạp tài nguyên icon không bị lem màu hoặc đè shader giữa các nước đi.
+- **v2.0.37 (Cách C: Ghim Khít Bàn Cờ, Đồng Bộ 100% Song Ngữ & Gỡ Thông Báo Chiếu Hết)**:
+  - **Triển khai Cách C cho Accuracy & Elo Pills**: Ghim khít 0 margin vào mép trên và mép dưới bàn cờ, tự động đo chiều rộng tối thiểu 232dp, triệt tiêu hoàn toàn lỗi cắt chữ `ELO ĐÁNH GIÁ`.
+  - **Đồng bộ hóa 100% Song Ngữ Anh / Việt**: Cập nhật toàn bộ thẻ Accuracy/Elo, menu cài đặt 5 tab, hộp thoại nhật ký hệ thống, phân loại nước đi đồng bộ qua `I18n.java`.
+  - **Xóa bỏ hoàn toàn thông báo chiếu hết**: Gỡ vĩnh viễn banner `MATE IN X!` và switch cài đặt.
+  - **Quy chuẩn hóa và dọn dẹp**: Bổ sung `rule.md`, dọn sạch repository đưa scripts cũ vào `scripts_archive/` và `mpp_archive/`.
 
 ---
 
 ## 3. TRẠNG THÁI HIỆN TẠI & KẾ HOẠCH TIẾP THEO
 
 ### 3.1. Trạng thái hiện tại
-- **Phiên bản mới nhất**: **v2.0.36** (`patches-2.0.36.mpp`).
-- **Kho lưu trữ GitHub**: Đã phát hành Release `v2.0.36`.
-- **Trạng thái Repo**: 100% sạch, không commit file `.py`.
+- **Phiên bản mới nhất**: **v2.0.37** (`patches-2.0.37.mpp`).
+- **Kho lưu trữ GitHub**: Đã phát hành Release `v2.0.37`.
+- **Trạng thái Repo**: 100% sạch, không commit file `.py`, root ngăn nắp.
 - **Tiến trình kỹ thuật**:
   1. Đã đưa Torch Depth về mặc định = 2.
   2. Đã giải quyết triệt để vấn đề "hàng chờ dồn lệnh" nhờ cơ chế `reqId` token cancellation.
   3. Đã xử lý xóa nhãn phân loại ngay lập tức khi vừa có nước cờ mới.
-  4. Đã hoàn thiện 2 thẻ Accuracy & Estimated Elo pills gắn trực tiếp vào bàn cờ, ghim chặt vị trí.
-  5. Đã tắt vĩnh viễn tour overlay gây tối màn hình.
+  4. Đã hoàn thiện Cách C: ghim khít mép bàn cờ, tự đo kích thước, 100% song ngữ.
+  5. Đã xóa vĩnh viễn thông báo chiếu hết và tour overlay tối màn hình.
+  6. Đã bổ sung `rule.md` và dọn dẹp sạch sẽ repository.

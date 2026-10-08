@@ -153,4 +153,5 @@ find_*.py
 debug_*.py
 parse_*.py
 extract_*.py
-*.html
+scripts_archive/
+mpp_archive/

@@ -10,7 +10,7 @@ public class I18n {
             case "title":
                 return isVi ? "CÀI ĐẶT NNVC" : "NNVC SETTINGS";
             case "ttl_sub":
-                return isVi ? "AI ENGINE · CHESS.COM" : "AI ENGINE · CHESS.COM";
+                return "AI ENGINE · CHESS.COM";
             case "tab_live":
                 return "LIVE";
             case "tab_engine":
@@ -22,7 +22,7 @@ public class I18n {
             case "tab_arrows":
                 return "ARROWS";
             case "engine":
-                return isVi ? "Engine" : "Engine";
+                return "Engine";
             case "card_control":
                 return isVi ? "Điều Khiển" : "Controls";
             case "enable_stockfish":
@@ -30,9 +30,9 @@ public class I18n {
             case "panic_hint":
                 return isVi ? "Chạm đúp vào thanh trên để bật/tắt ngay lập tức (chế độ ẩn)." : "Double-tap the top bar to switch it off or on instantly (panic mode).";
             case "card_elo":
-                return isVi ? "Engine Strength" : "Engine Strength";
+                return isVi ? "Sức Mạnh Engine" : "Engine Strength";
             case "row_elo":
-                return isVi ? "Elo" : "Elo";
+                return "Elo";
             case "elo_hint":
                 return isVi ? "Điều chỉnh trình độ gợi ý của Engine theo mức Elo." : "Adjust the engine Elo.";
             case "depth":
@@ -63,12 +63,10 @@ public class I18n {
                 return isVi ? "Thanh Eval Bar" : "Eval Bar";
             case "eval_bar_hint":
                 return isVi ? "Hiện thanh đánh giá cạnh bàn cờ." : "Show evaluation bar next to the board.";
-            case "forced_mates":
-                return isVi ? "Thông Báo Chiếu Hết" : "Mate Announcement";
-            case "forced_mates_hint":
-                return isVi ? "Thông báo nước chiếu hết bắt buộc khi Engine phát hiện đòn Mate." : "Announce forced checkmate when detected.";
             case "rate_moves":
                 return isVi ? "Đánh Giá Nước Đi" : "Rate Moves";
+            case "rate_moves_hint":
+                return isVi ? "Phân loại nước đi theo chuẩn Game Review: Brilliant, Great, Best, Blunder..." : "Move classification matching Game Review: Brilliant, Great, Best, Blunder...";
             case "vibrate_blunder":
                 return isVi ? "Rung Khi Mắc Sai Lầm" : "Vibrate on Mistakes";
             case "vibrate_hint":
@@ -141,6 +139,38 @@ public class I18n {
                 return isVi ? "Độ Chính Xác & Elo Trực Tiếp" : "Live Accuracy & Estimated Elo";
             case "show_accuracy_elo_hint":
                 return isVi ? "Gắn bảng chỉ số Độ chính xác (%) và Elo ước tính trực tiếp vào thanh thông tin 2 bên bàn cờ." : "Display live Accuracy (%) and Estimated Elo pills directly on player info bars.";
+            case "coach_title":
+                return isVi ? "HUẤN LUYỆN VIÊN (TORCH WASM)" : "COACH (TORCH WASM)";
+            case "coach_sub":
+                return isVi ? "Động cơ phân loại nước đi Torch CEE 26MB (Komodo WebAssembly) độc lập 100%." : "Torch CEE 26MB (Komodo WebAssembly) standalone classification engine.";
+            case "coach_log":
+                return isVi ? "📋 Xem Nhật Ký Chẩn Đoán Torch WASM" : "📋 View Torch WASM Diagnostic Log";
+            case "view_copy_log":
+                return isVi ? "📋 Xem & Copy Log" : "📋 View & Copy Log";
+            case "log_title":
+                return isVi ? "⚡ NHẬT KÝ HỆ THỐNG & TORCH" : "⚡ SYSTEM & TORCH LOGS";
+            case "jump_bottom":
+                return isVi ? "⬇ Cuối" : "⬇ Bottom";
+            case "jump_top":
+                return isVi ? "⬆ Đầu" : "⬆ Top";
+            case "clear_log":
+                return isVi ? "🗑️ Xóa" : "🗑️ Clear";
+            case "close":
+                return isVi ? "Đóng" : "Close";
+            case "copy":
+                return isVi ? "📋 Sao chép" : "📋 Copy";
+            case "copied_toast":
+                return isVi ? "Đã sao chép nhật ký vào bộ nhớ tạm!" : "Logs copied to clipboard!";
+            case "cleared_toast":
+                return isVi ? "Đã xóa toàn bộ nhật ký!" : "All logs cleared!";
+            case "role_you":
+                return isVi ? "BẠN" : "YOU";
+            case "role_opponent":
+                return isVi ? "ĐỐI THỦ" : "OPPONENT";
+            case "label_accuracy":
+                return isVi ? "CHÍNH XÁC" : "ACCURACY";
+            case "label_elo":
+                return isVi ? "ELO ĐÁNH GIÁ" : "EST. ELO";
             default:
                 return key;
         }

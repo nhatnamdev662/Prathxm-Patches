@@ -324,11 +324,11 @@ public class StockfishSettings {
     private static final String KEY_SHOW_MATE_ANNOUNCEMENT = "show_mate_announcement";
 
     public static boolean isMateAnnouncementEnabled(Context context) {
-        return getPrefs(context).getBoolean(KEY_SHOW_MATE_ANNOUNCEMENT, false);
+        return false;
     }
 
     public static void setMateAnnouncementEnabled(Context context, boolean enabled) {
-        getPrefs(context).edit().putBoolean(KEY_SHOW_MATE_ANNOUNCEMENT, enabled).apply();
+        // Disabled permanently
     }
 
     private static final String KEY_SHOW_ENGINE_INFO = "show_engine_info";

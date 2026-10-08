@@ -404,100 +404,8 @@ public class OverlayManager {
     }
 
     public static void showMateAnnouncement(final int mateIn) {
-        new Handler(Looper.getMainLooper()).post(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    Activity activity = StockfishExtension.getCurrentActivity();
-                    if (activity == null) return;
-                    Window window = activity.getWindow();
-                    if (window == null) return;
-                    ViewGroup decorView = (ViewGroup) window.getDecorView();
-                    if (decorView == null) return;
-
-                    View boardView = findChessBoardView(decorView);
-                    if (boardView == null) return;
-
-                    int[] boardLoc = new int[2];
-                    boardView.getLocationInWindow(boardLoc);
-                    int[] decorLoc = new int[2];
-                    decorView.getLocationInWindow(decorLoc);
-                    int boardX = (boardLoc[0] - decorLoc[0]) - decorView.getPaddingLeft();
-                    int boardY = (boardLoc[1] - decorLoc[1]) - decorView.getPaddingTop();
-                    int boardW = boardView.getWidth();
-                    if (boardW <= 0) return;
-
-                    float density = decorView.getContext().getResources().getDisplayMetrics().density;
-
-                    View existing = decorView.findViewWithTag("stockfish_mate_banner");
-                    TextView banner;
-                    if (existing instanceof TextView) {
-                        banner = (TextView) existing;
-                    } else {
-                        if (existing != null) decorView.removeView(existing);
-
-                        banner = new TextView(decorView.getContext());
-                        banner.setTag("stockfish_mate_banner");
-
-                        GradientDrawable bg = new GradientDrawable();
-                        bg.setColor(0xE60C0F16); // Cyber Midnight Glass
-                        bg.setCornerRadius(14 * density);
-                        bg.setStroke((int) (1.2f * density), mateIn > 0 ? 0xCC64D2FF : 0xCCFF453A);
-                        banner.setBackground(bg);
-
-                        banner.setTextColor(mateIn > 0 ? 0xFFF0F8FF : 0xFFFFF0F0);
-                        banner.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f);
-                        banner.setTypeface(android.graphics.Typeface.create("monospace", android.graphics.Typeface.BOLD));
-                        banner.setLetterSpacing(0.06f);
-                        banner.setGravity(Gravity.CENTER);
-
-                        int padH = (int) (14 * density);
-                        int padV = (int) (6 * density);
-                        banner.setPadding(padH, padV, padH, padV);
-
-                        FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(
-                                FrameLayout.LayoutParams.WRAP_CONTENT,
-                                FrameLayout.LayoutParams.WRAP_CONTENT
-                        );
-                        banner.setLayoutParams(lp);
-                        decorView.addView(banner);
-                    }
-
-                    // Cập nhật lại màu viền & màu chữ tương ứng với kết quả chiếu
-                    GradientDrawable bg = (GradientDrawable) banner.getBackground();
-                    if (bg != null) {
-                        bg.setStroke((int) (1.2f * density), mateIn > 0 ? 0xCC64D2FF : 0xCCFF453A);
-                    }
-                    banner.setTextColor(mateIn > 0 ? 0xFFF0F8FF : 0xFFFFF0F0);
-
-                    String sign = mateIn > 0 ? "⚡ MATE IN " : "⚠️ OPPONENT MATES IN ";
-                    banner.setText(sign + Math.abs(mateIn) + "!");
-
-                    banner.measure(
-                            View.MeasureSpec.makeMeasureSpec(boardW, View.MeasureSpec.AT_MOST),
-                            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
-                    );
-                    int bw = banner.getMeasuredWidth();
-                    int bh = banner.getMeasuredHeight();
-                    int centreX = boardX + (boardW - bw) / 2;
-                    int offset = 0;
-                    if (StockfishSettings.isWdlEnabled(decorView.getContext())
-                            || StockfishSettings.isEngineInfoEnabled(decorView.getContext())) {
-                        int barHeight = (int) (14 * density);
-                        offset = barHeight + (int)(4 * density);
-                    }
-                    int topY = Math.max(0, boardY - bh - (int)(8 * density) - offset);
-
-                    banner.setTranslationX(centreX);
-                    banner.setTranslationY(topY);
-                    banner.setVisibility(View.VISIBLE);
-                    banner.bringToFront();
-
-                } catch (Throwable t) {
-                    Log.e(TAG, "showMateAnnouncement failed: " + t.getMessage());
-                }
-            }
-        });
+        // Vô hiệu hóa vĩnh viễn theo yêu cầu người dùng
+        hideMateAnnouncement();
     }
 
     public static void hideMateAnnouncement() {
@@ -780,16 +688,8 @@ public class OverlayManager {
 
                     float density = decorView.getContext().getResources().getDisplayMetrics().density;
                     int pillH = (int) (26 * density);
-                    int pillW = (int) (185 * density);
-                    int pillMargin = (int) (6 * density);
 
                     boolean flipped = isBoardFlipped(boardView, StockfishExtension.getStateImpl());
-
-                    // Top Pill: nằm ngay trên bàn cờ
-                    // Bottom Pill: nằm ngay dưới bàn cờ
-                    int topY = Math.max(0, boardY - pillH - pillMargin);
-                    int botY = boardY + boardH + pillMargin;
-                    int pillX = boardX + (boardW - pillW) / 2; // Căn giữa theo chiều ngang bàn cờ
 
                     // Phân định ai ở trên / ai ở dưới theo chiều bàn cờ
                     // Nếu flipped = false (Bạn là Trắng ở dưới): Top = Đen (Đối thủ), Bottom = Trắng (Bạn)
@@ -815,14 +715,7 @@ public class OverlayManager {
                         topPill.setTag("nnvc_accuracy_top_pill");
                         decorView.addView(topPill);
                     }
-                    FrameLayout.LayoutParams topLp = new FrameLayout.LayoutParams(pillW, pillH);
-                    topLp.gravity = Gravity.TOP | Gravity.START;
-                    topPill.setLayoutParams(topLp);
-                    topPill.setTranslationX(pillX);
-                    topPill.setTranslationY(topY);
                     topPill.updateData(topIsWhite, topIsYou, topAcc, topElo);
-                    topPill.setVisibility(View.VISIBLE);
-                    topPill.bringToFront();
 
                     // 2. Quản lý Bottom Pill View
                     View botView = decorView.findViewWithTag("nnvc_accuracy_bot_pill");
@@ -835,12 +728,30 @@ public class OverlayManager {
                         botPill.setTag("nnvc_accuracy_bot_pill");
                         decorView.addView(botPill);
                     }
+                    botPill.updateData(botIsWhite, botIsYou, botAcc, botElo);
+
+                    // Cách C: Tính toán kích thước tự động tối ưu không bao giờ bị cắt chữ
+                    int minPillW = (int) (232 * density);
+                    int pillW = Math.max(minPillW, Math.max(topPill.calculateDesiredWidth(), botPill.calculateDesiredWidth()));
+
+                    // Cách C: Ghim khít mép trên và mép dưới bàn cờ (0 margin, ăn liền vào viền bàn cờ)
+                    int topY = Math.max(0, boardY - pillH);
+                    int botY = boardY + boardH;
+                    int pillX = boardX + (boardW - pillW) / 2; // Căn giữa theo chiều ngang bàn cờ
+
+                    FrameLayout.LayoutParams topLp = new FrameLayout.LayoutParams(pillW, pillH);
+                    topLp.gravity = Gravity.TOP | Gravity.START;
+                    topPill.setLayoutParams(topLp);
+                    topPill.setTranslationX(pillX);
+                    topPill.setTranslationY(topY);
+                    topPill.setVisibility(View.VISIBLE);
+                    topPill.bringToFront();
+
                     FrameLayout.LayoutParams botLp = new FrameLayout.LayoutParams(pillW, pillH);
                     botLp.gravity = Gravity.TOP | Gravity.START;
                     botPill.setLayoutParams(botLp);
                     botPill.setTranslationX(pillX);
                     botPill.setTranslationY(botY);
-                    botPill.updateData(botIsWhite, botIsYou, botAcc, botElo);
                     botPill.setVisibility(View.VISIBLE);
                     botPill.bringToFront();
 

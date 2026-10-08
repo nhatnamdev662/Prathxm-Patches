@@ -1,9 +1,9 @@
 {
-  "created_at": "2026-10-08T20:40:00",
-  "description": "## [2.0.36] (2026-10-08)\n\n### ⚡ NNVC v2.0.36 — Sửa Lỗi Tối Màn Hình & Ghim Chuẩn Vị Trí Thẻ Độ Chính Xác\n\n* **Tắt vĩnh viễn Tour Overlay tự động:** Vô hiệu hóa triệt để `StockfishTourOverlay` và lệnh gọi từ `GestureInterceptor`, khắc phục hoàn toàn hiện tượng elip tối mờ 80% màn hình trong trận đấu.\n* **Ghim thẻ Accuracy & Elo cố định trên bàn cờ:** Sử dụng `FrameLayout.LayoutParams` và translation chuẩn (thay cho gọi `layout()` thuần túy) giúp 2 thẻ Cyber Glass ghim cứng, không bị trôi hay co giật.\n* **Làm sạch đồ họa MaskFilter & Mutate Drawable:** Đảm bảo drop shadow mũi tên, badge và resource icon không bị lem nền hay đè màu giữa các nước đi.\n* **Author:** NNVC (@nncutett)",
-  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.36/patches-2.0.36.mpp",
+  "created_at": "2026-10-08T21:10:00",
+  "description": "## [2.0.37] (2026-10-08)\n\n### ⚡ NNVC v2.0.37 — Ghim Khít Bàn Cờ, Đồng Bộ 100% Song Ngữ & Gỡ Bỏ Thông Báo Chiếu Hết\n\n* **Ghim khít mép bàn cờ (Cách C):** Ghim 2 thẻ Accuracy & Elo sát rạt mép trên và mép dưới bàn cờ (0 margin), tự động tính toán độ rộng (tối thiểu 232dp) ngăn chặn hoàn toàn lỗi cắt chữ `ELO ĐÁNH GIÁ`.\n* **Đồng bộ hóa 100% ngôn ngữ (Song ngữ Anh/Việt):** Toàn bộ nhãn thẻ (`[BẠN]/[ĐỐI THỦ]`, `CHÍNH XÁC`, `ELO ĐÁNH GIÁ` <-> `[YOU]/[OPPONENT]`, `ACCURACY`, `EST. ELO`), phân loại nước đi, menu cài đặt 5 tab và hộp thoại nhật ký tự động chuyển đổi đồng bộ khi nhấn nút `[EN]`/`[VI]`.\n* **Xóa bỏ hoàn toàn thông báo chiếu hết:** Vô hiệu hóa và gỡ sạch banner `MATE IN X!` khỏi trận đấu và menu cài đặt.\n* **Quy chuẩn dự án:** Bổ sung file `rule.md` và dọn dẹp cấu trúc repository ngăn nắp.\n* **Author:** NNVC (@nncutett)",
+  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.37/patches-2.0.37.mpp",
   "signature_download_url": "",
-  "version": "2.0.36",
-  "versionCode": 20036,
-  "downloadUrl": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.36/patches-2.0.36.mpp"
+  "version": "2.0.37",
+  "versionCode": 20037,
+  "downloadUrl": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.37/patches-2.0.37.mpp"
 }

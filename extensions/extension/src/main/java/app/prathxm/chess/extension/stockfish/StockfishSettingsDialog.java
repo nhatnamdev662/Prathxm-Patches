@@ -528,14 +528,14 @@ public class StockfishSettingsDialog {
         panelCoach.addView(coachCard);
 
         TextView coachTitle = new TextView(activity);
-        coachTitle.setText("HUẤN LUYỆN VIÊN (TORCH WASM)");
+        coachTitle.setText(I18n.get(activity, "coach_title"));
         coachTitle.setTextColor(COLOR_TEXT_PRIMARY);
         coachTitle.setTextSize(13.5f);
         coachTitle.setTypeface(Typeface.create("sans-serif-medium", Typeface.BOLD));
         coachCard.addView(coachTitle);
 
         TextView coachSub = new TextView(activity);
-        coachSub.setText("Động cơ phân loại nước đi Torch CEE 26MB (Komodo WebAssembly) độc lập 100%.");
+        coachSub.setText(I18n.get(activity, "coach_sub"));
         coachSub.setTextColor(COLOR_TEXT_MUTED);
         coachSub.setTextSize(10.5f);
         coachSub.setPadding(0, (int) (2 * density), 0, (int) (8 * density));
@@ -543,7 +543,7 @@ public class StockfishSettingsDialog {
 
         final CyberSwitchView classifSwitch = addCyberSwitchRow(coachCard,
                 I18n.get(activity, "rate_moves"),
-                "Phân loại nước đi theo chuẩn Game Review: Brilliant, Great, Best, Blunder...",
+                I18n.get(activity, "rate_moves_hint"),
                 StockfishSettings.isMoveClassificationEnabled(activity),
                 density, activity);
 
@@ -586,7 +586,7 @@ public class StockfishSettingsDialog {
         });
 
         TextView coachLogTv = new TextView(activity);
-        coachLogTv.setText("📋 Xem Nhật Ký Chẩn Đoán Torch WASM");
+        coachLogTv.setText(I18n.get(activity, "coach_log"));
         coachLogTv.setTextColor(COLOR_ACCENT_CYAN);
         coachLogTv.setTextSize(12f);
         coachLogTv.setTypeface(Typeface.create("sans-serif-medium", Typeface.BOLD));
@@ -608,13 +608,7 @@ public class StockfishSettingsDialog {
                 StockfishSettings.isEvalBarEnabled(activity),
                 density, activity);
 
-        addCardSeparator(visualCard, density);
 
-        final CyberSwitchView mateSwitch = addCyberSwitchRow(visualCard,
-                I18n.get(activity, "forced_mates"),
-                I18n.get(activity, "forced_mates_hint"),
-                StockfishSettings.isMateAnnouncementEnabled(activity),
-                density, activity);
 
         // ─── TAB 5: ARROWS (Thiết Lập Mũi Tên & Bảng Màu) ───
         final LinearLayout panelArrows = new LinearLayout(activity);
@@ -769,7 +763,7 @@ public class StockfishSettingsDialog {
         logBtn.setBackground(logBg);
 
         TextView logText = new TextView(activity);
-        logText.setText("📋 Xem & Copy Log");
+        logText.setText(I18n.get(activity, "view_copy_log"));
         logText.setTextColor(COLOR_ACCENT_CYAN);
         logText.setTextSize(11.5f);
         logText.setTypeface(Typeface.create("sans-serif-medium", Typeface.BOLD));
@@ -852,8 +846,8 @@ public class StockfishSettingsDialog {
             StockfishSettings.setCoachDepth(activity, Math.max(1, coachDepthSeekBar.getProgress() + 1));
             StockfishSettings.setAccuracyEloEnabled(activity, accuracyEloSwitch.isChecked());
             StockfishSettings.setBlunderAlertsEnabled(activity, blunderSwitch.isChecked());
-            StockfishSettings.setMateAnnouncementEnabled(activity, mateSwitch.isChecked());
-            if (!mateSwitch.isChecked()) OverlayManager.hideMateAnnouncement();
+            StockfishSettings.setMateAnnouncementEnabled(activity, false);
+            OverlayManager.hideMateAnnouncement();
             if (!accuracyEloSwitch.isChecked()) OverlayManager.hideAccuracyEloPills();
 
             Toast.makeText(activity, I18n.get(activity, "settings_saved"), Toast.LENGTH_SHORT).show();
@@ -1482,8 +1476,10 @@ public class StockfishSettingsDialog {
         headerRow.setOrientation(LinearLayout.HORIZONTAL);
         headerRow.setGravity(Gravity.CENTER_VERTICAL);
 
+        boolean isVi = "vi".equalsIgnoreCase(StockfishSettings.getLanguage(activity));
+
         TextView titleTv = new TextView(activity);
-        titleTv.setText("⚡ NHẬT KÝ HỆ THỐNG & TORCH");
+        titleTv.setText(I18n.get(activity, "log_title"));
         titleTv.setTextColor(COLOR_ACCENT_CYAN);
         titleTv.setTextSize(13.5f);
         titleTv.setTypeface(Typeface.create("monospace", Typeface.BOLD));
@@ -1493,7 +1489,7 @@ public class StockfishSettingsDialog {
         // Status Badge
         boolean isTorchReady = TorchEngine.getInstance(activity).isReady();
         TextView statusBadge = new TextView(activity);
-        statusBadge.setText(isTorchReady ? "● SẴN SÀNG" : "○ ĐANG KHỞI ĐỘNG");
+        statusBadge.setText(isTorchReady ? (isVi ? "● SẴN SÀNG" : "● READY") : (isVi ? "○ ĐANG KHỞI ĐỘNG" : "○ INITIALIZING"));
         statusBadge.setTextColor(isTorchReady ? COLOR_GREEN_READY : COLOR_ACCENT_GOLD);
         statusBadge.setTextSize(10.5f);
         statusBadge.setTypeface(Typeface.create("monospace", Typeface.BOLD));
@@ -1560,7 +1556,9 @@ public class StockfishSettingsDialog {
         // Hàm cập nhật hiển thị log theo filter
         final Runnable reloadLogs = () -> {
             java.util.List<String> raw = TorchEngine.getRawLogs();
-            subTv.setText("Tổng cộng: " + raw.size() + "/300 mục nhật ký • Bộ lọc: " + currentFilter[0]);
+            boolean isViLang = "vi".equalsIgnoreCase(StockfishSettings.getLanguage(activity));
+            subTv.setText(isViLang ? ("Tổng cộng: " + raw.size() + "/300 mục nhật ký • Bộ lọc: " + currentFilter[0])
+                    : ("Total: " + raw.size() + "/300 entries • Filter: " + currentFilter[0]));
             SpannableStringBuilder spanned = buildHighlightedLogs(raw, currentFilter[0]);
             logContentTv.setText(spanned);
             scrollToBottom.run();
@@ -1634,7 +1632,7 @@ public class StockfishSettingsDialog {
 
         // Nút Cuộn xuống cuối (Jump to Bottom)
         TextView jumpBottomBtn = new TextView(activity);
-        jumpBottomBtn.setText("⬇ Cuối");
+        jumpBottomBtn.setText(I18n.get(activity, "jump_bottom"));
         jumpBottomBtn.setTextColor(0xFF38BDF8);
         jumpBottomBtn.setTextSize(11.5f);
         jumpBottomBtn.setTypeface(Typeface.DEFAULT_BOLD);
@@ -1656,7 +1654,7 @@ public class StockfishSettingsDialog {
 
         // Nút Cuộn lên đầu (Jump to Top)
         TextView jumpTopBtn = new TextView(activity);
-        jumpTopBtn.setText("⬆ Đầu");
+        jumpTopBtn.setText(I18n.get(activity, "jump_top"));
         jumpTopBtn.setTextColor(COLOR_TEXT_MUTED);
         jumpTopBtn.setTextSize(11.5f);
         jumpTopBtn.setPadding((int) (10 * density), (int) (6 * density), (int) (10 * density), (int) (6 * density));
@@ -1676,7 +1674,7 @@ public class StockfishSettingsDialog {
 
         // Nút Xóa Log (Clear)
         TextView clearBtn = new TextView(activity);
-        clearBtn.setText("🗑️ Xóa");
+        clearBtn.setText(I18n.get(activity, "clear_log"));
         clearBtn.setTextColor(COLOR_DANGER_RED);
         clearBtn.setTextSize(11.5f);
         clearBtn.setPadding((int) (10 * density), (int) (6 * density), (int) (10 * density), (int) (6 * density));
@@ -1689,6 +1687,7 @@ public class StockfishSettingsDialog {
             HapticHelper.pop(activity, v);
             TorchEngine.clearLogs();
             reloadLogs.run();
+            Toast.makeText(activity, I18n.get(activity, "cleared_toast"), Toast.LENGTH_SHORT).show();
         });
         actionRow.addView(clearBtn);
 
@@ -1698,7 +1697,7 @@ public class StockfishSettingsDialog {
 
         // Nút Đóng
         TextView closeBtn = new TextView(activity);
-        closeBtn.setText("Đóng");
+        closeBtn.setText(I18n.get(activity, "close"));
         closeBtn.setTextColor(COLOR_TEXT_MUTED);
         closeBtn.setTextSize(12.5f);
         closeBtn.setPadding((int) (12 * density), (int) (8 * density), (int) (12 * density), (int) (8 * density));
@@ -1711,7 +1710,7 @@ public class StockfishSettingsDialog {
 
         // Nút Sao chép Log
         TextView copyBtn = new TextView(activity);
-        copyBtn.setText("📋 Sao chép");
+        copyBtn.setText(I18n.get(activity, "copy"));
         copyBtn.setTextColor(COLOR_TEXT_PRIMARY);
         copyBtn.setTextSize(12.5f);
         copyBtn.setTypeface(Typeface.create("sans-serif-medium", Typeface.BOLD));
@@ -1730,10 +1729,10 @@ public class StockfishSettingsDialog {
                     CharSequence textToCopy = logContentTv.getText();
                     android.content.ClipData clip = android.content.ClipData.newPlainText("Torch Diagnostics", textToCopy);
                     cm.setPrimaryClip(clip);
-                    Toast.makeText(activity, "Đã sao chép Log vào bộ nhớ tạm!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(activity, I18n.get(activity, "copied_toast"), Toast.LENGTH_SHORT).show();
                 }
             } catch (Throwable t) {
-                Toast.makeText(activity, "Lỗi sao chép: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(activity, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
         actionRow.addView(copyBtn);

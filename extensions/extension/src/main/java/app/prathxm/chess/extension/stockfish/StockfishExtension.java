@@ -539,11 +539,7 @@ public class StockfishExtension {
         }
 
         if (!isFinal) return;
-        if (!disableOverlays && result.hasMate && StockfishSettings.isMateAnnouncementEnabled(context)) {
-            OverlayManager.showMateAnnouncement(result.mateIn);
-        } else {
-            OverlayManager.hideMateAnnouncement();
-        }
+        OverlayManager.hideMateAnnouncement();
     }
 
     private static boolean isWhiteTurnFromFen(String fen) {

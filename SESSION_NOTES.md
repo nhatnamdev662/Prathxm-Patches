@@ -96,12 +96,19 @@
     - **Ghim Layout Thẻ Bằng Translation**: Sửa `OverlayManager` dùng `FrameLayout.LayoutParams(pillW, pillH)` kết hợp `setTranslationX/Y()` ghim cứng thẻ trên và dưới bàn cờ, không bị trôi dạt.
     - **Reset MaskFilter & Mutate Drawable**: Đảm bảo vẽ shadow và resource icon trong sạch 100%, không bị đè shader hay lem màu giữa các lượt đi.
 
+19. **Phát Hành Bản v2.0.37 (Cách C: Ghim Khít Bàn Cờ, Đồng Bộ 100% Song Ngữ & Gỡ Thông Báo Chiếu Hết)**:
+    - **Triển khai Cách C cho Accuracy & Elo Pills**: Ghim khít 0 margin vào mép trên và mép dưới bàn cờ, tự động đo chiều rộng tối thiểu 232dp, triệt tiêu hoàn toàn lỗi cắt chữ `ELO ĐÁNH GIÁ`.
+    - **Đồng bộ hóa 100% Song Ngữ Anh / Việt**: Cập nhật toàn bộ thẻ Accuracy/Elo (`[BẠN]/[ĐỐI THỦ]`, `CHÍNH XÁC`, `ELO ĐÁNH GIÁ` <-> `[YOU]/[OPPONENT]`, `ACCURACY`, `EST. ELO`), menu cài đặt 5 tab, hộp thoại nhật ký hệ thống, phân loại nước đi đồng bộ qua `I18n.java`.
+    - **Xóa bỏ hoàn toàn thông báo chiếu hết**: Gỡ vĩnh viễn banner `MATE IN X!` và switch cài đặt.
+    - **Quy chuẩn hóa và dọn dẹp**: Bổ sung `rule.md`, dọn sạch repository đưa scripts cũ vào `scripts_archive/` và `mpp_archive/`.
+
 ---
 
 ## 3. Trạng Thái Hiện Tại & Checklist Kiểm Thử
-- **Phiên bản mới nhất trên GitHub**: `v2.0.36` (tag `v2.0.36`).
-- **File tải bundle**: `https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.36/patches-2.0.36.mpp`
+- **Phiên bản mới nhất trên GitHub**: `v2.0.37` (tag `v2.0.37`).
+- **File tải bundle**: `https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.37/patches-2.0.37.mpp`
 - **Checklist Kiểm Thử**:
-  - [x] Đã vá và nạp thành công bản `2.0.36` trên Morphe Manager.
-  - [ ] Kiểm tra màn hình trận đấu: Không còn bất kỳ bóng elip hay màn hình tối đen nào che bàn cờ.
-  - [ ] Kiểm tra thẻ Accuracy & Estimated Elo: Ghim chuẩn vị trí mép trên và dưới bàn cờ, hiển thị đúng màu quân và cập nhật mượt mà.
+  - [x] Đã vá và nạp thành công bản `2.0.37` trên Morphe Manager.
+  - [ ] Kiểm tra thẻ Accuracy & Estimated Elo: Ghim khít mép trên và dưới bàn cờ, không bị cắt chữ.
+  - [ ] Kiểm tra chuyển ngữ `[EN]` / `[VI]`: Thẻ Accuracy/Elo và toàn bộ menu chuyển đổi đồng bộ 100%.
+  - [ ] Xác nhận không còn banner thông báo chiếu hết khi có đòn Mate.
