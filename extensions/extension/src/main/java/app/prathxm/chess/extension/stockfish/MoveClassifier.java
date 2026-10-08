@@ -476,6 +476,7 @@ public class MoveClassifier {
                     return;
                 }
 
+                final boolean finalWhiteMoved = whiteMoved;
                 torch.analyze(moves, userColor, (classificationName, playedMoveLan, bestMoveLan, speechText, rawJson) -> {
                     TorchEngine.log("[CLASSIFIER CALLBACK] class=" + classificationName + ", act=" + (currentAct != null) + ", isMyMove=" + isMyMove);
                     if (classificationName != null && !classificationName.isEmpty() && !"null".equalsIgnoreCase(classificationName)) {
@@ -484,6 +485,7 @@ public class MoveClassifier {
                                 displayTorchClassification(currentAct, classificationName,
                                         (playedMoveLan != null && !playedMoveLan.isEmpty()) ? playedMoveLan : finalUci,
                                         speechText,
+                                        finalWhiteMoved,
                                         isMyMove);
                             });
                         }
@@ -502,7 +504,7 @@ public class MoveClassifier {
         }
     }
 
-    private static void displayTorchClassification(Activity activity, String torchName, String uciMove, String speechText, boolean isMyMove) {
+    private static void displayTorchClassification(Activity activity, String torchName, String uciMove, String speechText, boolean isWhite, boolean isMyMove) {
         if (activity == null || torchName == null) return;
         if (activity.isFinishing()) return;
         if (Build.VERSION.SDK_INT >= 17 && activity.isDestroyed()) return;
@@ -583,7 +585,7 @@ public class MoveClassifier {
         String targetSquare = null;
         if (uciMove != null && uciMove.length() >= 4) {
             targetSquare = uciMove.substring(2, 4);
-            OverlayManager.setClassificationBadge(targetSquare, torchName, isMyMove);
+            OverlayManager.setClassificationBadge(targetSquare, torchName, isWhite, isMyMove);
             TorchEngine.log("[BOARD BADGE] Đã vẽ huy hiệu Chess.com '" + torchName + "' tại ô " + targetSquare);
         }
 

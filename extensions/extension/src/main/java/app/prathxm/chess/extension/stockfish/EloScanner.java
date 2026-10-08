@@ -6,9 +6,11 @@
 package app.prathxm.chess.extension.stockfish;
 
 import android.app.Activity;
+import android.graphics.Rect;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.accessibility.AccessibilityNodeInfo;
 import android.widget.TextView;
 
 import java.lang.reflect.Field;
@@ -378,6 +380,53 @@ public class EloScanner {
 
     private static void collectSnapshots(View root, List<ViewSnapshot> out) {
         if (root == null || root.getVisibility() != View.VISIBLE) return;
+
+        // 1. Quét sâu qua AccessibilityNodeInfo (Đặc trị 100% Jetpack Compose / ComposeView)
+        try {
+            AccessibilityNodeInfo rootNode = root.createAccessibilityNodeInfo();
+            if (rootNode != null) {
+                collectAccessibilitySnapshots(rootNode, out);
+                try {
+                    rootNode.recycle();
+                } catch (Throwable ignored) {}
+            }
+        } catch (Throwable ignored) {}
+
+        // 2. Dự phòng: Quét qua cây View/TextView Android truyền thống nếu Accessibility chưa bắt hết
+        collectViewSnapshots(root, out);
+    }
+
+    private static void collectAccessibilitySnapshots(AccessibilityNodeInfo node, List<ViewSnapshot> out) {
+        if (node == null || !node.isVisibleToUser()) return;
+
+        CharSequence text = node.getText();
+        if (text != null && text.length() > 0) {
+            Rect bounds = new Rect();
+            node.getBoundsInScreen(bounds);
+            out.add(new ViewSnapshot(text.toString(), bounds.top));
+        } else {
+            CharSequence desc = node.getContentDescription();
+            if (desc != null && desc.length() > 0) {
+                Rect bounds = new Rect();
+                node.getBoundsInScreen(bounds);
+                out.add(new ViewSnapshot(desc.toString(), bounds.top));
+            }
+        }
+
+        int count = node.getChildCount();
+        for (int i = 0; i < count; i++) {
+            AccessibilityNodeInfo child = node.getChild(i);
+            if (child != null) {
+                collectAccessibilitySnapshots(child, out);
+                try {
+                    child.recycle();
+                } catch (Throwable ignored) {}
+            }
+        }
+    }
+
+    private static void collectViewSnapshots(View root, List<ViewSnapshot> out) {
+        if (root == null || root.getVisibility() != View.VISIBLE) return;
         if (root instanceof TextView) {
             CharSequence cs = ((TextView) root).getText();
             if (cs != null && cs.length() > 0) {
@@ -389,7 +438,7 @@ public class EloScanner {
             ViewGroup g = (ViewGroup) root;
             int count = g.getChildCount();
             for (int i = 0; i < count; i++) {
-                collectSnapshots(g.getChildAt(i), out);
+                collectViewSnapshots(g.getChildAt(i), out);
             }
         }
     }

@@ -33,11 +33,13 @@ public class ArrowOverlayView extends View {
     public static class ClassificationBadgeData {
         public final String square;
         public final String classificationName;
+        public final boolean isWhite;
         public final boolean isMyMove;
 
-        public ClassificationBadgeData(String square, String classificationName, boolean isMyMove) {
+        public ClassificationBadgeData(String square, String classificationName, boolean isWhite, boolean isMyMove) {
             this.square = square;
             this.classificationName = classificationName;
+            this.isWhite = isWhite;
             this.isMyMove = isMyMove;
         }
     }
@@ -93,7 +95,8 @@ public class ArrowOverlayView extends View {
     private final List<ArrowData> arrows = new ArrayList<>();
     private boolean flipped = false;
 
-    private ClassificationBadgeData classificationBadge = null;
+    private ClassificationBadgeData whiteBadge = null;
+    private ClassificationBadgeData blackBadge = null;
     private final Paint badgeCirclePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint badgeTextPaint2 = new Paint(Paint.ANTI_ALIAS_FLAG);
 
@@ -135,13 +138,28 @@ public class ArrowOverlayView extends View {
         badgeTextPaint.setTextAlign(Paint.Align.CENTER);
     }
 
-    public void setClassificationBadge(String square, String classificationName, boolean isMyMove) {
-        this.classificationBadge = new ClassificationBadgeData(square, classificationName, isMyMove);
+    public void setClassificationBadge(String square, String classificationName, boolean isWhite, boolean isMyMove) {
+        ClassificationBadgeData data = new ClassificationBadgeData(square, classificationName, isWhite, isMyMove);
+        if (isWhite) {
+            this.whiteBadge = data;
+        } else {
+            this.blackBadge = data;
+        }
         invalidate();
     }
 
     public void clearClassificationBadge() {
-        this.classificationBadge = null;
+        this.whiteBadge = null;
+        this.blackBadge = null;
+        invalidate();
+    }
+
+    public boolean hasBadges() {
+        return whiteBadge != null || blackBadge != null;
+    }
+
+    public void clearArrowsOnly() {
+        this.arrows.clear();
         invalidate();
     }
 
@@ -179,14 +197,15 @@ public class ArrowOverlayView extends View {
 
     public void clear() {
         this.arrows.clear();
-        this.classificationBadge = null;
+        this.whiteBadge = null;
+        this.blackBadge = null;
         invalidate();
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        if (arrows.isEmpty() && classificationBadge == null) return;
+        if (arrows.isEmpty() && !hasBadges()) return;
 
         int w = getWidth();
         int h = getHeight();
@@ -207,8 +226,13 @@ public class ArrowOverlayView extends View {
             drawEvalBadges(canvas, sqSize);
         }
 
-        // 3. Draw Square Classification Badge (Chess.com Official Vector Drawable)
-        drawClassificationBadge(canvas, sqSize);
+        // 3. Draw Square Classification Badges (Both White and Black recent moves)
+        if (whiteBadge != null) {
+            drawSingleClassificationBadge(canvas, sqSize, whiteBadge);
+        }
+        if (blackBadge != null) {
+            drawSingleClassificationBadge(canvas, sqSize, blackBadge);
+        }
     }
 
     /**
@@ -748,12 +772,12 @@ public class ArrowOverlayView extends View {
         }
     }
 
-    private void drawClassificationBadge(Canvas canvas, float sqSize) {
-        if (classificationBadge == null || classificationBadge.square == null || classificationBadge.square.length() < 2) {
+    private void drawSingleClassificationBadge(Canvas canvas, float sqSize, ClassificationBadgeData badge) {
+        if (badge == null || badge.square == null || badge.square.length() < 2) {
             return;
         }
 
-        String sq = classificationBadge.square;
+        String sq = badge.square;
         int file = sq.charAt(0) - 'a';
         int rank = sq.charAt(1) - '1';
         if (file < 0 || file > 7 || rank < 0 || rank > 7) return;
@@ -771,7 +795,7 @@ public class ArrowOverlayView extends View {
         float badgeY = top + sqSize * 0.03f;
 
         // 1. Thử lấy Drawable gốc từ resource của Chess.com APK
-        Drawable nativeDrawable = getClassificationDrawable(getContext(), classificationBadge.classificationName);
+        Drawable nativeDrawable = getClassificationDrawable(getContext(), badge.classificationName);
 
         if (nativeDrawable != null) {
             // Vẽ bóng đổ tròn nhẹ để nổi bật trên nền cờ tối/sáng
@@ -783,7 +807,7 @@ public class ArrowOverlayView extends View {
             nativeDrawable.draw(canvas);
         } else {
             // Fallback: Vẽ huy hiệu bo tròn với icon glyph và màu chuẩn Chess.com
-            drawFallbackBadge(canvas, badgeX, badgeY, badgeSize, classificationBadge.classificationName);
+            drawFallbackBadge(canvas, badgeX, badgeY, badgeSize, badge.classificationName);
         }
     }
 

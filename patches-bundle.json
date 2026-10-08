@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-10-08T14:05:00",
-  "description": "## [2.0.24] (2026-10-08)\n\n### ⚡ NNVC v2.0.24 — Trích xuất Huy hiệu & Âm thanh Phân loại cờ Chính hãng Chess.com\n\n* **Huy hiệu Phân loại trực tiếp trên Ô cờ (Square Classification Badge):** Trích xuất 100% Vector Drawable nguyên bản từ APK Chess.com (Brilliant, Great Find, Best, Excellent, Good, Book, Inaccuracy, Mistake, Blunder, Missed Win, Forced). Huy hiệu hiển thị trực tiếp ngay góc trên ô cờ vừa đi như Game Review thật!\n* **Âm thanh Thiên tài chính hãng (Brilliant Sound):** Tích hợp hiệu ứng âm thanh 'brilliant.mp3' chính thức của Chess.com vang lên khi người chơi thực hiện nước cờ thiên tài.\n* **Xóa bỏ hoàn toàn Toast hệ thống:** Không còn dùng Toast Android làm phiền tầm nhìn hay che bàn cờ.\n* **Author:** NNVC (@nncutett)",
-  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.24/patches-2.0.24.mpp",
+  "created_at": "2026-10-08T14:25:00",
+  "description": "## [2.0.25] (2026-10-08)\n\n### ⚡ NNVC v2.0.25 — Sửa lỗi hiển thị Huy hiệu Phân loại & Tự động quét Elo trên Jetpack Compose\n\n* **Khắc phục lỗi ẩn huy hiệu phân loại khi đi cờ:** Tách biệt hoàn toàn quản lý mũi tên và huy hiệu phân loại. Nước đi của người chơi hiển thị huy hiệu tức thì trên bàn cờ, không bị ẩn hay chớp tắt khi đối thủ chuẩn bị đi.\n* **Hỗ trợ đồng thời 2 huy hiệu Trắng & Đen (Dual Badges):** Lưu giữ huy hiệu nước đi gần nhất của cả hai bên trên bàn cờ giống hệt giao diện Game Review của Chess.com.\n* **Tự động nhận diện Elo chính xác trên Jetpack Compose (Chess.com 4.10+):** Sử dụng AccessibilityNodeInfo duyệt sâu toàn bộ component Compose (LiveGamePlayerV6Kt), tự động lấy đúng Elo của cả 2 kỳ thủ thay vì fallback về 3500.\n* **Author:** NNVC (@nncutett)",
+  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.25/patches-2.0.25.mpp",
   "signature_download_url": "",
-  "version": "2.0.24"
+  "version": "2.0.25"
 }

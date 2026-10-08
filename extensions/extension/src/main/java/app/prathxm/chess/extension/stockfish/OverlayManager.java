@@ -131,7 +131,13 @@ public class OverlayManager {
                     View decorView = window.getDecorView();
                     if (decorView == null) return;
                     View v = decorView.findViewWithTag("nnvc_arrow_overlay");
-                    if (v != null) {
+                    if (v instanceof ArrowOverlayView) {
+                        ArrowOverlayView aov = (ArrowOverlayView) v;
+                        aov.clearArrowsOnly();
+                        if (!aov.hasBadges()) {
+                            aov.setVisibility(View.GONE);
+                        }
+                    } else if (v != null) {
                         v.setVisibility(View.GONE);
                     }
                 } catch (Throwable t) {
@@ -536,7 +542,7 @@ public class OverlayManager {
         return isWhite != null && !isWhite;
     }
 
-    public static void setClassificationBadge(final String square, final String classificationName, final boolean isMyMove) {
+    public static void setClassificationBadge(final String square, final String classificationName, final boolean isWhite, final boolean isMyMove) {
         new Handler(Looper.getMainLooper()).post(new Runnable() {
             @Override
             public void run() {
@@ -575,7 +581,9 @@ public class OverlayManager {
                         arrowView.update(boardX, boardY, boardW, boardH, null, isFlipped);
                     }
 
-                    arrowView.setClassificationBadge(square, classificationName, isMyMove);
+                    arrowView.setVisibility(View.VISIBLE);
+                    arrowView.bringToFront();
+                    arrowView.setClassificationBadge(square, classificationName, isWhite, isMyMove);
                 } catch (Throwable t) {
                     Log.w(TAG, "Failed to set classification badge: " + t.getMessage());
                 }
