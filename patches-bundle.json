@@ -1,9 +1,9 @@
 {
-  "created_at": "2026-10-08T21:10:00",
-  "description": "## [2.0.37] (2026-10-08)\n\n### ⚡ NNVC v2.0.37 — Ghim Khít Bàn Cờ, Đồng Bộ 100% Song Ngữ & Gỡ Bỏ Thông Báo Chiếu Hết\n\n* **Ghim khít mép bàn cờ (Cách C):** Ghim 2 thẻ Accuracy & Elo sát rạt mép trên và mép dưới bàn cờ (0 margin), tự động tính toán độ rộng (tối thiểu 232dp) ngăn chặn hoàn toàn lỗi cắt chữ `ELO ĐÁNH GIÁ`.\n* **Đồng bộ hóa 100% ngôn ngữ (Song ngữ Anh/Việt):** Toàn bộ nhãn thẻ (`[BẠN]/[ĐỐI THỦ]`, `CHÍNH XÁC`, `ELO ĐÁNH GIÁ` <-> `[YOU]/[OPPONENT]`, `ACCURACY`, `EST. ELO`), phân loại nước đi, menu cài đặt 5 tab và hộp thoại nhật ký tự động chuyển đổi đồng bộ khi nhấn nút `[EN]`/`[VI]`.\n* **Xóa bỏ hoàn toàn thông báo chiếu hết:** Vô hiệu hóa và gỡ sạch banner `MATE IN X!` khỏi trận đấu và menu cài đặt.\n* **Quy chuẩn dự án:** Bổ sung file `rule.md` và dọn dẹp cấu trúc repository ngăn nắp.\n* **Author:** NNVC (@nncutett)",
-  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.37/patches-2.0.37.mpp",
+  "created_at": "2026-10-08T21:42:00",
+  "description": "## [2.0.38] (2026-10-08)\n\n### ⚡ NNVC v2.0.38 — Áp Dụng Cài Đặt Thời Gian Thực & Nút Tắt Menu Chuẩn Extension\n\n* **Tự động áp dụng & lưu cấu hình thời gian thực (Auto-apply Real-time):** Mọi thay đổi trong Menu cài đặt (bật/tắt Stockfish, Komodo/Stockfish, lối chơi, độ sâu, phân loại nước đi, elo, multi-pv, mũi tên đối thủ/đe dọa, bảng màu) đều tự động lưu vào hệ thống và có hiệu lực tức thì trên bàn cờ mà không cần bấm nút lưu.\n* **Nút đóng Menu phong cách Extension (✕):** Nút tắt menu được trang bị biểu tượng `✕` bo tròn phong cách Extension ở góc trên bên phải header; footer loại bỏ nút Hủy rườm rà và chuyển thành nút `Xong` dứt khoát.\n* **Đồng bộ hóa ngôn ngữ thời gian thực:** Chuyển đổi ngôn ngữ [VI]/[EN] cập nhật tức thì cả menu và các lớp phủ bàn cờ.\n* **Author:** NNVC (@nncutett)",
+  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.38/patches-2.0.38.mpp",
   "signature_download_url": "",
-  "version": "2.0.37",
-  "versionCode": 20037,
-  "downloadUrl": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.37/patches-2.0.37.mpp"
+  "version": "2.0.38",
+  "versionCode": 20038,
+  "downloadUrl": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.38/patches-2.0.38.mpp"
 }

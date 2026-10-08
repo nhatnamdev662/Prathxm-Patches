@@ -783,4 +783,79 @@ public class OverlayManager {
             }
         });
     }
+
+    public static void refreshOverlaysLanguage(final Activity activity) {
+        if (activity == null) return;
+        new Handler(Looper.getMainLooper()).post(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Window window = activity.getWindow();
+                    if (window == null) return;
+                    ViewGroup decorView = (ViewGroup) window.getDecorView();
+                    if (decorView == null) return;
+
+                    View boardView = findChessBoardView(decorView);
+                    int boardW = (boardView != null) ? boardView.getWidth() : 0;
+                    int boardX = 0;
+                    if (boardView != null) {
+                        int[] boardLoc = new int[2];
+                        boardView.getLocationInWindow(boardLoc);
+                        int[] decorLoc = new int[2];
+                        decorView.getLocationInWindow(decorLoc);
+                        boardX = (boardLoc[0] - decorLoc[0]) - decorView.getPaddingLeft();
+                    }
+
+                    float density = decorView.getContext().getResources().getDisplayMetrics().density;
+                    int minPillW = (int) (232 * density);
+
+                    View topView = decorView.findViewWithTag("nnvc_accuracy_top_pill");
+                    View botView = decorView.findViewWithTag("nnvc_accuracy_bot_pill");
+
+                    int topDes = (topView instanceof PlayerAccuracyPillView) ? ((PlayerAccuracyPillView) topView).calculateDesiredWidth() : 0;
+                    int botDes = (botView instanceof PlayerAccuracyPillView) ? ((PlayerAccuracyPillView) botView).calculateDesiredWidth() : 0;
+                    int pillW = Math.max(minPillW, Math.max(topDes, botDes));
+
+                    if (topView instanceof PlayerAccuracyPillView && topView.getVisibility() == View.VISIBLE) {
+                        ViewGroup.LayoutParams lp = topView.getLayoutParams();
+                        if (lp != null) {
+                            lp.width = pillW;
+                            topView.setLayoutParams(lp);
+                        }
+                        if (boardW > 0) {
+                            int pillX = boardX + (boardW - pillW) / 2;
+                            topView.setTranslationX(pillX);
+                        }
+                        topView.invalidate();
+                    }
+
+                    if (botView instanceof PlayerAccuracyPillView && botView.getVisibility() == View.VISIBLE) {
+                        ViewGroup.LayoutParams lp = botView.getLayoutParams();
+                        if (lp != null) {
+                            lp.width = pillW;
+                            botView.setLayoutParams(lp);
+                        }
+                        if (boardW > 0) {
+                            int pillX = boardX + (boardW - pillW) / 2;
+                            botView.setTranslationX(pillX);
+                        }
+                        botView.invalidate();
+                    }
+
+                    View arrowView = decorView.findViewWithTag("nnvc_arrow_overlay");
+                    if (arrowView != null) {
+                        arrowView.invalidate();
+                    }
+
+                    View evalBar = decorView.findViewWithTag("stockfish_eval_bar");
+                    if (evalBar != null) {
+                        evalBar.invalidate();
+                    }
+                } catch (Throwable t) {
+                    Log.w(TAG, "refreshOverlaysLanguage error: " + t.getMessage());
+                }
+            }
+        });
+    }
 }
+

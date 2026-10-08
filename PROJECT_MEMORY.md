@@ -1,6 +1,6 @@
 # NHẬT KÝ DỰ ÁN & BỘ GHI NHỚ DẶN DÒ (PROJECT MEMORY)
 *Dự án: Chess Mobile - ReVanced Extension Patches cho Chess.com Android*
-*Phiên bản hiện tại: v2.0.37*
+*Phiên bản hiện tại: v2.0.38*
 *Cập nhật lần cuối: 2026-10-08*
 
 ---
@@ -212,14 +212,18 @@
   - **Đồng bộ hóa 100% Song Ngữ Anh / Việt**: Cập nhật toàn bộ thẻ Accuracy/Elo, menu cài đặt 5 tab, hộp thoại nhật ký hệ thống, phân loại nước đi đồng bộ qua `I18n.java`.
   - **Xóa bỏ hoàn toàn thông báo chiếu hết**: Gỡ vĩnh viễn banner `MATE IN X!` và switch cài đặt.
   - **Quy chuẩn hóa và dọn dẹp**: Bổ sung `rule.md`, dọn sạch repository đưa scripts cũ vào `scripts_archive/` và `mpp_archive/`.
+- **v2.0.38 (Áp Dụng Cài Đặt Real-time & Nút Tắt Menu Chuẩn Extension)**:
+  - **Tự động áp dụng & lưu cấu hình thời gian thực (Auto-apply Real-time)**: Mọi thao tác switch, seekbar, chọn engine, chọn phong cách Komodo, đổi bảng màu đều tự động lưu vào SharedPreferences và áp dụng tức thì lên bàn cờ, không cần bấm nút lưu.
+  - **Nút đóng Menu dấu ✕ phong cách Extension**: Trang bị nút `✕` tinh tế ở góc phải header; footer chuyển thành nút `Xong` (hoặc đóng ngay bằng `✕`).
+  - **Đồng bộ hóa ngôn ngữ thời gian thực**: Nút chuyển đổi [VI]/[EN] gọi `OverlayManager.refreshOverlaysLanguage()` cập nhật ngay lập tức các lớp phủ bàn cờ và menu.
 
 ---
 
 ## 3. TRẠNG THÁI HIỆN TẠI & KẾ HOẠCH TIẾP THEO
 
 ### 3.1. Trạng thái hiện tại
-- **Phiên bản mới nhất**: **v2.0.37** (`patches-2.0.37.mpp`).
-- **Kho lưu trữ GitHub**: Đã phát hành Release `v2.0.37`.
+- **Phiên bản mới nhất**: **v2.0.38** (`patches-2.0.38.mpp`).
+- **Kho lưu trữ GitHub**: Đã phát hành Release `v2.0.38`.
 - **Trạng thái Repo**: 100% sạch, không commit file `.py`, root ngăn nắp.
 - **Tiến trình kỹ thuật**:
   1. Đã đưa Torch Depth về mặc định = 2.
@@ -228,3 +232,4 @@
   4. Đã hoàn thiện Cách C: ghim khít mép bàn cờ, tự đo kích thước, 100% song ngữ.
   5. Đã xóa vĩnh viễn thông báo chiếu hết và tour overlay tối màn hình.
   6. Đã bổ sung `rule.md` và dọn dẹp sạch sẽ repository.
+  7. Đã hoàn thiện Auto-apply Real-time và nút đóng `✕` Extension v2.0.38.

@@ -70,7 +70,17 @@
 
 ---
 
-## 6. PHONG CÁCH LÀM VIỆC & GIAO TIẾP
+## 6. QUY TẮC CÀI ĐẶT REAL-TIME & GIAO DIỆN EXTENSION
+1. **Tự động áp dụng & Lưu tức thì (Auto-apply Real-time)**:
+   - Thay đổi bất kỳ toggle, seekbar, engine choice, style, palette màu trong menu cài đặt -> Tự động lưu SharedPreferences và cập nhật ngay lập tức bàn cờ trực tiếp, không bắt người dùng phải bấm nút Lưu.
+   - Khi đổi ngôn ngữ [VI]/[EN], menu và các overlay trên bàn cờ (Pills, Arrows, Eval Bar) lập tức chuyển đổi song ngữ thời gian thực.
+2. **Nút đóng Menu phong cách Extension**:
+   - Sử dụng nút đóng biểu tượng dấu `✕` kiểu Extension ở góc trên bên phải header menu.
+   - Bỏ hoàn toàn nút `Hủy` (Cancel) thừa thãi ở footer.
+
+---
+
+## 7. PHONG CÁCH LÀM VIỆC & GIAO TIẾP
 1. **Phong cách giao tiếp**:
    - Cực kỳ ngắn gọn, telegraphic (ultra-terse).
    - Đi thẳng vào kết quả: Nêu nguyên nhân, việc đã làm, bước tiếp theo. Không dài dòng, không văn hoa.
@@ -78,3 +88,4 @@
 2. **Thái độ nghiêm túc tuyệt đối**:
    - Kiểm tra kỹ cú pháp, biên dịch thực tế trước khi phát hành gói.
    - Không code ẩu, không báo cáo kết quả ảo.
+

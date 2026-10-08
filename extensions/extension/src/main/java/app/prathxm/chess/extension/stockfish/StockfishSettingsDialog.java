@@ -174,6 +174,11 @@ public class StockfishSettingsDialog {
 
         headerLayout.addView(titleCol);
 
+        // Action Buttons in Header: [VI/EN] + [✕] Close Button (Extension Style)
+        LinearLayout headerBtns = new LinearLayout(activity);
+        headerBtns.setOrientation(LinearLayout.HORIZONTAL);
+        headerBtns.setGravity(Gravity.CENTER_VERTICAL);
+
         // Language Switch Button
         TextView langBtn = new TextView(activity);
         boolean isCurrentVi = "vi".equalsIgnoreCase(StockfishSettings.getLanguage(activity));
@@ -196,10 +201,40 @@ public class StockfishSettingsDialog {
             HapticHelper.pop(activity, v);
             String newLang = isCurrentVi ? "en" : "vi";
             StockfishSettings.setLanguage(activity, newLang);
+            OverlayManager.refreshOverlaysLanguage(activity);
             dialog.dismiss();
             showSettingsMenu(activity);
         });
-        headerLayout.addView(langBtn);
+        headerBtns.addView(langBtn);
+
+        // Spacer between Lang button and Close button
+        View hdrSpacer = new View(activity);
+        hdrSpacer.setLayoutParams(new LinearLayout.LayoutParams((int) (8 * density), 1));
+        headerBtns.addView(hdrSpacer);
+
+        // Extension Style Close Button (✕)
+        TextView closeBtn = new TextView(activity);
+        closeBtn.setText("✕");
+        closeBtn.setTextColor(COLOR_TEXT_SECONDARY);
+        closeBtn.setTextSize(13);
+        closeBtn.setTypeface(Typeface.create("sans-serif", Typeface.BOLD));
+        closeBtn.setGravity(Gravity.CENTER);
+        int closePad = (int) (6 * density);
+        closeBtn.setPadding(closePad, (int) (3 * density), closePad, (int) (3 * density));
+
+        GradientDrawable closeBg = new GradientDrawable();
+        closeBg.setColor(0x1FFFFFFF);
+        closeBg.setCornerRadius(8 * density);
+        closeBg.setStroke((int) (1 * density), 0x33FFFFFF);
+        closeBtn.setBackground(closeBg);
+
+        closeBtn.setOnClickListener(v -> {
+            HapticHelper.pop(activity, v);
+            dialog.dismiss();
+        });
+        headerBtns.addView(closeBtn);
+
+        headerLayout.addView(headerBtns);
 
         windowRoot.addView(headerLayout);
 
@@ -311,6 +346,28 @@ public class StockfishSettingsDialog {
                 StockfishSettings.isEngineEnabled(activity),
                 density, activity);
 
+        enabledSwitch.setOnCheckedChangeListener((view, isChecked) -> {
+            StockfishSettings.setEngineEnabled(activity, isChecked);
+            statusDot.setBackgroundColor(isChecked ? COLOR_GREEN_READY : COLOR_DANGER_RED);
+            GradientDrawable dBg = new GradientDrawable();
+            dBg.setColor(isChecked ? COLOR_GREEN_READY : COLOR_DANGER_RED);
+            dBg.setCornerRadius(999 * density);
+            statusDot.setBackground(dBg);
+            statusLabel.setText(isChecked ? "ENGINE READY" : "ENGINE OFF");
+            Object state = StockfishExtension.getStateImpl();
+            if (!isChecked) {
+                ArrowInjector.clearEngineArrows(state);
+                OverlayManager.hideEvalBar();
+                OverlayManager.hideMateAnnouncement();
+                OverlayManager.hideEngineInfo();
+            } else {
+                if (StockfishSettings.isEvalBarEnabled(activity)) {
+                    // Eval bar will be shown on analysis
+                }
+                StockfishExtension.triggerAnalysisForCurrentState();
+            }
+        });
+
         // ─── TAB 2: ENGINE (Sức mạnh & Phân loại) ───
         final LinearLayout panelEngine = new LinearLayout(activity);
         panelEngine.setOrientation(LinearLayout.VERTICAL);
@@ -385,39 +442,59 @@ public class StockfishSettingsDialog {
         btnKomodo.setOnClickListener(v -> {
             HapticHelper.tick(activity, v);
             curEngine[0] = StockfishSettings.ENGINE_KOMODO;
+            StockfishSettings.setEngineChoice(activity, curEngine[0]);
             updateTabStyle(btnKomodo, true, density);
             updateTabStyle(btnStockfish, false, density);
             komodoStyleLayout.setVisibility(View.VISIBLE);
+            if (StockfishSettings.isEngineEnabled(activity)) {
+                StockfishExtension.triggerAnalysisForCurrentState();
+            }
         });
 
         btnStockfish.setOnClickListener(v -> {
             HapticHelper.tick(activity, v);
             curEngine[0] = StockfishSettings.ENGINE_STOCKFISH18;
+            StockfishSettings.setEngineChoice(activity, curEngine[0]);
             updateTabStyle(btnKomodo, false, density);
             updateTabStyle(btnStockfish, true, density);
             komodoStyleLayout.setVisibility(View.GONE);
+            if (StockfishSettings.isEngineEnabled(activity)) {
+                StockfishExtension.triggerAnalysisForCurrentState();
+            }
         });
 
         btnStyleDef.setOnClickListener(v -> {
             HapticHelper.tick(activity, v);
             curStyle[0] = StockfishSettings.STYLE_DEFAULT;
+            StockfishSettings.setKomodoStyle(activity, curStyle[0]);
             updateTabStyle(btnStyleDef, true, density);
             updateTabStyle(btnStyleAgg, false, density);
             updateTabStyle(btnStyleDefens, false, density);
+            if (StockfishSettings.isEngineEnabled(activity)) {
+                StockfishExtension.triggerAnalysisForCurrentState();
+            }
         });
         btnStyleAgg.setOnClickListener(v -> {
             HapticHelper.tick(activity, v);
             curStyle[0] = StockfishSettings.STYLE_AGGRESSIVE;
+            StockfishSettings.setKomodoStyle(activity, curStyle[0]);
             updateTabStyle(btnStyleDef, false, density);
             updateTabStyle(btnStyleAgg, true, density);
             updateTabStyle(btnStyleDefens, false, density);
+            if (StockfishSettings.isEngineEnabled(activity)) {
+                StockfishExtension.triggerAnalysisForCurrentState();
+            }
         });
         btnStyleDefens.setOnClickListener(v -> {
             HapticHelper.tick(activity, v);
             curStyle[0] = StockfishSettings.STYLE_DEFENSIVE;
+            StockfishSettings.setKomodoStyle(activity, curStyle[0]);
             updateTabStyle(btnStyleDef, false, density);
             updateTabStyle(btnStyleAgg, false, density);
             updateTabStyle(btnStyleDefens, true, density);
+            if (StockfishSettings.isEngineEnabled(activity)) {
+                StockfishExtension.triggerAnalysisForCurrentState();
+            }
         });
 
         // Card 2: Sức mạnh & Độ sâu (Auto Depth, Elo 100-3500)
@@ -445,9 +522,13 @@ public class StockfishSettingsDialog {
                 I18n.get(activity, "elo_hint"),
                 density, activity,
                 (newElo) -> {
+                    StockfishSettings.setElo(activity, newElo);
                     if (autoDepthSwitch.isChecked() && depthBadgeHolder[0] != null) {
                         int autoD = StockfishSettings.autoDepthForElo(newElo);
                         depthBadgeHolder[0].setText(autoD + " (Auto)");
+                    }
+                    if (StockfishSettings.isEngineEnabled(activity)) {
+                        StockfishExtension.triggerAnalysisForCurrentState();
                     }
                 });
 
@@ -464,7 +545,13 @@ public class StockfishSettingsDialog {
                 initialDepthBadge,
                 currentDepth - 1, StockfishSettings.MAX_DEPTH - 1, 1,
                 I18n.get(activity, "depth_hint"),
-                density, activity, depthBadgeHolder);
+                density, activity, depthBadgeHolder,
+                (newDepth) -> {
+                    StockfishSettings.setDepth(activity, newDepth);
+                    if (StockfishSettings.isEngineEnabled(activity)) {
+                        StockfishExtension.triggerAnalysisForCurrentState();
+                    }
+                });
         depthSeekBarHolder[0] = depthSeekBar;
 
         if (initialAuto) {
@@ -473,6 +560,7 @@ public class StockfishSettingsDialog {
         }
 
         autoDepthSwitch.setOnCheckedChangeListener((view, isChecked) -> {
+            StockfishSettings.setAutoDepthEnabled(activity, isChecked);
             int elo = StockfishSettings.MIN_ELO + eloSeekBar.getProgress() * StockfishSettings.ELO_STEP;
             if (isChecked) {
                 int autoD = StockfishSettings.autoDepthForElo(elo);
@@ -484,6 +572,9 @@ public class StockfishSettingsDialog {
                 if (depthBadgeHolder[0] != null) depthBadgeHolder[0].setText(String.valueOf(manualD));
                 depthSeekBar.setAlpha(1.0f);
                 depthSeekBar.setEnabled(true);
+            }
+            if (StockfishSettings.isEngineEnabled(activity)) {
+                StockfishExtension.triggerAnalysisForCurrentState();
             }
         });
 
@@ -547,6 +638,10 @@ public class StockfishSettingsDialog {
                 StockfishSettings.isMoveClassificationEnabled(activity),
                 density, activity);
 
+        classifSwitch.setOnCheckedChangeListener((view, isChecked) -> {
+            StockfishSettings.setMoveClassificationEnabled(activity, isChecked);
+        });
+
         addCardSeparator(coachCard, density);
 
         int currentCoachDepth = StockfishSettings.getCoachDepth(activity);
@@ -555,7 +650,10 @@ public class StockfishSettingsDialog {
                 String.valueOf(currentCoachDepth),
                 currentCoachDepth - 1, 9, 1,
                 I18n.get(activity, "coach_depth_hint"),
-                density, activity);
+                density, activity,
+                (newCoachDepth) -> {
+                    StockfishSettings.setCoachDepth(activity, newCoachDepth);
+                });
 
         addCardSeparator(coachCard, density);
 
@@ -565,6 +663,15 @@ public class StockfishSettingsDialog {
                 StockfishSettings.isAccuracyEloEnabled(activity),
                 density, activity);
 
+        accuracyEloSwitch.setOnCheckedChangeListener((view, isChecked) -> {
+            StockfishSettings.setAccuracyEloEnabled(activity, isChecked);
+            if (!isChecked) {
+                OverlayManager.hideAccuracyEloPills();
+            } else {
+                OverlayManager.refreshOverlaysLanguage(activity);
+            }
+        });
+
         addCardSeparator(coachCard, density);
 
         final CyberSwitchView blunderSwitch = addCyberSwitchRow(coachCard,
@@ -572,6 +679,10 @@ public class StockfishSettingsDialog {
                 I18n.get(activity, "vibrate_hint"),
                 StockfishSettings.isBlunderAlertsEnabled(activity),
                 density, activity);
+
+        blunderSwitch.setOnCheckedChangeListener((view, isChecked) -> {
+            StockfishSettings.setBlunderAlertsEnabled(activity, isChecked);
+        });
 
         addCardSeparator(coachCard, density);
 
@@ -608,7 +719,16 @@ public class StockfishSettingsDialog {
                 StockfishSettings.isEvalBarEnabled(activity),
                 density, activity);
 
-
+        evalBarSwitch.setOnCheckedChangeListener((view, isChecked) -> {
+            StockfishSettings.setEvalBarEnabled(activity, isChecked);
+            if (!isChecked) {
+                OverlayManager.hideEvalBar();
+            } else {
+                if (StockfishSettings.isEngineEnabled(activity)) {
+                    StockfishExtension.triggerAnalysisForCurrentState();
+                }
+            }
+        });
 
         // ─── TAB 5: ARROWS (Thiết Lập Mũi Tên & Bảng Màu) ───
         final LinearLayout panelArrows = new LinearLayout(activity);
@@ -625,6 +745,17 @@ public class StockfishSettingsDialog {
                 StockfishSettings.isArrowsVisible(activity),
                 density, activity);
 
+        arrowsSwitch.setOnCheckedChangeListener((view, isChecked) -> {
+            StockfishSettings.setArrowsVisible(activity, isChecked);
+            Object state = StockfishExtension.getStateImpl();
+            if (!isChecked) {
+                ArrowInjector.clearEngineArrows(state);
+                OverlayManager.hideArrowOverlay();
+            } else {
+                StockfishExtension.triggerAnalysisForCurrentState();
+            }
+        });
+
         addCardSeparator(arrowCard, density);
 
         int currentPV = StockfishSettings.getMultiPV(activity);
@@ -633,7 +764,13 @@ public class StockfishSettingsDialog {
                 currentPV + " PV",
                 currentPV - 1, 4, 1,
                 I18n.get(activity, "arrows_hint"),
-                density, activity);
+                density, activity,
+                (newPV) -> {
+                    StockfishSettings.setMultiPV(activity, newPV);
+                    if (StockfishSettings.isEngineEnabled(activity)) {
+                        StockfishExtension.triggerAnalysisForCurrentState();
+                    }
+                });
 
         addCardSeparator(arrowCard, density);
 
@@ -643,6 +780,13 @@ public class StockfishSettingsDialog {
                 !StockfishSettings.isMySideOnly(activity),
                 density, activity);
 
+        oppArrowsSwitch.setOnCheckedChangeListener((view, isChecked) -> {
+            StockfishSettings.setMySideOnly(activity, !isChecked);
+            if (StockfishSettings.isEngineEnabled(activity)) {
+                StockfishExtension.triggerAnalysisForCurrentState();
+            }
+        });
+
         addCardSeparator(arrowCard, density);
 
         final CyberSwitchView threatSwitch = addCyberSwitchRow(arrowCard,
@@ -650,6 +794,13 @@ public class StockfishSettingsDialog {
                 I18n.get(activity, "threat_arrow_hint"),
                 StockfishSettings.isThreatArrowsEnabled(activity),
                 density, activity);
+
+        threatSwitch.setOnCheckedChangeListener((view, isChecked) -> {
+            StockfishSettings.setThreatArrowsEnabled(activity, isChecked);
+            if (StockfishSettings.isEngineEnabled(activity)) {
+                StockfishExtension.triggerAnalysisForCurrentState();
+            }
+        });
 
         LinearLayout paletteCard = createGlassCard(activity, density);
         panelArrows.addView(paletteCard);
@@ -789,84 +940,31 @@ public class StockfishSettingsDialog {
 
         addDialogSpacer(footerLayout, 8, density);
 
-        // Action Buttons (Cancel / Save)
+        // Action Buttons (Done)
         LinearLayout actionButtons = new LinearLayout(activity);
         actionButtons.setOrientation(LinearLayout.HORIZONTAL);
         actionButtons.setGravity(Gravity.END);
 
-        TextView cancelBtn = new TextView(activity);
-        cancelBtn.setText(I18n.get(activity, "cancel"));
-        cancelBtn.setTextColor(COLOR_TEXT_MUTED);
-        cancelBtn.setTextSize(14);
-        cancelBtn.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
-        cancelBtn.setGravity(Gravity.CENTER);
-        cancelBtn.setPadding((int) (16 * density), (int) (8 * density), (int) (16 * density), (int) (8 * density));
-        cancelBtn.setOnClickListener(v -> {
+        TextView doneBtn = new TextView(activity);
+        boolean isVi = "vi".equalsIgnoreCase(StockfishSettings.getLanguage(activity));
+        doneBtn.setText(isVi ? "Xong" : "Done");
+        doneBtn.setTextColor(COLOR_TEXT_PRIMARY);
+        doneBtn.setTextSize(14);
+        doneBtn.setTypeface(Typeface.create("sans-serif-medium", Typeface.BOLD));
+        doneBtn.setGravity(Gravity.CENTER);
+        doneBtn.setPadding((int) (24 * density), (int) (8 * density), (int) (24 * density), (int) (8 * density));
+
+        GradientDrawable doneBg = new GradientDrawable();
+        doneBg.setColor(COLOR_ACCENT_BLUE);
+        doneBg.setCornerRadius(10 * density);
+        doneBg.setStroke((int) (1.2f * density), COLOR_ACCENT_CYAN);
+        doneBtn.setBackground(doneBg);
+
+        doneBtn.setOnClickListener(v -> {
             HapticHelper.pop(activity, v);
             dialog.dismiss();
         });
-        actionButtons.addView(cancelBtn);
-
-        View btnSpacer = new View(activity);
-        btnSpacer.setLayoutParams(new LinearLayout.LayoutParams((int) (8 * density), 1));
-        actionButtons.addView(btnSpacer);
-
-        TextView saveBtn = new TextView(activity);
-        saveBtn.setText(I18n.get(activity, "save"));
-        saveBtn.setTextColor(COLOR_TEXT_PRIMARY);
-        saveBtn.setTextSize(14);
-        saveBtn.setTypeface(Typeface.create("sans-serif-medium", Typeface.BOLD));
-        saveBtn.setGravity(Gravity.CENTER);
-        saveBtn.setPadding((int) (22 * density), (int) (8 * density), (int) (22 * density), (int) (8 * density));
-
-        GradientDrawable saveBg = new GradientDrawable();
-        saveBg.setColor(COLOR_ACCENT_BLUE);
-        saveBg.setCornerRadius(10 * density);
-        saveBg.setStroke((int) (1.2f * density), COLOR_ACCENT_CYAN);
-        saveBtn.setBackground(saveBg);
-
-        saveBtn.setOnClickListener(v -> {
-            HapticHelper.pop(activity, v);
-            StockfishSettings.setEngineEnabled(activity, enabledSwitch.isChecked());
-            StockfishSettings.setEngineChoice(activity, curEngine[0]);
-            StockfishSettings.setKomodoStyle(activity, curStyle[0]);
-            StockfishSettings.setAutoDepthEnabled(activity, autoDepthSwitch.isChecked());
-            StockfishSettings.setDepth(activity, Math.max(1, depthSeekBar.getProgress() + 1));
-            StockfishSettings.setMultiPV(activity, Math.max(1, pvSeekBar.getProgress() + 1));
-            StockfishSettings.setMySideOnly(activity, !oppArrowsSwitch.isChecked());
-            StockfishSettings.setLimitStrength(activity, true);
-            StockfishSettings.setElo(activity, StockfishSettings.MIN_ELO + eloSeekBar.getProgress() * StockfishSettings.ELO_STEP);
-            StockfishSettings.setPremiumEnabled(activity, true);
-            StockfishSettings.setArrowsVisible(activity, arrowsSwitch.isChecked());
-            StockfishSettings.setEvalBarEnabled(activity, evalBarSwitch.isChecked());
-            StockfishSettings.setWdlEnabled(activity, false); // Gỡ bỏ WDL
-            StockfishSettings.setEngineInfoEnabled(activity, false); // Gỡ bỏ điểm số trên bàn cờ
-            StockfishSettings.setThreatArrowsEnabled(activity, threatSwitch.isChecked());
-            StockfishSettings.setMoveClassificationEnabled(activity, classifSwitch.isChecked());
-            StockfishSettings.setCoachDepth(activity, Math.max(1, coachDepthSeekBar.getProgress() + 1));
-            StockfishSettings.setAccuracyEloEnabled(activity, accuracyEloSwitch.isChecked());
-            StockfishSettings.setBlunderAlertsEnabled(activity, blunderSwitch.isChecked());
-            StockfishSettings.setMateAnnouncementEnabled(activity, false);
-            OverlayManager.hideMateAnnouncement();
-            if (!accuracyEloSwitch.isChecked()) OverlayManager.hideAccuracyEloPills();
-
-            Toast.makeText(activity, I18n.get(activity, "settings_saved"), Toast.LENGTH_SHORT).show();
-
-            Object state = StockfishExtension.getStateImpl();
-            if (!enabledSwitch.isChecked() || !arrowsSwitch.isChecked()) {
-                ArrowInjector.clearEngineArrows(state);
-            }
-            if (!enabledSwitch.isChecked() || !evalBarCbChecked(evalBarSwitch)) OverlayManager.hideEvalBar();
-            OverlayManager.hideWdlBar();
-            OverlayManager.hideEngineInfo();
-            if (!enabledSwitch.isChecked()) OverlayManager.hideMateAnnouncement();
-            if (enabledSwitch.isChecked()) {
-                StockfishExtension.triggerAnalysisForCurrentState();
-            }
-
-            dialog.dismiss();
-        });
-        actionButtons.addView(saveBtn);
+        actionButtons.addView(doneBtn);
 
         footerLayout.addView(actionButtons);
         windowRoot.addView(footerLayout);
@@ -996,7 +1094,15 @@ public class StockfishSettingsDialog {
         return cyberSwitch;
     }
 
+    public interface OnValueChangeListener {
+        void onValueChanged(int newValue);
+    }
+
     private static SeekBar addGlassSeekBarWithBadge(LinearLayout layout, final String labelPrefix, String initialBadge, int progress, int max, final int minVal, String hint, float density, Activity activity) {
+        return addGlassSeekBarWithBadge(layout, labelPrefix, initialBadge, progress, max, minVal, hint, density, activity, null);
+    }
+
+    private static SeekBar addGlassSeekBarWithBadge(LinearLayout layout, final String labelPrefix, String initialBadge, int progress, int max, final int minVal, String hint, float density, Activity activity, OnValueChangeListener listener) {
         // Label & Badge Header
         LinearLayout headerRow = new LinearLayout(activity);
         headerRow.setOrientation(LinearLayout.HORIZONTAL);
@@ -1062,6 +1168,10 @@ public class StockfishSettingsDialog {
                     valBadge.setText(val + " PV");
                 } else {
                     valBadge.setText(String.valueOf(val));
+                }
+
+                if (listener != null) {
+                    listener.onValueChanged(val);
                 }
 
                 // Rung xúc giác nhẹ mỗi nấc giá trị thay đổi khi người dùng kéo
@@ -1246,6 +1356,8 @@ public class StockfishSettingsDialog {
                     StockfishSettings.setArrowTierColor(activity, tier, c);
                     boxBg.setColor(c);
                     colorBox.invalidate();
+                    StockfishExtension.invalidateAllBoards();
+                    StockfishExtension.triggerAnalysisForCurrentState();
                     pickerDialog.dismiss();
                 });
 
@@ -1362,6 +1474,10 @@ public class StockfishSettingsDialog {
     }
 
     private static SeekBar addDepthSeekBarWithBadge(LinearLayout layout, final String labelPrefix, String initialBadge, int progress, int max, final int minVal, String hint, float density, Activity activity, TextView[] badgeRef) {
+        return addDepthSeekBarWithBadge(layout, labelPrefix, initialBadge, progress, max, minVal, hint, density, activity, badgeRef, null);
+    }
+
+    private static SeekBar addDepthSeekBarWithBadge(LinearLayout layout, final String labelPrefix, String initialBadge, int progress, int max, final int minVal, String hint, float density, Activity activity, TextView[] badgeRef, OnValueChangeListener listener) {
         LinearLayout headerRow = new LinearLayout(activity);
         headerRow.setOrientation(LinearLayout.HORIZONTAL);
         headerRow.setGravity(Gravity.CENTER_VERTICAL);
@@ -1423,6 +1539,10 @@ public class StockfishSettingsDialog {
                 int val = Math.max(minVal, prog + minVal);
                 if (valBadge.getText().toString().contains("Auto")) return;
                 valBadge.setText(String.valueOf(val));
+
+                if (listener != null) {
+                    listener.onValueChanged(val);
+                }
 
                 if (fromUser && val != lastVal[0]) {
                     lastVal[0] = val;
