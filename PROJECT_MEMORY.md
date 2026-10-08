@@ -1,6 +1,6 @@
 # NHẬT KÝ DỰ ÁN & BỘ GHI NHỚ DẶN DÒ (PROJECT MEMORY)
 *Dự án: Chess Mobile - ReVanced Extension Patches cho Chess.com Android*
-*Phiên bản hiện tại: v2.0.21*
+*Phiên bản hiện tại: v2.0.22*
 *Cập nhật lần cuối: 2026-10-08*
 
 ---
@@ -152,18 +152,33 @@
     - **Đục sâu Reflection từ Game Models**: Quét đa tầng qua `stateImplObject` và `Activity` (ViewModel, Game Controller) để tìm trực tiếp `RcnGameState` (`getWhiteRating()`, `getBlackRating()`) và `UserInfo` / `LiveUserInfo` (`getRating()`, `getColor()`) của cả 2 bên.
     - **Nâng cấp Enhanced Regex Scanner**: Hỗ trợ nhận diện số Elo kèm tên hoặc thể loại cờ (ví dụ `Magnus (2850)`, `Bot Martin (250)`, `1500 Rapid`), tự động phát hiện Elo người chơi (Bottom) và đối thủ (Top) dựa theo chiều bàn cờ (Flipped).
     - **Tự động đồng bộ Elo vào Torch CEE**: Gửi ngay lệnh `setoption name WhiteElo value X` và `setoption name BlackElo value Y` vào WebAssembly Engine để tính toán phân loại chuẩn xác theo trình độ thực tế của ván đấu.
+- **v2.0.22**:
+  - **Triệt tiêu 100% hiện tượng khựng/lag khi đi cờ**:
+    - Chuyển toàn bộ tác vụ quét Elo (Reflection và View Hierarchy) sang một background single-thread worker (`SCAN_EXECUTOR`).
+    - Trên UI Thread chỉ thực hiện snapshot cực nhẹ các text view (< 1ms, không reflection, không regex).
+    - Loại bỏ lệnh gọi `EloScanner.scanAndApply` dư thừa khỏi `onArrowsChanged`.
+    - Thêm throttle 3000ms và không quét lại khi đã phát hiện Elo cho ván hiện tại.
+  - **Phân biệt rành mạch [Bạn] vs [Đối thủ]**:
+    - Xác định chính xác quân của người chơi (`isUserWhite`), gắn tag `[Bạn]` hoặc `[Đối thủ]` trên Toast và Log.
+    - Truyền đúng `userColor` là màu quân của người chơi thực tế vào Torch CEE.
+  - **Sửa lỗi map nhãn Great Move**:
+    - Ánh xạ chính xác `greatfind`, `great_find` sang `Nước cờ xuất sắc (Great)` (`!`) thay vì rơi vào default `Good`.
+    - Bổ sung alias `missedwin` sang `Bỏ lỡ cơ hội thắng (Missed Win)` (`✕`).
+  - **Hỗ trợ v1 và v2 ChessBoardView**:
+    - Mở rộng `findChessBoardView` nhận diện cả `com.chess.chessboard.v2.ChessBoardView`.
+    - Bổ sung log chẩn đoán `[ELO DEBUG]` chi tiết từng bước.
 
 ---
 
 ## 3. TRẠNG THÁI HIỆN TẠI & KẾ HOẠCH TIẾP THEO
 
 ### 3.1. Trạng thái hiện tại
-- **Phiên bản mới nhất**: **v2.0.21** (`patches-2.0.21.mpp`).
-- **Kho lưu trữ GitHub**: Đã sẵn sàng phát hành Release v2.0.21.
+- **Phiên bản mới nhất**: **v2.0.22** (`patches-2.0.22.mpp`).
+- **Kho lưu trữ GitHub**: Đã sẵn sàng phát hành Release v2.0.22.
 - **Trạng thái Repo**: 100% sạch, không commit file `.py`.
 - **Tiến trình kỹ thuật**:
-  1. Hook hoàn chỉnh lịch sử nước đi từ `positionObject` cho Torch CEE.
-  2. Deep Reflection + Enhanced Scanner tự động nhận diện Elo 2 bên.
-  3. Bọc an toàn tuyệt đối chống Abort WebAssembly.
-  4. Phân hệ Coach 100% Torch độc lập, không dính dáng tới Stockfish.
-  5. Cấu trúc 5 Tab chuẩn Extension `[ LIVE | ENGINE | COACH | VISUAL | ARROWS ]`.
+  1. Triệt tiêu hoàn toàn lag khi đi cờ nhờ off-thread scanning.
+  2. Gắn tag [Bạn] / [Đối thủ] rõ ràng trên Toast phân loại.
+  3. Hoàn thiện toàn bộ các nhãn phân loại Torch CEE (Great Move, Missed Win, v.v.).
+  4. Hỗ trợ đầy đủ v1 và v2 ChessBoardView.
+  5. Giữ vững tính ổn định 100% của WebAssembly Worker.

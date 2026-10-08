@@ -164,6 +164,7 @@ public class MoveClassifier {
         lastPlayedUci = null;
         lastWasCapture = false;
         lastOppLoss = -1f;
+        EloScanner.reset();
     }
 
     /**
@@ -456,7 +457,15 @@ public class MoveClassifier {
             // ── 1. 100% Real Torch WebAssembly Engine Execution ──
             TorchEngine torch = TorchEngine.getInstance(context);
             if (torch.isReady()) {
-                String userColor = whiteMoved ? "white" : "black";
+                Boolean userIsWhite = StockfishExtension.isUserWhite(StockfishExtension.getStateImpl());
+                final boolean isMyMove;
+                if (userIsWhite != null) {
+                    isMyMove = (whiteMoved == userIsWhite.booleanValue());
+                } else {
+                    isMyMove = (whiteMoved == !OverlayManager.isBoardFlipped(StockfishExtension.getStateImpl()));
+                }
+
+                String userColor = (userIsWhite != null && !userIsWhite) ? "black" : "white";
                 final String finalUci = uciMove;
                 classifiedMoves.add(moveIdentifier);
 
@@ -473,13 +482,14 @@ public class MoveClassifier {
                 }
 
                 torch.analyze(moves, userColor, (classificationName, playedMoveLan, bestMoveLan, speechText, rawJson) -> {
-                    TorchEngine.log("[CLASSIFIER CALLBACK] class=" + classificationName + ", act=" + (currentAct != null));
+                    TorchEngine.log("[CLASSIFIER CALLBACK] class=" + classificationName + ", act=" + (currentAct != null) + ", isMyMove=" + isMyMove);
                     if (classificationName != null && !classificationName.isEmpty() && !"null".equalsIgnoreCase(classificationName)) {
                         if (currentAct != null) {
                             currentAct.runOnUiThread(() -> {
                                 displayTorchClassification(currentAct, classificationName,
                                         (playedMoveLan != null && !playedMoveLan.isEmpty()) ? playedMoveLan : finalUci,
-                                        speechText);
+                                        speechText,
+                                        isMyMove);
                             });
                         }
                     } else {
@@ -511,7 +521,7 @@ public class MoveClassifier {
         }
     }
 
-    private static void displayTorchClassification(Activity activity, String torchName, String uciMove, String speechText) {
+    private static void displayTorchClassification(Activity activity, String torchName, String uciMove, String speechText, boolean isMyMove) {
         if (activity == null || torchName == null) return;
         boolean isVi = "vi".equalsIgnoreCase(StockfishSettings.getLanguage(activity));
         String classification;
@@ -525,6 +535,8 @@ public class MoveClassifier {
                 emoji = "!!";
                 break;
             case "great":
+            case "greatfind":
+            case "great_find":
                 classification = isVi ? "Nước cờ xuất sắc (Great)" : "Great Move";
                 emoji = "!";
                 break;
@@ -565,6 +577,7 @@ public class MoveClassifier {
                 break;
             case "missed":
             case "missed_win":
+            case "missedwin":
                 classification = isVi ? "Bỏ lỡ cơ hội thắng (Missed Win)" : "Missed Win";
                 emoji = "✕";
                 isBlunderOrMistake = true;
@@ -580,8 +593,9 @@ public class MoveClassifier {
         }
 
         String comment = (speechText != null && !speechText.trim().isEmpty()) ? "\n\"" + speechText.trim() + "\"" : "";
-        final String toastText = "[Torch] [" + emoji + "] " + classification + " (" + uciMove + ")" + comment;
-        TorchEngine.log("[CLASSIFIED TOAST] " + emoji + " " + classification + " (" + uciMove + ")");
+        String playerPrefix = isMyMove ? (isVi ? "[Bạn]" : "[You]") : (isVi ? "[Đối thủ]" : "[Opponent]");
+        final String toastText = "[Torch] " + playerPrefix + " [" + emoji + "] " + classification + " (" + uciMove + ")" + comment;
+        TorchEngine.log("[CLASSIFIED TOAST] " + playerPrefix + " " + emoji + " " + classification + " (" + uciMove + ")");
         Toast.makeText(activity, toastText, Toast.LENGTH_SHORT).show();
 
         if (isBlunderOrMistake && StockfishSettings.isBlunderAlertsEnabled(activity)) {

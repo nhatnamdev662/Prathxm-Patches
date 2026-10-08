@@ -286,11 +286,6 @@ public class StockfishExtension {
         GestureInterceptor.ensureGestureInterceptorRegistered();
         ensureEngineReady();
 
-        final Activity activity = getCurrentActivity();
-        if (activity != null) {
-            EloScanner.scanAndApply(activity, stateImplObject);
-        }
-
         // Auto-trigger analysis for move 0 / initial position if no job has been scheduled yet
         if (engineReady && currentJob == null) {
             triggerAnalysisForCurrentState();

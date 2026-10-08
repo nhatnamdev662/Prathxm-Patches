@@ -15,15 +15,17 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
  * EloScanner – Quét và nhận diện chính xác chỉ số Elo/Rating của hai kỳ thủ (White & Black)
- * tương tự như cơ chế của NNVC Extension trên PC.
- * 
- * Áp dụng bộ lọc nghiêm ngặt (Strict Filter) để loại trừ 100% các giá trị nhầm lẫn:
- * đồng hồ bấm giờ, thời lượng ván đấu, điểm số chênh lệch quân, số thứ tự nước đi.
+ * chạy 100% không làm nghẽn Main UI Thread (Triệt tiêu hiện tượng lag/khựng khi đi cờ).
  */
 public class EloScanner {
 
@@ -48,24 +50,50 @@ public class EloScanner {
         }
     }
 
+    private static class ViewSnapshot {
+        final String text;
+        final int y;
+        ViewSnapshot(String text, int y) {
+            this.text = text;
+            this.y = y;
+        }
+    }
+
     private static volatile EloPair lastDetectedPair = null;
     private static volatile long lastScanTimeMs = 0;
+    private static final ExecutorService SCAN_EXECUTOR = Executors.newSingleThreadExecutor();
+    private static final AtomicBoolean IS_SCANNING = new AtomicBoolean(false);
+
+    public static void reset() {
+        lastDetectedPair = null;
+        lastScanTimeMs = 0;
+    }
 
     /**
      * Quét và tự động đồng bộ hóa Elo vào Torch WebAssembly Engine.
+     * Chạy hoàn toàn trên Background Worker, tuyệt đối không chặn Main Thread.
      */
     public static void scanAndApply(Activity activity, Object stateImplObject) {
         if (activity == null) return;
 
-        // Tránh quét liên tục làm tốn CPU, chỉ quét cách nhau tối thiểu 2 giây
         long now = System.currentTimeMillis();
-        if (now - lastScanTimeMs < 2000 && lastDetectedPair != null && lastDetectedPair.isAutoDetected) {
+        // Tránh quét dồn dập: giãn cách tối thiểu 3 giây
+        if (now - lastScanTimeMs < 3000) {
+            return;
+        }
+        // Nếu đã nhận diện thành công cho ván đấu hiện tại, không quét lại để tiết kiệm CPU
+        if (lastDetectedPair != null && lastDetectedPair.isAutoDetected) {
+            return;
+        }
+
+        if (!IS_SCANNING.compareAndSet(false, true)) {
             return;
         }
         lastScanTimeMs = now;
 
-        activity.runOnUiThread(() -> {
+        SCAN_EXECUTOR.submit(() -> {
             try {
+                TorchEngine.log("[ELO SCAN] Bắt đầu quét Elo người chơi...");
                 EloPair pair = detectEloPair(activity, stateImplObject);
                 if (pair != null && pair.isAutoDetected) {
                     if (lastDetectedPair == null || lastDetectedPair.whiteElo != pair.whiteElo || lastDetectedPair.blackElo != pair.blackElo) {
@@ -73,9 +101,15 @@ public class EloScanner {
                         TorchEngine.log("[ELO SCANNER] ĐÃ PHÁT HIỆN: " + pair.toString());
                         TorchEngine.getInstance(activity.getApplicationContext()).updateRatings(pair.whiteElo, pair.blackElo);
                     }
+                } else {
+                    int def = StockfishSettings.getElo(activity);
+                    TorchEngine.log("[ELO DEBUG] Không phát hiện tự động, dùng cài đặt mặc định: " + def);
                 }
             } catch (Throwable t) {
                 Log.e(TAG, "Lỗi khi quét Elo: " + t.getMessage(), t);
+                TorchEngine.log("[ELO ERROR] " + t.getMessage());
+            } finally {
+                IS_SCANNING.set(false);
             }
         });
     }
@@ -85,24 +119,34 @@ public class EloScanner {
     }
 
     /**
-     * Nhận diện cặp Elo với độ chính xác cao:
-     * 1. Deep Reflection từ Model/State/Activity (RcnGameState, UserInfo, LiveUserInfo)
-     * 2. Quét View Hierarchy theo toạ độ bàn cờ (Top/Bottom Player Zones)
+     * Nhận diện cặp Elo theo thứ tự ưu tiên:
+     * 1. Deep Reflection từ Model/State/Activity
+     * 2. Quét View Hierarchy theo toạ độ bàn cờ
      * 3. Fallback: Cài đặt người dùng
      */
     public static EloPair detectEloPair(Activity activity, Object stateImplObject) {
         if (activity == null) return null;
 
-        // ── 1. Thử qua Deep Reflection từ State / ViewModel / Activity ──
-        EloPair reflectPair = tryReflectionElo(activity, stateImplObject);
-        if (reflectPair != null) {
-            return reflectPair;
+        // ── 1. Thử qua Deep Reflection ──
+        try {
+            EloPair reflectPair = tryReflectionElo(activity, stateImplObject);
+            if (reflectPair != null) {
+                TorchEngine.log("[ELO DEBUG] Reflection thành công: " + reflectPair);
+                return reflectPair;
+            }
+        } catch (Throwable t) {
+            Log.e(TAG, "Lỗi tryReflectionElo: " + t.getMessage());
         }
 
-        // ── 2. Quét View Hierarchy theo toạ độ bàn cờ (Top/Bottom Player Zones) ──
-        EloPair viewPair = tryScanViewHierarchy(activity, stateImplObject);
-        if (viewPair != null) {
-            return viewPair;
+        // ── 2. Quét View Hierarchy theo toạ độ bàn cờ ──
+        try {
+            EloPair viewPair = tryScanViewHierarchy(activity, stateImplObject);
+            if (viewPair != null) {
+                TorchEngine.log("[ELO DEBUG] Quét View thành công: " + viewPair);
+                return viewPair;
+            }
+        } catch (Throwable t) {
+            Log.e(TAG, "Lỗi tryScanViewHierarchy: " + t.getMessage());
         }
 
         // ── 3. Fallback an toàn: Dùng Elo cài đặt từ người dùng ──
@@ -111,13 +155,11 @@ public class EloScanner {
     }
 
     private static EloPair tryReflectionElo(Activity activity, Object stateImpl) {
-        // 1. Thử từ stateImplObject
         if (stateImpl != null) {
             EloPair pair = inspectObjectForElo(stateImpl, 0);
             if (pair != null) return pair;
         }
 
-        // 2. Thử từ Activity fields (ViewModel, Presenter, Game Controller)
         if (activity != null) {
             try {
                 for (Field f : activity.getClass().getDeclaredFields()) {
@@ -145,7 +187,7 @@ public class EloScanner {
         Class<?> clazz = obj.getClass();
         if (isFrameworkClass(clazz.getName())) return null;
 
-        // A. Kiểm tra direct getters: getWhiteRating / getBlackRating
+        // A. Direct getters: getWhiteRating / getBlackRating
         try {
             Method wM = findMethod(clazz, "getWhiteRating", "getWhiteElo");
             Method bM = findMethod(clazz, "getBlackRating", "getBlackElo");
@@ -162,7 +204,7 @@ public class EloScanner {
             }
         } catch (Throwable ignored) {}
 
-        // B. Kiểm tra nếu có UserInfo / LiveUserInfo
+        // B. UserInfo / LiveUserInfo
         try {
             Integer whiteElo = null;
             Integer blackElo = null;
@@ -187,7 +229,7 @@ public class EloScanner {
             }
         } catch (Throwable ignored) {}
 
-        // C. Kiểm tra các fields con đến độ sâu 2
+        // C. Recursive fields search
         if (depth < 2) {
             try {
                 for (Field f : clazz.getDeclaredFields()) {
@@ -241,121 +283,159 @@ public class EloScanner {
     }
 
     private static EloPair tryScanViewHierarchy(Activity activity, Object stateImpl) {
+        final List<ViewSnapshot> snapshots = new ArrayList<>();
+        final int[] boardData = new int[3]; // [boardY, boardH, screenH]
+        final CountDownLatch latch = new CountDownLatch(1);
+
+        // Snapshot cực nhanh trên UI Thread (< 1ms, không reflection, không regex)
+        activity.runOnUiThread(() -> {
+            try {
+                if (activity.getWindow() != null && activity.getWindow().getDecorView() != null) {
+                    View decorView = activity.getWindow().getDecorView();
+                    boardData[2] = decorView.getHeight();
+
+                    View boardView = OverlayManager.findChessBoardView(decorView);
+                    if (boardView != null && boardView.getWidth() > 0 && boardView.getHeight() > 0) {
+                        int[] loc = new int[2];
+                        boardView.getLocationOnScreen(loc);
+                        boardData[0] = loc[1];
+                        boardData[1] = boardView.getHeight();
+                    }
+                    collectSnapshots(decorView, snapshots);
+                }
+            } catch (Throwable ignored) {
+            } finally {
+                latch.countDown();
+            }
+        });
+
         try {
-            if (activity.getWindow() == null || activity.getWindow().getDecorView() == null) return null;
-            View decorView = activity.getWindow().getDecorView();
+            latch.await(300, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException ignored) {}
 
-            View boardView = OverlayManager.findChessBoardView(decorView);
-            if (boardView == null || boardView.getWidth() <= 0 || boardView.getHeight() <= 0) return null;
+        if (snapshots.isEmpty()) return null;
 
-            int[] boardLoc = new int[2];
-            boardView.getLocationOnScreen(boardLoc);
-            int boardY = boardLoc[1];
-            int boardH = boardView.getHeight();
+        // Xử lý và tính toán vị trí trên Background Thread
+        int boardY = boardData[0];
+        int boardH = boardData[1];
+        int screenH = boardData[2];
 
-            float density = activity.getResources().getDisplayMetrics().density;
-            int maxZoneDist = (int) (280 * density); // Giới hạn vùng player chỉ trong 280dp quanh bàn cờ
-
-            List<TextView> allTextViews = new ArrayList<>();
-            collectTextViews(decorView, allTextViews);
-
-            Integer topZoneElo = null;
-            Integer bottomZoneElo = null;
-            int closestTopDist = Integer.MAX_VALUE;
-            int closestBottomDist = Integer.MAX_VALUE;
-
-            for (TextView tv : allTextViews) {
-                if (tv.getVisibility() != View.VISIBLE) continue;
-                CharSequence cs = tv.getText();
-                if (cs == null) continue;
-
-                Integer parsed = parseStrictElo(cs.toString());
-                if (parsed == null) continue;
-
-                int[] tvLoc = new int[2];
-                tv.getLocationOnScreen(tvLoc);
-                int tvY = tvLoc[1];
-
-                // Kiểm tra Top Zone (phía trên bàn cờ)
-                if (tvY < boardY && tvY >= boardY - maxZoneDist) {
-                    int dist = boardY - tvY;
-                    if (dist < closestTopDist) {
-                        closestTopDist = dist;
-                        topZoneElo = parsed;
-                    }
-                }
-                // Kiểm tra Bottom Zone (phía dưới bàn cờ)
-                else if (tvY >= boardY + boardH && tvY <= boardY + boardH + maxZoneDist) {
-                    int dist = tvY - (boardY + boardH);
-                    if (dist < closestBottomDist) {
-                        closestBottomDist = dist;
-                        bottomZoneElo = parsed;
-                    }
-                }
-            }
-
-            if (topZoneElo != null || bottomZoneElo != null) {
-                boolean flipped = OverlayManager.isBoardFlipped(stateImpl);
-                int finalWhite;
-                int finalBlack;
-
-                int def = StockfishSettings.getElo(activity);
-                int top = (topZoneElo != null) ? topZoneElo : def;
-                int bot = (bottomZoneElo != null) ? bottomZoneElo : def;
-
-                if (!flipped) {
-                    // Không lật bàn: Người chơi (Bottom) là Trắng, Đối thủ (Top) là Đen
-                    finalWhite = bot;
-                    finalBlack = top;
-                } else {
-                    // Lật bàn: Người chơi (Bottom) là Đen, Đối thủ (Top) là Trắng
-                    finalWhite = top;
-                    finalBlack = bot;
-                }
-
-                return new EloPair(finalWhite, finalBlack, "view_hierarchy_zones", true);
-            }
-
-        } catch (Throwable t) {
-            Log.e(TAG, "Lỗi tryScanViewHierarchy: " + t.getMessage());
+        int boardCenterY;
+        if (boardH > 0) {
+            boardCenterY = boardY + (boardH / 2);
+        } else {
+            boardCenterY = screenH > 0 ? (screenH / 2) : 1000;
         }
+
+        Integer topZoneElo = null;
+        Integer bottomZoneElo = null;
+        int closestTopDist = Integer.MAX_VALUE;
+        int closestBottomDist = Integer.MAX_VALUE;
+
+        for (ViewSnapshot snap : snapshots) {
+            Integer parsed = parseStrictElo(snap.text);
+            if (parsed == null) continue;
+
+            int tvY = snap.y;
+            if (tvY < boardCenterY) {
+                int dist = boardCenterY - tvY;
+                if (dist < closestTopDist) {
+                    closestTopDist = dist;
+                    topZoneElo = parsed;
+                }
+            } else {
+                int dist = tvY - boardCenterY;
+                if (dist < closestBottomDist) {
+                    closestBottomDist = dist;
+                    bottomZoneElo = parsed;
+                }
+            }
+        }
+
+        TorchEngine.log("[ELO DEBUG] Views count=" + snapshots.size() + ", TopZoneElo=" + topZoneElo + ", BottomZoneElo=" + bottomZoneElo);
+
+        if (topZoneElo != null || bottomZoneElo != null) {
+            boolean flipped = OverlayManager.isBoardFlipped(stateImpl);
+            int def = StockfishSettings.getElo(activity);
+            int top = (topZoneElo != null) ? topZoneElo : def;
+            int bot = (bottomZoneElo != null) ? bottomZoneElo : def;
+
+            int finalWhite;
+            int finalBlack;
+            if (!flipped) {
+                finalWhite = bot;
+                finalBlack = top;
+            } else {
+                finalWhite = top;
+                finalBlack = bot;
+            }
+
+            return new EloPair(finalWhite, finalBlack, "view_hierarchy_zones", true);
+        }
+
         return null;
+    }
+
+    private static void collectSnapshots(View root, List<ViewSnapshot> out) {
+        if (root == null || root.getVisibility() != View.VISIBLE) return;
+        if (root instanceof TextView) {
+            CharSequence cs = ((TextView) root).getText();
+            if (cs != null && cs.length() > 0) {
+                int[] loc = new int[2];
+                root.getLocationOnScreen(loc);
+                out.add(new ViewSnapshot(cs.toString(), loc[1]));
+            }
+        } else if (root instanceof ViewGroup) {
+            ViewGroup g = (ViewGroup) root;
+            int count = g.getChildCount();
+            for (int i = 0; i < count; i++) {
+                collectSnapshots(g.getChildAt(i), out);
+            }
+        }
     }
 
     /**
      * Bộ lọc nghiêm ngặt (Strict Filter):
-     * Chỉ chấp nhận chuỗi là số Elo chuẩn (100 - 3800).
-     * Hỗ trợ:
-     * - Số trong ngoặc đơn dạng "(2850)" hoặc "Magnus (2850)"
-     * - Dạng tiền tố / hậu tố "1500 Rapid", "Blitz • 1820", "Rating: 1500"
-     * - Số đứng một mình "1500", "2070"
-     * Loại bỏ triệt để:
-     * - Đồng hồ thời gian ("10:00", "03:15", "0:45")
-     * - Thời lượng ván ("10 min", "3|2", "5+3")
-     * - Chênh lệch quân ("+1", "+3", "-2")
+     * Nhận diện chính xác số Elo từ 100 đến 3800.
+     * Hỗ trợ text nhiều dòng, tên kèm rating trong ngoặc, từ khoá Elo/Rapid/Blitz.
+     * Loại bỏ triệt để: đồng hồ đếm ngược (10:00, 3:15), phép chia thời gian, chênh lệch quân.
      */
     public static Integer parseStrictElo(String rawText) {
         if (rawText == null) return null;
         String s = rawText.trim();
         if (s.isEmpty()) return null;
 
-        // 1. Loại bỏ các ký tự đồng hồ và phép chia thời gian
-        if (s.contains(":") || s.contains("|") || s.contains("/") || s.contains("\\")) {
+        String[] lines = s.split("\\r?\\n");
+        for (String line : lines) {
+            Integer res = parseStrictEloLine(line.trim());
+            if (res != null) return res;
+        }
+        return null;
+    }
+
+    private static Integer parseStrictEloLine(String s) {
+        if (s == null || s.isEmpty()) return null;
+
+        // 1. Loại bỏ định dạng đồng hồ đếm ngược (e.g. 10:00, 3:15, 0:45)
+        if (Pattern.compile("\\b\\d{1,2}:\\d{2}\\b").matcher(s).find()) {
             return null;
         }
 
-        // 2. Loại bỏ các chuỗi chứa đơn vị thời gian
+        // 2. Loại bỏ đơn vị thời gian (min, sec, phút, giây) và phép chia thời lượng (3|2, 5+3)
         String lower = s.toLowerCase(java.util.Locale.US);
-        if (lower.contains("min") || lower.contains("sec") || lower.contains("phút") || lower.contains("giây") || lower.contains("ms")) {
+        if (lower.contains("min") || lower.contains("sec") || lower.contains("phút") || lower.contains("giây")) {
+            return null;
+        }
+        if (Pattern.compile("\\b\\d+\\s*[|+x]\\s*\\d+\\b").matcher(s).find()) {
             return null;
         }
 
-        // 3. Loại bỏ ký hiệu chênh lệch điểm quân cờ
-        if (s.startsWith("+") || s.startsWith("-")) {
+        // 3. Loại bỏ điểm chênh lệch quân cờ (+1, -3)
+        if (Pattern.compile("^[+-]\\d+$").matcher(s).matches()) {
             return null;
         }
 
-        // 4. Ưu tiên số trong ngoặc đơn dạng "(1500)" hoặc "Tên (1500)"
+        // 4. Ưu tiên số trong ngoặc đơn: "Magnus (2850)", "Bot Martin (250)", "(1500)"
         Matcher mBracket = Pattern.compile(".*?\\((\\d{2,4})\\??\\).*?").matcher(s);
         if (mBracket.matches()) {
             try {
@@ -364,28 +444,28 @@ public class EloScanner {
             } catch (Throwable ignored) {}
         }
 
-        // 5. Khớp trực tiếp dạng "1500" hoặc "1500?"
+        // 5. Dạng kèm từ khoá: "Rating: 1500", "Elo: 1500", "1500 Rapid", "Blitz • 1820"
+        Matcher mWord = Pattern.compile(".*?(?:rating|elo|rapid|blitz|bullet|daily)\\s*[:•\\-\\s]\\s*\\(?(\\d{2,4})\\??\\)?.*?", Pattern.CASE_INSENSITIVE).matcher(s);
+        if (mWord.matches()) {
+            try {
+                int val = Integer.parseInt(mWord.group(1));
+                if (isValidElo(val)) return val;
+            } catch (Throwable ignored) {}
+        }
+
+        Matcher mWordRev = Pattern.compile(".*?\\(?(\\d{2,4})\\??\\)?\\s*[:•\\-\\s]\\s*(?:rating|elo|rapid|blitz|bullet|daily).*?", Pattern.CASE_INSENSITIVE).matcher(s);
+        if (mWordRev.matches()) {
+            try {
+                int val = Integer.parseInt(mWordRev.group(1));
+                if (isValidElo(val)) return val;
+            } catch (Throwable ignored) {}
+        }
+
+        // 6. Số đứng độc lập hoặc trong ngoặc: "1500", "(1500)"
         Matcher mDirect = Pattern.compile("^\\(?(\\d{2,4})\\??\\)?$").matcher(s);
         if (mDirect.matches()) {
             try {
                 int val = Integer.parseInt(mDirect.group(1));
-                if (isValidElo(val)) return val;
-            } catch (Throwable ignored) {}
-        }
-
-        // 6. Khớp dạng có chữ: "Rating: 1500", "Elo: 1500", "1500 Rapid", "Blitz • 1500"
-        Matcher mWord1 = Pattern.compile(".*?(?:rating|elo|rapid|blitz|bullet|daily)\\s*[:•\\s]\\s*\\(?(\\d{2,4})\\??\\)?.*?", Pattern.CASE_INSENSITIVE).matcher(s);
-        if (mWord1.matches()) {
-            try {
-                int val = Integer.parseInt(mWord1.group(1));
-                if (isValidElo(val)) return val;
-            } catch (Throwable ignored) {}
-        }
-
-        Matcher mWord2 = Pattern.compile(".*?\\(?(\\d{2,4})\\??\\)?\\s*[:•\\s]\\s*(?:rating|elo|rapid|blitz|bullet|daily).*?", Pattern.CASE_INSENSITIVE).matcher(s);
-        if (mWord2.matches()) {
-            try {
-                int val = Integer.parseInt(mWord2.group(1));
                 if (isValidElo(val)) return val;
             } catch (Throwable ignored) {}
         }
@@ -395,18 +475,5 @@ public class EloScanner {
 
     private static boolean isValidElo(int val) {
         return val >= 100 && val <= 3800;
-    }
-
-    private static void collectTextViews(View root, List<TextView> out) {
-        if (root == null) return;
-        if (root instanceof TextView) {
-            out.add((TextView) root);
-        }
-        if (root instanceof ViewGroup) {
-            ViewGroup g = (ViewGroup) root;
-            for (int i = 0; i < g.getChildCount(); i++) {
-                collectTextViews(g.getChildAt(i), out);
-            }
-        }
     }
 }

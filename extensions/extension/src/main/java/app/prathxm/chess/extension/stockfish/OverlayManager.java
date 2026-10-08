@@ -497,7 +497,8 @@ public class OverlayManager {
 
     public static View findChessBoardView(View view) {
         if (view == null) return null;
-        if (view.getClass().getName().equals("com.chess.chessboard.view.ChessBoardView")) {
+        String name = view.getClass().getName();
+        if (name.endsWith("ChessBoardView") || name.contains("ChessBoardLayout") || name.equals("com.chess.chessboard.view.ChessBoardView")) {
             if (view.getVisibility() == View.VISIBLE) {
                 return view;
             }
