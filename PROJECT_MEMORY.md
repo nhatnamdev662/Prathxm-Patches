@@ -1,6 +1,6 @@
 # NHẬT KÝ DỰ ÁN & BỘ GHI NHỚ DẶN DÒ (PROJECT MEMORY)
 *Dự án: Chess Mobile - ReVanced Extension Patches cho Chess.com Android*
-*Phiên bản hiện tại: v2.0.38*
+*Phiên bản hiện tại: v2.0.39*
 *Cập nhật lần cuối: 2026-10-08*
 
 ---
@@ -217,13 +217,17 @@
   - **Nút đóng Menu dấu ✕ phong cách Extension**: Trang bị nút `✕` tinh tế ở góc phải header; footer chuyển thành nút `Xong` (hoặc đóng ngay bằng `✕`).
   - **Đồng bộ hóa ngôn ngữ thời gian thực**: Nút chuyển đổi [VI]/[EN] gọi `OverlayManager.refreshOverlaysLanguage()` cập nhật ngay lập tức các lớp phủ bàn cờ và menu.
 
+- **v2.0.39 (Tải Ngôn Ngữ In-Place & Loại Bỏ 100% Nút Footer Menu)**:
+  - **Tải lại ngôn ngữ In-Place không chớp giật**: Nút [VI]/[EN] thay thế nội dung menu ngay tại chỗ (`dialog.setContentView`), lưu giữ nguyên Tab đang chọn, không bị dismiss dialog hay nhấp nháy màn hình.
+  - **Loại bỏ hoàn toàn các nút ở Footer**: Gỡ sạch toàn bộ các nút ở footer (không Lưu, không Hủy, không Xong). Menu đóng duy nhất bằng nút `✕` chuẩn phong cách Extension ở góc trên bên phải header.
+
 ---
 
 ## 3. TRẠNG THÁI HIỆN TẠI & KẾ HOẠCH TIẾP THEO
 
 ### 3.1. Trạng thái hiện tại
-- **Phiên bản mới nhất**: **v2.0.38** (`patches-2.0.38.mpp`).
-- **Kho lưu trữ GitHub**: Đã phát hành Release `v2.0.38`.
+- **Phiên bản mới nhất**: **v2.0.39** (`patches-2.0.39.mpp`).
+- **Kho lưu trữ GitHub**: Đã phát hành Release `v2.0.39`.
 - **Trạng thái Repo**: 100% sạch, không commit file `.py`, root ngăn nắp.
 - **Tiến trình kỹ thuật**:
   1. Đã đưa Torch Depth về mặc định = 2.
@@ -232,4 +236,4 @@
   4. Đã hoàn thiện Cách C: ghim khít mép bàn cờ, tự đo kích thước, 100% song ngữ.
   5. Đã xóa vĩnh viễn thông báo chiếu hết và tour overlay tối màn hình.
   6. Đã bổ sung `rule.md` và dọn dẹp sạch sẽ repository.
-  7. Đã hoàn thiện Auto-apply Real-time và nút đóng `✕` Extension v2.0.38.
+  7. Đã hoàn thiện Auto-apply Real-time, nút đóng `✕` Extension, loại bỏ 100% nút footer, và tải ngôn ngữ in-place v2.0.39.

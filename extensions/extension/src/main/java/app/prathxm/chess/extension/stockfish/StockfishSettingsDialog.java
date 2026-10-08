@@ -46,11 +46,12 @@ public class StockfishSettingsDialog {
     private static final int COLOR_DANGER_RED     = 0xFFFF453A; // Danger / Red
 
     public static void showSettingsMenu(Activity activity) {
+        if (activity == null) return;
         final Dialog dialog = new Dialog(activity);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
 
         DisplayMetrics dm = activity.getResources().getDisplayMetrics();
-        float density = dm.density;
+        final float density = dm.density;
         int screenWidth = dm.widthPixels;
         int screenHeight = dm.heightPixels;
 
@@ -79,6 +80,16 @@ public class StockfishSettingsDialog {
 
         dialog.setOnDismissListener(d -> borderGlowAnim.cancel());
 
+        final int[] currentTabIndex = { 0 };
+        View windowRoot = buildSettingsContentView(activity, dialog, currentTabIndex, targetDialogWidth, targetDialogHeight, density);
+        dialog.setContentView(windowRoot);
+        dialog.show();
+
+        // Đảm bảo kích thước cửa sổ chuẩn cố định sau khi show
+        dialog.getWindow().setLayout(targetDialogWidth, targetDialogHeight);
+    }
+
+    private static View buildSettingsContentView(final Activity activity, final Dialog dialog, final int[] currentTabIndex, final int targetDialogWidth, final int targetDialogHeight, final float density) {
         // Root container (Cố định chiều cao và chiều rộng)
         LinearLayout windowRoot = new LinearLayout(activity);
         windowRoot.setOrientation(LinearLayout.VERTICAL);
@@ -202,8 +213,11 @@ public class StockfishSettingsDialog {
             String newLang = isCurrentVi ? "en" : "vi";
             StockfishSettings.setLanguage(activity, newLang);
             OverlayManager.refreshOverlaysLanguage(activity);
-            dialog.dismiss();
-            showSettingsMenu(activity);
+            View newRoot = buildSettingsContentView(activity, dialog, currentTabIndex, targetDialogWidth, targetDialogHeight, density);
+            dialog.setContentView(newRoot);
+            if (dialog.getWindow() != null) {
+                dialog.getWindow().setLayout(targetDialogWidth, targetDialogHeight);
+            }
         });
         headerBtns.addView(langBtn);
 
@@ -264,11 +278,12 @@ public class StockfishSettingsDialog {
         tabNavBg.setStroke((int) (1 * density), 0x1AFFFFFF);
         tabNav.setBackground(tabNavBg);
 
-        final TextView tabLive = createTabButton(activity, I18n.get(activity, "tab_live"), true, density);
-        final TextView tabEngine = createTabButton(activity, I18n.get(activity, "tab_engine"), false, density);
-        final TextView tabCoach = createTabButton(activity, I18n.get(activity, "tab_coach"), false, density);
-        final TextView tabVisual = createTabButton(activity, I18n.get(activity, "tab_visual"), false, density);
-        final TextView tabArrows = createTabButton(activity, I18n.get(activity, "tab_arrows"), false, density);
+        int initialTab = (currentTabIndex != null && currentTabIndex.length > 0) ? currentTabIndex[0] : 0;
+        final TextView tabLive = createTabButton(activity, I18n.get(activity, "tab_live"), initialTab == 0, density);
+        final TextView tabEngine = createTabButton(activity, I18n.get(activity, "tab_engine"), initialTab == 1, density);
+        final TextView tabCoach = createTabButton(activity, I18n.get(activity, "tab_coach"), initialTab == 2, density);
+        final TextView tabVisual = createTabButton(activity, I18n.get(activity, "tab_visual"), initialTab == 3, density);
+        final TextView tabArrows = createTabButton(activity, I18n.get(activity, "tab_arrows"), initialTab == 4, density);
 
         tabNav.addView(tabLive);
         tabNav.addView(tabEngine);
@@ -299,6 +314,7 @@ public class StockfishSettingsDialog {
         // ─── TAB 1: LIVE (Trực tiếp & Thế cờ) ───
         final LinearLayout panelLive = new LinearLayout(activity);
         panelLive.setOrientation(LinearLayout.VERTICAL);
+        panelLive.setVisibility(initialTab == 0 ? View.VISIBLE : View.GONE);
         tabContentRoot.addView(panelLive);
 
         // Mini Dashboard Card with Pulsing LED (.dash)
@@ -371,7 +387,7 @@ public class StockfishSettingsDialog {
         // ─── TAB 2: ENGINE (Sức mạnh & Phân loại) ───
         final LinearLayout panelEngine = new LinearLayout(activity);
         panelEngine.setOrientation(LinearLayout.VERTICAL);
-        panelEngine.setVisibility(View.GONE);
+        panelEngine.setVisibility(initialTab == 1 ? View.VISIBLE : View.GONE);
         tabContentRoot.addView(panelEngine);
 
         // Card 1: Chọn Engine (Komodo 3.3 vs Stockfish 18)
@@ -612,7 +628,7 @@ public class StockfishSettingsDialog {
         // ─── TAB 3: COACH (Torch WebAssembly Coach Engine) ───
         final LinearLayout panelCoach = new LinearLayout(activity);
         panelCoach.setOrientation(LinearLayout.VERTICAL);
-        panelCoach.setVisibility(View.GONE);
+        panelCoach.setVisibility(initialTab == 2 ? View.VISIBLE : View.GONE);
         tabContentRoot.addView(panelCoach);
 
         LinearLayout coachCard = createGlassCard(activity, density);
@@ -707,7 +723,7 @@ public class StockfishSettingsDialog {
         // ─── TAB 4: VISUAL (Giao Diện & Lớp Phủ) ───
         final LinearLayout panelVisual = new LinearLayout(activity);
         panelVisual.setOrientation(LinearLayout.VERTICAL);
-        panelVisual.setVisibility(View.GONE);
+        panelVisual.setVisibility(initialTab == 3 ? View.VISIBLE : View.GONE);
         tabContentRoot.addView(panelVisual);
 
         LinearLayout visualCard = createGlassCard(activity, density);
@@ -733,7 +749,7 @@ public class StockfishSettingsDialog {
         // ─── TAB 5: ARROWS (Thiết Lập Mũi Tên & Bảng Màu) ───
         final LinearLayout panelArrows = new LinearLayout(activity);
         panelArrows.setOrientation(LinearLayout.VERTICAL);
-        panelArrows.setVisibility(View.GONE);
+        panelArrows.setVisibility(initialTab == 4 ? View.VISIBLE : View.GONE);
         tabContentRoot.addView(panelArrows);
 
         LinearLayout arrowCard = createGlassCard(activity, density);
@@ -814,6 +830,12 @@ public class StockfishSettingsDialog {
             boolean isC = (v == tabCoach);
             boolean isV = (v == tabVisual);
             boolean isA = (v == tabArrows);
+
+            if (isL) currentTabIndex[0] = 0;
+            else if (isE) currentTabIndex[0] = 1;
+            else if (isC) currentTabIndex[0] = 2;
+            else if (isV) currentTabIndex[0] = 3;
+            else if (isA) currentTabIndex[0] = 4;
 
             updateTabStyle(tabLive, isL, density);
             updateTabStyle(tabEngine, isE, density);
@@ -938,42 +960,8 @@ public class StockfishSettingsDialog {
         patchTv.setGravity(Gravity.CENTER);
         footerLayout.addView(patchTv);
 
-        addDialogSpacer(footerLayout, 8, density);
-
-        // Action Buttons (Done)
-        LinearLayout actionButtons = new LinearLayout(activity);
-        actionButtons.setOrientation(LinearLayout.HORIZONTAL);
-        actionButtons.setGravity(Gravity.END);
-
-        TextView doneBtn = new TextView(activity);
-        boolean isVi = "vi".equalsIgnoreCase(StockfishSettings.getLanguage(activity));
-        doneBtn.setText(isVi ? "Xong" : "Done");
-        doneBtn.setTextColor(COLOR_TEXT_PRIMARY);
-        doneBtn.setTextSize(14);
-        doneBtn.setTypeface(Typeface.create("sans-serif-medium", Typeface.BOLD));
-        doneBtn.setGravity(Gravity.CENTER);
-        doneBtn.setPadding((int) (24 * density), (int) (8 * density), (int) (24 * density), (int) (8 * density));
-
-        GradientDrawable doneBg = new GradientDrawable();
-        doneBg.setColor(COLOR_ACCENT_BLUE);
-        doneBg.setCornerRadius(10 * density);
-        doneBg.setStroke((int) (1.2f * density), COLOR_ACCENT_CYAN);
-        doneBtn.setBackground(doneBg);
-
-        doneBtn.setOnClickListener(v -> {
-            HapticHelper.pop(activity, v);
-            dialog.dismiss();
-        });
-        actionButtons.addView(doneBtn);
-
-        footerLayout.addView(actionButtons);
         windowRoot.addView(footerLayout);
-
-        dialog.setContentView(windowRoot);
-        dialog.show();
-
-        // Đảm bảo kích thước cửa sổ chuẩn cố định sau khi show
-        dialog.getWindow().setLayout(targetDialogWidth, targetDialogHeight);
+        return windowRoot;
     }
 
     private static boolean evalBarCbChecked(CyberSwitchView s) { return s != null && s.isChecked(); }

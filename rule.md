@@ -74,9 +74,10 @@
 1. **Tự động áp dụng & Lưu tức thì (Auto-apply Real-time)**:
    - Thay đổi bất kỳ toggle, seekbar, engine choice, style, palette màu trong menu cài đặt -> Tự động lưu SharedPreferences và cập nhật ngay lập tức bàn cờ trực tiếp, không bắt người dùng phải bấm nút Lưu.
    - Khi đổi ngôn ngữ [VI]/[EN], menu và các overlay trên bàn cờ (Pills, Arrows, Eval Bar) lập tức chuyển đổi song ngữ thời gian thực.
+   - **Tải lại ngôn ngữ In-Place (Không Dismiss / Không Chớp)**: Nút chuyển đổi [VI]/[EN] thay thế nội dung menu ngay tại chỗ (`dialog.setContentView`), giữ nguyên Tab đang chọn, không được gọi `dialog.dismiss()` hay mở lại dialog gây nhấp nháy màn hình.
 2. **Nút đóng Menu phong cách Extension**:
-   - Sử dụng nút đóng biểu tượng dấu `✕` kiểu Extension ở góc trên bên phải header menu.
-   - Bỏ hoàn toàn nút `Hủy` (Cancel) thừa thãi ở footer.
+   - Sử dụng duy nhất nút đóng biểu tượng dấu `✕` kiểu Extension ở góc trên bên phải header menu.
+   - **BỎ HOÀN TOÀN CÁC NÚT Ở FOOTER**: Tuyệt đối không để nút `Hủy`, `Lưu`, hay `Xong` ở footer menu. Menu chỉ đóng bằng nút `✕` ở header.
 
 ---
 
