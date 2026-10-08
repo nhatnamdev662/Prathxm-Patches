@@ -255,9 +255,11 @@ public class StockfishExtension {
         }
 
         Log.d(TAG, "Position changed → FEN: " + fen);
-        TorchEngine.log("[BOARD FEN] " + fen);
         if (fen.startsWith("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR")) {
             OverlayManager.clearClassificationBadge();
+            OverlayManager.hideArrowOverlay();
+            ArrowInjector.clearEngineArrows(stateImplObject);
+            TorchEngine.getInstance(getContext()).cancelPendingRequests();
         }
         MoveClassifier.updateHistory(fen, positionObject);
         if (activity != null) {
@@ -429,7 +431,13 @@ public class StockfishExtension {
 
                 if (result.moves.isEmpty()) {
                     // Checkmate / stalemate: still rate the move that produced it.
-                    if (result.terminal) MoveClassifier.classifyMoveIfPossible(context, fen, result);
+                    if (result.terminal) {
+                        MoveClassifier.classifyMoveIfPossible(context, fen, result);
+                        OverlayManager.hideArrowOverlay();
+                        ArrowInjector.clearEngineArrows(getStateImpl());
+                        TorchEngine.getInstance(context).cancelPendingRequests();
+                        TorchEngine.log("[GAME OVER] Ván đấu kết thúc (terminal=true). Đã ẩn mũi tên và hủy hàng chờ Torch.");
+                    }
                     Log.d(TAG, "Engine returned no best moves.");
                     return;
                 }

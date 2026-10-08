@@ -80,12 +80,18 @@
     - **Jetpack Compose Semantics Tree**: Duyệt cấu trúc Compose qua `SemanticsOwner` / `SemanticsNode` trích xuất Elo trên giao diện Live.
     - **Regex Nâng Cấp**: Dùng `find()` với mẫu `\\((\\d{3,4})\\??\\)` chấp nhận tên chứa emoji, cờ quốc gia, ký tự đặc biệt.
 
+15. **Phát Hành Bản v2.0.33 (Tùy Chọn Torch Depth, Supersede Cancellation & Xử Lý Kết Thúc Ván)**:
+    - **Thanh trượt Độ Sâu Phân Loại (Torch Depth)**: Đưa thanh trượt `Độ Sâu Phân Loại (Torch Depth)` (từ 1 đến 10, mặc định = 2) vào tab COACH trong menu cài đặt, đồng bộ `StockfishSettings.getCoachDepth()`.
+    - **Cơ chế Triệt Tiêu Hàng Chờ Dồn Lệnh (Supersede Cancellation Token)**: Bổ sung `currentRequestId` dạng Atomic. Khi có nước đi mới hoặc nước đi diễn ra dồn dập, Web Worker tự động bỏ qua toàn bộ kết quả phân loại của `reqId` cũ và hủy lệnh đang tính (`cancelTorchAnalysis`), chỉ xử lý nước cờ mới nhất (100% giống Extension).
+    - **Xử lý Kết Thúc Ván Đấu & Reset Ván Mới Chuẩn Xác**: Khi Stockfish báo `terminal = true` (chiếu hết / hòa cờ) hoặc bàn cờ reset về `startpos`, lập tức dọn dẹp mũi tên trên bàn cờ (`clearEngineArrows`), ẩn overlay (`hideArrowOverlay`), và hủy sạch hàng chờ tính toán Torch (`cancelPendingRequests`).
+
 ---
 
 ## 3. Trạng Thái Hiện Tại & Checklist Kiểm Thử
-- **Phiên bản mới nhất trên GitHub**: `v2.0.32` (tag `v2.0.32`).
-- **File tải bundle**: `https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.32/patches-2.0.32.mpp`
+- **Phiên bản mới nhất trên GitHub**: `v2.0.33` (tag `v2.0.33`).
+- **File tải bundle**: `https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.33/patches-2.0.33.mpp`
 - **Checklist Kiểm Thử**:
-  - [x] Đã vá và nạp thành công bản `2.0.32` trên Morphe Manager.
-  - [ ] Test trận Live Match (`RealGameActivity`): Kiểm tra mũi tên và thanh eval bar không còn bị lệch lên trên.
-  - [ ] Test quét Elo trong Live Match: Mở log kiểm tra `[ELO DEBUG]` hoặc `[STOCKFISH GO] (Elo=xxxx)` xem đã tự nhận diện đúng Elo người chơi và đối thủ thay vì default 3500.
+  - [x] Đã vá và nạp thành công bản `2.0.33` trên Morphe Manager.
+  - [ ] Test thanh trượt `Torch Depth` trong Tab COACH (kéo từ 1-10, mặc định 2).
+  - [ ] Test đi cờ nhanh: Kiểm tra huy hiệu phân loại chuyển ngay sang nước mới nhất, không còn bị delay dồn hàng chờ như trước.
+  - [ ] Test hết ván (Checkmate/Stalemate/Vào ván mới): Mũi tên và overlay biến mất sạch sẽ, không đè lên ván tiếp theo.

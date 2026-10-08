@@ -1,6 +1,6 @@
 # NHẬT KÝ DỰ ÁN & BỘ GHI NHỚ DẶN DÒ (PROJECT MEMORY)
 *Dự án: Chess Mobile - ReVanced Extension Patches cho Chess.com Android*
-*Phiên bản hiện tại: v2.0.32*
+*Phiên bản hiện tại: v2.0.33*
 *Cập nhật lần cuối: 2026-10-08*
 
 ---
@@ -198,16 +198,21 @@
   - **Đục sâu RealGameViewModel qua Reflection**: Mở `Lazy` delegate, truy xuất `RcnPlayGameDelegateImpl` (`field m` -> `b()` -> `RcnGameState.getWhiteRating()` / `getBlackRating()`), `GameViewModelPlayersImpl` (`field d`), và danh sách `UserInfo` (`field e`).
   - **Bóc tách Jetpack Compose Semantics Tree**: Duyệt sâu `AndroidComposeView` / `ComposeView` qua `SemanticsOwner` (`field z` / `getSemanticsOwner()`) và config maps để lấy Elo và tên người chơi hiển thị trên giao diện Live.
   - **Regex Nâng Cấp**: Sử dụng `find()` thay cho `matches()` với mẫu `\\((\\d{3,4})\\??\\)` chấp nhận tên có emoji, cờ quốc gia, ký tự đặc biệt.
+- **v2.0.33 (Tùy Chọn Torch Depth, Supersede Cancellation & Xử Lý Kết Thúc Ván)**:
+  - **Thanh trượt Độ Sâu Phân Loại (Torch Depth)**: Đưa thanh trượt `Độ Sâu Phân Loại (Torch Depth)` (từ 1 đến 10, mặc định = 2) vào tab COACH trong menu cài đặt, đồng bộ `StockfishSettings.getCoachDepth()`.
+  - **Cơ chế Triệt Tiêu Hàng Chờ Dồn Lệnh (Supersede Cancellation Token)**: Bổ sung `currentRequestId` dạng Atomic. Khi có nước đi mới hoặc nước đi diễn ra dồn dập, Web Worker tự động bỏ qua toàn bộ kết quả phân loại của `reqId` cũ và hủy lệnh đang tính (`cancelTorchAnalysis`), chỉ xử lý nước cờ mới nhất (100% giống Extension).
+  - **Xử lý Kết Thúc Ván Đấu & Reset Ván Mới Chuẩn Xác**: Khi Stockfish báo `terminal = true` (chiếu hết / hòa cờ) hoặc bàn cờ reset về `startpos`, lập tức dọn dẹp mũi tên trên bàn cờ (`clearEngineArrows`), ẩn overlay (`hideArrowOverlay`), và hủy sạch hàng chờ tính toán Torch (`cancelPendingRequests`).
 
 ---
 
 ## 3. TRẠNG THÁI HIỆN TẠI & KẾ HOẠCH TIẾP THEO
 
 ### 3.1. Trạng thái hiện tại
-- **Phiên bản mới nhất**: **v2.0.32** (`patches-2.0.32.mpp`).
-- **Kho lưu trữ GitHub**: Đã phát hành Release `v2.0.32`.
+- **Phiên bản mới nhất**: **v2.0.33** (`patches-2.0.33.mpp`).
+- **Kho lưu trữ GitHub**: Đã phát hành Release `v2.0.33`.
 - **Trạng thái Repo**: 100% sạch, không commit file `.py`.
 - **Tiến trình kỹ thuật**:
-  1. Đã sửa triệt để lỗi lệch bàn cờ (căn đúng `ChessBoardView`, tính delta tọa độ chuẩn).
-  2. Đã nâng cấp `EloScanner` đọc sâu cả ViewModel và Compose Semantics trong Live Match (`RealGameActivity`).
-  3. Đã đồng bộ `patches-bundle.json` và `patches-list.json` chuẩn v2.0.32.
+  1. Đã đưa Torch Depth về mặc định = 2 (tăng tốc độ phản hồi gấp nhiều lần so với fix cứng depth = 4 cũ).
+  2. Đã giải quyết triệt để vấn đề "hàng chờ dồn lệnh" nhờ cơ chế `reqId` token cancellation.
+  3. Đã xử lý dọn dẹp bàn cờ tự động khi kết thúc ván đấu hoặc sang ván mới.
+  4. Đã cập nhật metadata và sẵn sàng cho Morphe cập nhật.

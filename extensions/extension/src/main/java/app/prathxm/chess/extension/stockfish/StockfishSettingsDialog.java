@@ -549,6 +549,16 @@ public class StockfishSettingsDialog {
 
         addCardSeparator(coachCard, density);
 
+        int currentCoachDepth = StockfishSettings.getCoachDepth(activity);
+        final String coachDepthPrefix = I18n.get(activity, "coach_depth");
+        final SeekBar coachDepthSeekBar = addGlassSeekBarWithBadge(coachCard, coachDepthPrefix,
+                String.valueOf(currentCoachDepth),
+                currentCoachDepth - 1, 9, 1,
+                I18n.get(activity, "coach_depth_hint"),
+                density, activity);
+
+        addCardSeparator(coachCard, density);
+
         final CyberSwitchView blunderSwitch = addCyberSwitchRow(coachCard,
                 I18n.get(activity, "vibrate_blunder"),
                 I18n.get(activity, "vibrate_hint"),
@@ -831,6 +841,7 @@ public class StockfishSettingsDialog {
             StockfishSettings.setEngineInfoEnabled(activity, false); // Gỡ bỏ điểm số trên bàn cờ
             StockfishSettings.setThreatArrowsEnabled(activity, threatSwitch.isChecked());
             StockfishSettings.setMoveClassificationEnabled(activity, classifSwitch.isChecked());
+            StockfishSettings.setCoachDepth(activity, Math.max(1, coachDepthSeekBar.getProgress() + 1));
             StockfishSettings.setBlunderAlertsEnabled(activity, blunderSwitch.isChecked());
             StockfishSettings.setMateAnnouncementEnabled(activity, mateSwitch.isChecked());
             if (!mateSwitch.isChecked()) OverlayManager.hideMateAnnouncement();

@@ -300,6 +300,17 @@ public class StockfishSettings {
         getPrefs(context).edit().putBoolean(KEY_SHOW_MOVE_CLASSIFICATION, enabled).apply();
     }
 
+    private static final String KEY_COACH_DEPTH = "coach_depth";
+    public static final int DEFAULT_COACH_DEPTH = 2; // Khớp 100% Extension DEFAULT_DEPTH = 2
+
+    public static int getCoachDepth(Context context) {
+        return Math.max(1, Math.min(10, getPrefs(context).getInt(KEY_COACH_DEPTH, DEFAULT_COACH_DEPTH)));
+    }
+
+    public static void setCoachDepth(Context context, int depth) {
+        getPrefs(context).edit().putInt(KEY_COACH_DEPTH, Math.max(1, Math.min(10, depth))).apply();
+    }
+
     private static final String KEY_ENABLE_BLUNDER_ALERTS = "enable_blunder_alerts";
 
     public static boolean isBlunderAlertsEnabled(Context context) {

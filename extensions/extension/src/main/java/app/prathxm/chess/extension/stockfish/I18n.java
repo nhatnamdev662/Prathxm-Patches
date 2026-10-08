@@ -133,6 +133,10 @@ public class I18n {
                 return isVi ? "Tấn công" : "Aggressive";
             case "style_defensive":
                 return isVi ? "Phòng thủ" : "Defensive";
+            case "coach_depth":
+                return isVi ? "Độ Sâu Phân Loại (Torch Depth)" : "Classification Depth (Torch)";
+            case "coach_depth_hint":
+                return isVi ? "Độ sâu tính toán của Huấn luyện viên Torch CEE (Mặc định: 2, giống Extension). Số càng thấp phản hồi càng nhanh." : "Calculation depth for Torch CEE Coach (Default: 2, matching Extension). Lower value provides faster responses.";
             default:
                 return key;
         }

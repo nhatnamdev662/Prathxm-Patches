@@ -244,23 +244,30 @@ public class TorchEngine {
                     "                console.error('[Torch] ' + data);\n" +
                     "                if (window.TorchBridge) window.TorchBridge.onTorchError(data.substring(16));\n" +
                     "            } else if (typeof data === 'string' && data.startsWith('json ')) {\n" +
-                    "                if (window.TorchBridge) window.TorchBridge.onTorchResult(data.substring(5).trim());\n" +
+                    "                const jsonPayload = data.substring(5).trim();\n" +
+                    "                const reqId = window._activeReqId || 0;\n" +
+                    "                if (window.TorchBridge) window.TorchBridge.onTorchResult(jsonPayload, reqId);\n" +
                     "            }\n" +
                     "        };\n" +
                     "        worker.onerror = function(err) {\n" +
                     "            console.error('[Torch Worker Error] ' + (err.message || err));\n" +
                     "            if (window.TorchBridge) window.TorchBridge.onTorchError(String(err.message || err));\n" +
                     "        };\n" +
-                    "        window.sendTorchPosition = function(posCmd, userColor, depth) {\n" +
+                    "        window.sendTorchPosition = function(posCmd, userColor, depth, reqId) {\n" +
                     "            if (!worker) return;\n" +
+                    "            window._activeReqId = reqId;\n" +
                     "            if (userColor) worker.postMessage('setoption name UserColor value ' + userColor);\n" +
-                    "            const d = depth || 4;\n" +
+                    "            const d = depth || 2;\n" +
                     "            worker.postMessage('setoption name HandleContinuationsDepth value ' + d);\n" +
                     "            worker.postMessage(posCmd);\n" +
                     "            worker.postMessage('fetch analysis');\n" +
                     "        };\n" +
-                    "        window.sendTorchMove = function(movesStr, userColor, depth) {\n" +
-                    "            window.sendTorchPosition('position startpos moves ' + movesStr, userColor, depth);\n" +
+                    "        window.cancelTorchAnalysis = function() {\n" +
+                    "            window._activeReqId = -1;\n" +
+                    "            if (worker) worker.postMessage('stop');\n" +
+                    "        };\n" +
+                    "        window.sendTorchMove = function(movesStr, userColor, depth, reqId) {\n" +
+                    "            window.sendTorchPosition('position startpos moves ' + movesStr, userColor, depth, reqId);\n" +
                     "        };\n" +
                     "        worker.postMessage({ __init_torch__: true, js: jsText, wasm: wasmBuffer }, [wasmBuffer]);\n" +
                     "    }).catch(err => {\n" +
@@ -278,8 +285,23 @@ public class TorchEngine {
         }
     }
 
+    private final java.util.concurrent.atomic.AtomicLong currentRequestId = new java.util.concurrent.atomic.AtomicLong(0);
+
+    public void cancelPendingRequests() {
+        currentRequestId.incrementAndGet();
+        this.activeCallback = null;
+        if (webView != null) {
+            mainHandler.post(() -> {
+                try {
+                    webView.evaluateJavascript("if (window.cancelTorchAnalysis) window.cancelTorchAnalysis();", null);
+                } catch (Throwable ignored) {}
+            });
+        }
+        log("[TORCH CANCEL] Đã hủy toàn bộ yêu cầu phân loại đang chờ.");
+    }
+
     public void analyzePosition(String positionCmd, String userColor, TorchClassificationCallback callback) {
-        analyzePosition(positionCmd, userColor, 4, callback);
+        analyzePosition(positionCmd, userColor, 2, callback);
     }
 
     public void analyzePosition(String positionCmd, String userColor, int depth, TorchClassificationCallback callback) {
@@ -287,16 +309,17 @@ public class TorchEngine {
             log("[ANALYZE SKIP] isReady=" + isReady + ", webView=" + (webView != null) + ", posCmd=" + (positionCmd != null));
             return;
         }
+        final long reqId = currentRequestId.incrementAndGet();
         this.activeCallback = callback;
         final String cmd = positionCmd.trim();
         final String color = (userColor != null) ? userColor : "white";
-        final int targetDepth = Math.max(2, Math.min(10, depth > 0 ? depth : 4));
-        log("[ANALYZE SEND] Cmd=" + cmd + ", Color=" + color + ", Depth=" + targetDepth);
+        final int targetDepth = Math.max(1, Math.min(10, depth > 0 ? depth : 2));
+        log("[ANALYZE SEND] reqId=" + reqId + ", Cmd=" + cmd + ", Color=" + color + ", Depth=" + targetDepth);
 
         mainHandler.post(() -> {
             try {
                 String safeCmd = cmd.replace("'", "\\'");
-                String js = "if (window.sendTorchPosition) window.sendTorchPosition('" + safeCmd + "', '" + color + "', " + targetDepth + ");";
+                String js = "if (window.sendTorchPosition) window.sendTorchPosition('" + safeCmd + "', '" + color + "', " + targetDepth + ", " + reqId + ");";
                 webView.evaluateJavascript(js, null);
             } catch (Throwable t) {
                 log("[EVAL JS ERROR] " + t.getMessage());
@@ -357,8 +380,12 @@ public class TorchEngine {
         }
 
         @JavascriptInterface
-        public void onTorchResult(String jsonStr) {
-            log("[BRIDGE RESULT] Nhận json độ dài: " + (jsonStr != null ? jsonStr.length() : 0));
+        public void onTorchResult(String jsonStr, long reqId) {
+            log("[BRIDGE RESULT] Nhận json reqId=" + reqId + " độ dài: " + (jsonStr != null ? jsonStr.length() : 0));
+            if (reqId > 0 && reqId != currentRequestId.get()) {
+                log("[TORCH SUPERSEDED] Bỏ qua kết quả cũ reqId=" + reqId + " (Hiện tại: " + currentRequestId.get() + ")");
+                return;
+            }
             try {
                 JSONObject root = new JSONObject(jsonStr);
                 JSONArray positions = root.optJSONArray("positions");
@@ -383,7 +410,12 @@ public class TorchEngine {
                         speechText = spObj.optString("sentence", spObj.optString("text", ""));
                     }
                 }
-                log("[BRIDGE PARSED] class=" + classificationName + ", played=" + playedMoveLan + ", best=" + bestMoveLan + ", speech=" + speechText);
+                log("[BRIDGE PARSED] reqId=" + reqId + ", class=" + classificationName + ", played=" + playedMoveLan + ", best=" + bestMoveLan + ", speech=" + speechText);
+
+                if (reqId > 0 && reqId != currentRequestId.get()) {
+                    log("[TORCH SUPERSEDED] Bỏ qua callback vì reqId=" + reqId + " bị vượt qua.");
+                    return;
+                }
 
                 if (activeCallback != null) {
                     activeCallback.onClassification(classificationName, playedMoveLan, bestMoveLan, speechText, jsonStr);
@@ -393,6 +425,11 @@ public class TorchEngine {
                 log("[BRIDGE PARSE ERROR] " + t.getMessage());
                 Log.e(TAG, "Failed to parse Torch JSON: " + t.getMessage());
             }
+        }
+
+        @JavascriptInterface
+        public void onTorchResult(String jsonStr) {
+            onTorchResult(jsonStr, 0);
         }
     }
 

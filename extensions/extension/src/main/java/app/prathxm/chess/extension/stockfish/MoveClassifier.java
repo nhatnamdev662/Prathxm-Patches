@@ -477,7 +477,8 @@ public class MoveClassifier {
                 }
 
                 final boolean finalWhiteMoved = whiteMoved;
-                torch.analyze(moves, userColor, (classificationName, playedMoveLan, bestMoveLan, speechText, rawJson) -> {
+                int coachDepth = StockfishSettings.getCoachDepth(context);
+                torch.analyze(moves, userColor, coachDepth, (classificationName, playedMoveLan, bestMoveLan, speechText, rawJson) -> {
                     TorchEngine.log("[CLASSIFIER CALLBACK] class=" + classificationName + ", act=" + (currentAct != null) + ", isMyMove=" + isMyMove);
                     if (classificationName != null && !classificationName.isEmpty() && !"null".equalsIgnoreCase(classificationName)) {
                         if (currentAct != null) {
