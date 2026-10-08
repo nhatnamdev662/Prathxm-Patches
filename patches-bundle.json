@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-10-08T14:50:00",
-  "description": "## [2.0.28] (2026-10-08)\n\n### ⚡ NNVC v2.0.28 — Cập nhật 100% Bảng Màu Phân Loại Nguyên Bản từ APK Chess.com\n\n* **Đồng bộ màu sắc chính hãng 100%:** Trích xuất trực tiếp giá trị màu nhị phân từ các resource `color_classification_*.xml` trong APK Chess.com gốc (Brilliant: `#26C2A3`, Great Find: `#486688`, Best/Forced: `#81B64C`, Excellent/Good: `#95B776`, Book: `#D5A47D`, Inaccuracy: `#F7C631`, Mistake: `#FA742C`, Blunder: `#FA412D`, Miss: `#FF6352`).\n* **Author:** NNVC (@nncutett)",
-  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.28/patches-2.0.28.mpp",
+  "created_at": "2026-10-08T14:58:00",
+  "description": "## [2.0.29] (2026-10-08)\n\n### ⚡ NNVC v2.0.29 — Mở Khóa Chụp Màn Hình & Quay Video (Clear FLAG_SECURE)\n\n* **Gỡ bỏ triệt để cấm chụp màn hình (Bypass FLAG_SECURE):** Tự động can thiệp vào cửa sổ Window của Chess.com và xóa cờ `FLAG_SECURE` trên toàn bộ các Activity khi vào trận trực tiếp (Live Match), giải đố hay phân tích. Người dùng có thể thoải mái chụp ảnh màn hình, quay video màn hình hay dùng tính năng trợ năng mà không bị đen màn hình hay thông báo chặn.\n* **Author:** NNVC (@nncutett)",
+  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.29/patches-2.0.29.mpp",
   "signature_download_url": "",
-  "version": "2.0.28"
+  "version": "2.0.29"
 }

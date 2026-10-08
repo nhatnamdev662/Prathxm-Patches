@@ -6,6 +6,7 @@ import android.content.Context;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
+import android.view.WindowManager;
 
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
@@ -221,6 +222,7 @@ public class StockfishExtension {
 
         final Activity activity = getCurrentActivity();
         if (activity != null) {
+            unlockScreenshots(activity);
             if (isLiveMatch(activity)) {
                 isReviewMode = false;
             }
@@ -560,11 +562,14 @@ public class StockfishExtension {
             }
 
             @Override
-            public void onActivityStarted(Activity activity) {}
+            public void onActivityStarted(Activity activity) {
+                unlockScreenshots(activity);
+            }
 
             @Override
             public void onActivityResumed(Activity activity) {
                 resumedActivity = new WeakReference<>(activity);
+                unlockScreenshots(activity);
                 GestureInterceptor.registerGestureInterceptor(activity);
                 lastArrowSignature = null;
                 lastScheduledKey = null;
@@ -595,6 +600,23 @@ public class StockfishExtension {
 
             @Override
             public void onActivityDestroyed(Activity activity) {}
+        });
+    }
+
+    public static void unlockScreenshots(final Activity activity) {
+        if (activity == null) return;
+        activity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Window window = activity.getWindow();
+                    if (window != null) {
+                        window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE);
+                    }
+                } catch (Throwable t) {
+                    Log.w(TAG, "Failed to clear FLAG_SECURE: " + t.getMessage());
+                }
+            }
         });
     }
 
