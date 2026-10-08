@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-10-08T14:40:00",
-  "description": "## [2.0.27] (2026-10-08)\n\n### ⚡ NNVC v2.0.27 — Chuẩn hoá Hiển thị Đúng 1 Phân loại Nước đi Mới nhất theo Game Review Chess.com\n\n* **Chỉ hiển thị đúng 1 phân loại duy nhất:** Khi đối thủ đi cờ, huy hiệu và hiệu ứng ô cờ của người chơi được thay thế ngay lập tức bằng nước đi mới của đối thủ (không còn tồn tại song song 2 huy hiệu trên bàn cờ).\n* **Hiệu ứng Tô màu Ô cờ (Square Highlights):** Tô màu chuẩn xác ô xuất phát và ô đích theo đúng loại nước đi hiện tại.\n* **Hoạt ảnh nảy đàn hồi (Pop-in Scale):** Scale overshoot 250ms cực mượt mỗi khi xuất hiện nước đi mới.\n* **Author:** NNVC (@nncutett)",
-  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.27/patches-2.0.27.mpp",
+  "created_at": "2026-10-08T14:50:00",
+  "description": "## [2.0.28] (2026-10-08)\n\n### ⚡ NNVC v2.0.28 — Cập nhật 100% Bảng Màu Phân Loại Nguyên Bản từ APK Chess.com\n\n* **Đồng bộ màu sắc chính hãng 100%:** Trích xuất trực tiếp giá trị màu nhị phân từ các resource `color_classification_*.xml` trong APK Chess.com gốc (Brilliant: `#26C2A3`, Great Find: `#486688`, Best/Forced: `#81B64C`, Excellent/Good: `#95B776`, Book: `#D5A47D`, Inaccuracy: `#F7C631`, Mistake: `#FA742C`, Blunder: `#FA412D`, Miss: `#FF6352`).\n* **Author:** NNVC (@nncutett)",
+  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.28/patches-2.0.28.mpp",
   "signature_download_url": "",
-  "version": "2.0.27"
+  "version": "2.0.28"
 }

@@ -776,37 +776,38 @@ public class ArrowOverlayView extends View {
     }
 
     private static int getClassificationThemeColor(String classificationName) {
-        if (classificationName == null) return 0xFF96BC4B;
+        if (classificationName == null) return 0xFF81B64C;
         String lower = classificationName.toLowerCase(java.util.Locale.US).replace(" ", "_");
         switch (lower) {
             case "brilliant":
-                return 0xFF1BACA6; // Cyan Teal
+                return 0xFF26C2A3; // Chess.com APK color_classification_brilliant
             case "great":
             case "greatfind":
             case "great_find":
-                return 0xFF5C8BB0; // Blue Teal
+                return 0xFF486688; // Chess.com APK color_classification_great_find
             case "best":
+            case "forced":
+                return 0xFF81B64C; // Chess.com APK color_classification_best (Brand Green)
             case "excellent":
-                return 0xFF96BC4B; // Chess.com Green
+                return 0xFF95B776; // Chess.com APK color_classification_excellent
             case "good":
-                return 0xFFA88865;
+                return 0xFF95B776; // Chess.com APK color_classification_good
             case "book":
-                return 0xFFD5A47D;
+                return 0xFFD5A47D; // Chess.com APK color_classification_book
             case "inaccuracy":
-                return 0xFFF0C15C;
+                return 0xFFF7C631; // Chess.com APK color_classification_inaccuracy
             case "mistake":
-                return 0xFFE6912C;
+                return 0xFFFA742C; // Chess.com APK color_classification_mistake
             case "blunder":
-                return 0xFFCA3431;
+                return 0xFFFA412D; // Chess.com APK color_classification_blunder
             case "miss":
             case "missed":
+                return 0xFFFF6352; // Chess.com APK color_classification_miss
             case "missedwin":
             case "missed_win":
-                return 0xFFEA5753;
-            case "forced":
-                return 0xFF9B9B9B;
+                return 0xFFFA412D; // Chess.com APK color_classification_missed_win
             default:
-                return 0xFF96BC4B;
+                return 0xFF81B64C;
         }
     }
 
