@@ -735,7 +735,11 @@ public class OverlayManager {
                     if (decorView == null) return;
                     View overlay = decorView.findViewWithTag("nnvc_arrow_overlay");
                     if (overlay instanceof ArrowOverlayView) {
-                        ((ArrowOverlayView) overlay).clearClassificationBadge();
+                        ArrowOverlayView aov = (ArrowOverlayView) overlay;
+                        aov.clearClassificationBadge();
+                        if (ArrowInjector.lastEngineArrows.isEmpty()) {
+                            aov.setVisibility(View.GONE);
+                        }
                     }
                 } catch (Throwable ignored) {}
             }

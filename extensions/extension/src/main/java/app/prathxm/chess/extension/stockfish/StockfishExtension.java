@@ -246,6 +246,7 @@ public class StockfishExtension {
 
         ArrowInjector.clearEngineArrows(stateImplObject);
         OverlayManager.hideArrowOverlay();
+        OverlayManager.clearClassificationBadge();
         lastArrowSignature = null;
 
         String fen = extractFen(positionObject);

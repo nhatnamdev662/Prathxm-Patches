@@ -85,13 +85,14 @@
     - **Cơ chế Triệt Tiêu Hàng Chờ Dồn Lệnh (Supersede Cancellation Token)**: Bổ sung `currentRequestId` dạng Atomic. Khi có nước đi mới hoặc nước đi diễn ra dồn dập, Web Worker tự động bỏ qua toàn bộ kết quả phân loại của `reqId` cũ và hủy lệnh đang tính (`cancelTorchAnalysis`), chỉ xử lý nước cờ mới nhất (100% giống Extension).
     - **Xử lý Kết Thúc Ván Đấu & Reset Ván Mới Chuẩn Xác**: Khi Stockfish báo `terminal = true` (chiếu hết / hòa cờ) hoặc bàn cờ reset về `startpos`, lập tức dọn dẹp mũi tên trên bàn cờ (`clearEngineArrows`), ẩn overlay (`hideArrowOverlay`), và hủy sạch hàng chờ tính toán Torch (`cancelPendingRequests`).
 
+16. **Phát Hành Bản v2.0.34 (Xóa Nhãn Phân Loại Tức Thì Khi Có Nước Cờ Mới)**:
+    - **Triệt tiêu lưu ảnh nhãn cũ (Instant Badge Clear)**: Gọi `OverlayManager.clearClassificationBadge()` ngay lập tức trong `StockfishExtension.onBoardChanged`. Khi bất kỳ bên nào đi một nước cờ mới, nhãn phân loại của nước đi trước biến mất ngay, bàn cờ sạch sẽ trong khi Torch tính toán nước mới.
+
 ---
 
 ## 3. Trạng Thái Hiện Tại & Checklist Kiểm Thử
-- **Phiên bản mới nhất trên GitHub**: `v2.0.33` (tag `v2.0.33`).
-- **File tải bundle**: `https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.33/patches-2.0.33.mpp`
+- **Phiên bản mới nhất trên GitHub**: `v2.0.34` (tag `v2.0.34`).
+- **File tải bundle**: `https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.34/patches-2.0.34.mpp`
 - **Checklist Kiểm Thử**:
-  - [x] Đã vá và nạp thành công bản `2.0.33` trên Morphe Manager.
-  - [ ] Test thanh trượt `Torch Depth` trong Tab COACH (kéo từ 1-10, mặc định 2).
-  - [ ] Test đi cờ nhanh: Kiểm tra huy hiệu phân loại chuyển ngay sang nước mới nhất, không còn bị delay dồn hàng chờ như trước.
-  - [ ] Test hết ván (Checkmate/Stalemate/Vào ván mới): Mũi tên và overlay biến mất sạch sẽ, không đè lên ván tiếp theo.
+  - [x] Đã vá và nạp thành công bản `2.0.34` trên Morphe Manager.
+  - [ ] Test nước đi mới: Kiểm tra nhãn phân loại của nước cũ biến mất ngay lập tức khi quân cờ vừa di chuyển.

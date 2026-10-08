@@ -1,9 +1,9 @@
 {
-  "created_at": "2026-10-08T19:15:00",
-  "description": "## [2.0.33] (2026-10-08)\n\n### ⚡ NNVC v2.0.33 — Tùy Chọn Độ Sâu Torch WebAssembly, Hủy Hàng Chờ Lỗi Thời & Xử Lý Kết Thúc Ván\n\n* **Thanh trượt độ sâu Torch Depth:** Bổ sung thanh trượt độ sâu phân loại (Torch Depth từ 1-10, mặc định = 2) trong Tab COACH chuẩn Extension.\n* **Hủy hàng chờ tính toán dồn lệnh (Supersede Cancellation):** Khi các nước cờ đi nhanh liên tục, engine tự động hủy/bỏ qua kết quả cũ, chỉ phân tích nước mới nhất.\n* **Xử lý kết thúc ván đấu:** Tự động ẩn mũi tên, reset lớp phủ và hủy toàn bộ hàng chờ Torch khi ván đấu kết thúc hoặc bắt đầu ván mới.\n* **Author:** NNVC (@nncutett)",
-  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.33/patches-2.0.33.mpp",
+  "created_at": "2026-10-08T19:35:00",
+  "description": "## [2.0.34] (2026-10-08)\n\n### ⚡ NNVC v2.0.34 — Xóa Huy Hiệu Phân Loại Tức Thì Khi Có Nước Đi Mới\n\n* **Xóa nhãn phân loại ngay lập tức (Instant Badge Clear):** Khi bất kỳ kỳ thủ nào thực hiện nước đi mới, huy hiệu và hiệu ứng ô cờ của nước trước lập tức biến mất ngay trong sự kiện `onBoardChanged`, không chờ Torch tính xong nước mới mới đổi.\n* **Author:** NNVC (@nncutett)",
+  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.34/patches-2.0.34.mpp",
   "signature_download_url": "",
-  "version": "2.0.33",
-  "versionCode": 20033,
-  "downloadUrl": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.33/patches-2.0.33.mpp"
+  "version": "2.0.34",
+  "versionCode": 20034,
+  "downloadUrl": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.34/patches-2.0.34.mpp"
 }
