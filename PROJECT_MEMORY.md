@@ -1,6 +1,6 @@
 # NHẬT KÝ DỰ ÁN & BỘ GHI NHỚ DẶN DÒ (PROJECT MEMORY)
 *Dự án: Chess Mobile - ReVanced Extension Patches cho Chess.com Android*
-*Phiên bản hiện tại: v2.0.34*
+*Phiên bản hiện tại: v2.0.35*
 *Cập nhật lần cuối: 2026-10-08*
 
 ---
@@ -198,19 +198,23 @@
   - **Đục sâu RealGameViewModel qua Reflection**: Mở `Lazy` delegate, truy xuất `RcnPlayGameDelegateImpl` (`field m` -> `b()` -> `RcnGameState.getWhiteRating()` / `getBlackRating()`), `GameViewModelPlayersImpl` (`field d`), và danh sách `UserInfo` (`field e`).
   - **Bóc tách Jetpack Compose Semantics Tree**: Duyệt sâu `AndroidComposeView` / `ComposeView` qua `SemanticsOwner` (`field z` / `getSemanticsOwner()`) và config maps để lấy Elo và tên người chơi hiển thị trên giao diện Live.
   - **Regex Nâng Cấp**: Sử dụng `find()` thay cho `matches()` với mẫu `\\((\\d{3,4})\\??\\)` chấp nhận tên có emoji, cờ quốc gia, ký tự đặc biệt.
-- **v2.0.34 (Xóa Huy Hiệu Phân Loại Tức Thì Khi Có Nước Đi Mới)**:
-  - **Triệt tiêu lưu ảnh nhãn cũ (Instant Badge Clear)**: Gọi `OverlayManager.clearClassificationBadge()` ngay lập tức trong `StockfishExtension.onBoardChanged`. Khi bất kỳ bên nào đi một nước cờ mới, nhãn phân loại của nước đi trước biến mất ngay, bàn cờ sạch sẽ trong khi Torch tính toán nước mới.
+- **v2.0.35 (Thẻ Độ Chính Xác & Estimated Elo Gắn Trực Tiếp Vào Bàn Cờ Chess.com)**:
+  - **Tạo widget PlayerAccuracyPillView**: Gắn 2 thẻ Cyber Glass trực tiếp vào mép trên và mép dưới bàn cờ hiển thị Accuracy (%) và Estimated Elo thời gian thực trích xuất từ `CAPS` và `reportCard` của Torch CEE WebAssembly.
+  - **Nhận diện đúng màu quân người chơi**: Người chơi cầm Trắng thì thẻ phía bạn là Trắng, cầm Đen thì thẻ phía bạn là Đen kèm viền Cyber Blue phát sáng và nhãn `[BẠN]`, phía đối thủ mang nhãn `[ĐỐI THỦ]`.
+  - **Bật/tắt linh hoạt**: Nút switch `Độ Chính Xác & Elo Trực Tiếp` trong Tab COACH menu cài đặt.
+  - **Tự động dọn dẹp**: Tự ẩn khi hết ván hoặc tắt engine.
 
 ---
 
 ## 3. TRẠNG THÁI HIỆN TẠI & KẾ HOẠCH TIẾP THEO
 
 ### 3.1. Trạng thái hiện tại
-- **Phiên bản mới nhất**: **v2.0.34** (`patches-2.0.34.mpp`).
-- **Kho lưu trữ GitHub**: Đã phát hành Release `v2.0.34`.
+- **Phiên bản mới nhất**: **v2.0.35** (`patches-2.0.35.mpp`).
+- **Kho lưu trữ GitHub**: Đã phát hành Release `v2.0.35`.
 - **Trạng thái Repo**: 100% sạch, không commit file `.py`.
 - **Tiến trình kỹ thuật**:
-  1. Đã đưa Torch Depth về mặc định = 2 (tăng tốc độ phản hồi gấp nhiều lần).
+  1. Đã đưa Torch Depth về mặc định = 2.
   2. Đã giải quyết triệt để vấn đề "hàng chờ dồn lệnh" nhờ cơ chế `reqId` token cancellation.
   3. Đã xử lý xóa nhãn phân loại ngay lập tức khi vừa có nước cờ mới.
-  4. Đã xử lý dọn dẹp bàn cờ tự động khi kết thúc ván đấu hoặc sang ván mới.
+  4. Đã hoàn thiện 2 thẻ Accuracy & Estimated Elo pills gắn trực tiếp vào bàn cờ.
+  5. Đã xử lý dọn dẹp bàn cờ tự động khi kết thúc ván đấu hoặc sang ván mới.

@@ -478,8 +478,59 @@ public class MoveClassifier {
 
                 final boolean finalWhiteMoved = whiteMoved;
                 int coachDepth = StockfishSettings.getCoachDepth(context);
+                final boolean finalIsMyMove = isMyMove;
+                final boolean finalUserIsWhite = (userIsWhite != null) ? userIsWhite.booleanValue() : true;
                 torch.analyze(moves, userColor, coachDepth, (classificationName, playedMoveLan, bestMoveLan, speechText, rawJson) -> {
-                    TorchEngine.log("[CLASSIFIER CALLBACK] class=" + classificationName + ", act=" + (currentAct != null) + ", isMyMove=" + isMyMove);
+                    TorchEngine.log("[CLASSIFIER CALLBACK] class=" + classificationName + ", act=" + (currentAct != null) + ", isMyMove=" + finalIsMyMove);
+                    
+                    // Trích xuất Accuracy (%) và Estimated Elo từ đối tượng JSON của Torch (chuẩn Extension)
+                    if (rawJson != null && currentAct != null) {
+                        try {
+                            org.json.JSONObject root = new org.json.JSONObject(rawJson);
+                            float whiteAcc = -1f;
+                            float blackAcc = -1f;
+                            int whiteElo = -1;
+                            int blackElo = -1;
+
+                            org.json.JSONObject caps = root.optJSONObject("CAPS");
+                            if (caps == null) caps = root.optJSONObject("caps");
+                            if (caps != null) {
+                                org.json.JSONObject wCaps = caps.optJSONObject("white");
+                                if (wCaps != null) whiteAcc = (float) wCaps.optDouble("all", -1.0);
+                                org.json.JSONObject bCaps = caps.optJSONObject("black");
+                                if (bCaps != null) blackAcc = (float) bCaps.optDouble("all", -1.0);
+                            }
+
+                            org.json.JSONObject reportCard = root.optJSONObject("reportCard");
+                            if (reportCard == null) reportCard = root.optJSONObject("report_card");
+                            if (reportCard == null) reportCard = root.optJSONObject("gameReview");
+                            if (reportCard != null) {
+                                org.json.JSONObject wRep = reportCard.optJSONObject("white");
+                                if (wRep != null) {
+                                    whiteElo = wRep.optInt("effectiveElo", wRep.optInt("estimatedElo", -1));
+                                    if (whiteAcc < 0) whiteAcc = (float) wRep.optDouble("accuracy", -1.0);
+                                }
+                                org.json.JSONObject bRep = reportCard.optJSONObject("black");
+                                if (bRep != null) {
+                                    blackElo = bRep.optInt("effectiveElo", bRep.optInt("estimatedElo", -1));
+                                    if (blackAcc < 0) blackAcc = (float) bRep.optDouble("accuracy", -1.0);
+                                }
+                            }
+
+                            if (whiteAcc >= 0 || blackAcc >= 0 || whiteElo > 0 || blackElo > 0) {
+                                final float fWhiteAcc = whiteAcc;
+                                final float fBlackAcc = blackAcc;
+                                final int fWhiteElo = whiteElo;
+                                final int fBlackElo = blackElo;
+                                currentAct.runOnUiThread(() -> {
+                                    OverlayManager.updateAccuracyEloPills(fWhiteAcc, fBlackAcc, fWhiteElo, fBlackElo, finalUserIsWhite);
+                                });
+                            }
+                        } catch (Throwable t) {
+                            Log.w(TAG, "Lỗi trích xuất Accuracy/Elo từ Torch: " + t.getMessage());
+                        }
+                    }
+
                     if (classificationName != null && !classificationName.isEmpty() && !"null".equalsIgnoreCase(classificationName)) {
                         if (currentAct != null) {
                             currentAct.runOnUiThread(() -> {
@@ -487,7 +538,7 @@ public class MoveClassifier {
                                         (playedMoveLan != null && !playedMoveLan.isEmpty()) ? playedMoveLan : finalUci,
                                         speechText,
                                         finalWhiteMoved,
-                                        isMyMove);
+                                        finalIsMyMove);
                             });
                         }
                     } else {

@@ -1,9 +1,9 @@
 {
-  "created_at": "2026-10-08T19:35:00",
-  "description": "## [2.0.34] (2026-10-08)\n\n### ⚡ NNVC v2.0.34 — Xóa Huy Hiệu Phân Loại Tức Thì Khi Có Nước Đi Mới\n\n* **Xóa nhãn phân loại ngay lập tức (Instant Badge Clear):** Khi bất kỳ kỳ thủ nào thực hiện nước đi mới, huy hiệu và hiệu ứng ô cờ của nước trước lập tức biến mất ngay trong sự kiện `onBoardChanged`, không chờ Torch tính xong nước mới mới đổi.\n* **Author:** NNVC (@nncutett)",
-  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.34/patches-2.0.34.mpp",
+  "created_at": "2026-10-08T19:50:00",
+  "description": "## [2.0.35] (2026-10-08)\n\n### ⚡ NNVC v2.0.35 — Bảng Độ Chính Xác (%) & Elo Ước Tính Gắn Trực Tiếp Vào Bàn Cờ\n\n* **Gắn trực tiếp vào bàn cờ Chess.com (Player Accuracy & Elo Pills):** Tự động gắn 2 thẻ Cyber Glass hiển thị Độ chính xác (%) và Estimated Elo thời gian thực vào thanh người chơi ở mép trên và mép dưới bàn cờ.\n* **Nhận diện đúng màu quân:** Người chơi cầm quân nào (Trắng hay Đen) thì thẻ ở phía người chơi tự động hiển thị đúng màu quân đó kèm viền Cyber Blue phát sáng và nhãn `[BẠN]`.\n* **Tự động dọn dẹp khi hết ván:** Biến mất khi bắt đầu ván mới hoặc khi tắt engine.\n* **Author:** NNVC (@nncutett)",
+  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.35/patches-2.0.35.mpp",
   "signature_download_url": "",
-  "version": "2.0.34",
-  "versionCode": 20034,
-  "downloadUrl": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.34/patches-2.0.34.mpp"
+  "version": "2.0.35",
+  "versionCode": 20035,
+  "downloadUrl": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.35/patches-2.0.35.mpp"
 }

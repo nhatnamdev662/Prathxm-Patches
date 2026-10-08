@@ -342,6 +342,16 @@ public class StockfishSettings {
         getPrefs(context).edit().putBoolean(KEY_SHOW_ENGINE_INFO, enabled).apply();
     }
 
+    private static final String KEY_SHOW_ACCURACY_ELO = "show_accuracy_elo";
+
+    public static boolean isAccuracyEloEnabled(Context context) {
+        return getPrefs(context).getBoolean(KEY_SHOW_ACCURACY_ELO, true);
+    }
+
+    public static void setAccuracyEloEnabled(Context context, boolean enabled) {
+        getPrefs(context).edit().putBoolean(KEY_SHOW_ACCURACY_ELO, enabled).apply();
+    }
+
     /** Restores every engine setting to its default (the tour flag is kept). */
     public static void resetToDefaults(Context context) {
         boolean tour = isTourShown(context);

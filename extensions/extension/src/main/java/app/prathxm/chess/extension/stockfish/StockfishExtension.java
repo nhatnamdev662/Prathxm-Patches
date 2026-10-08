@@ -259,6 +259,7 @@ public class StockfishExtension {
         if (fen.startsWith("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR")) {
             OverlayManager.clearClassificationBadge();
             OverlayManager.hideArrowOverlay();
+            OverlayManager.hideAccuracyEloPills();
             ArrowInjector.clearEngineArrows(stateImplObject);
             TorchEngine.getInstance(getContext()).cancelPendingRequests();
         }
@@ -647,6 +648,7 @@ public class StockfishExtension {
             OverlayManager.hideWdlBar();
             OverlayManager.hideMateAnnouncement();
             OverlayManager.hideEngineInfo();
+            OverlayManager.hideAccuracyEloPills();
         } else {
             triggerAnalysisForCurrentState();
         }
@@ -737,7 +739,7 @@ public class StockfishExtension {
             Log.e(TAG, "isUserWhite failed: " + t.getMessage(), t);
         }
 
-        // Fallback: Infer player side from board orientation (not flipped = White, flipped = Black)
+        // Fallback 1: Infer player side from board orientation via stateImpl
         try {
             for (Method m : stateImplObject.getClass().getMethods()) {
                 String n = m.getName();
@@ -747,6 +749,12 @@ public class StockfishExtension {
                     return !flipped;
                 }
             }
+        } catch (Throwable ignored) {}
+
+        // Fallback 2: Check live ChessBoardView orientation via OverlayManager
+        try {
+            boolean flipped = OverlayManager.isBoardFlipped(stateImplObject);
+            return !flipped;
         } catch (Throwable ignored) {}
 
         // Move 0 default: Player starting a match is White

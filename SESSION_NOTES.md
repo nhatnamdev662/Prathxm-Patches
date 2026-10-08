@@ -85,14 +85,17 @@
     - **Cơ chế Triệt Tiêu Hàng Chờ Dồn Lệnh (Supersede Cancellation Token)**: Bổ sung `currentRequestId` dạng Atomic. Khi có nước đi mới hoặc nước đi diễn ra dồn dập, Web Worker tự động bỏ qua toàn bộ kết quả phân loại của `reqId` cũ và hủy lệnh đang tính (`cancelTorchAnalysis`), chỉ xử lý nước cờ mới nhất (100% giống Extension).
     - **Xử lý Kết Thúc Ván Đấu & Reset Ván Mới Chuẩn Xác**: Khi Stockfish báo `terminal = true` (chiếu hết / hòa cờ) hoặc bàn cờ reset về `startpos`, lập tức dọn dẹp mũi tên trên bàn cờ (`clearEngineArrows`), ẩn overlay (`hideArrowOverlay`), và hủy sạch hàng chờ tính toán Torch (`cancelPendingRequests`).
 
-16. **Phát Hành Bản v2.0.34 (Xóa Nhãn Phân Loại Tức Thì Khi Có Nước Cờ Mới)**:
-    - **Triệt tiêu lưu ảnh nhãn cũ (Instant Badge Clear)**: Gọi `OverlayManager.clearClassificationBadge()` ngay lập tức trong `StockfishExtension.onBoardChanged`. Khi bất kỳ bên nào đi một nước cờ mới, nhãn phân loại của nước đi trước biến mất ngay, bàn cờ sạch sẽ trong khi Torch tính toán nước mới.
+17. **Phát Hành Bản v2.0.35 (Thẻ Độ Chính Xác & Estimated Elo Gắn Trực Tiếp Vào Bàn Cờ Chess.com)**:
+    - **Tạo widget PlayerAccuracyPillView**: Gắn 2 thẻ Cyber Glass trực tiếp vào mép trên và mép dưới bàn cờ hiển thị Accuracy (%) và Estimated Elo thời gian thực trích xuất từ `CAPS` và `reportCard` của Torch CEE WebAssembly.
+    - **Nhận diện đúng màu quân người chơi**: Người chơi cầm Trắng thì thẻ phía bạn là Trắng, cầm Đen thì thẻ phía bạn là Đen kèm viền Cyber Blue phát sáng và nhãn `[BẠN]`, phía đối thủ mang nhãn `[ĐỐI THỦ]`.
+    - **Bật/tắt linh hoạt**: Nút switch `Độ Chính Xác & Elo Trực Tiếp` trong Tab COACH menu cài đặt.
+    - **Tự động dọn dẹp**: Tự ẩn khi hết ván hoặc tắt engine.
 
 ---
 
 ## 3. Trạng Thái Hiện Tại & Checklist Kiểm Thử
-- **Phiên bản mới nhất trên GitHub**: `v2.0.34` (tag `v2.0.34`).
-- **File tải bundle**: `https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.34/patches-2.0.34.mpp`
+- **Phiên bản mới nhất trên GitHub**: `v2.0.35` (tag `v2.0.35`).
+- **File tải bundle**: `https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.35/patches-2.0.35.mpp`
 - **Checklist Kiểm Thử**:
-  - [x] Đã vá và nạp thành công bản `2.0.34` trên Morphe Manager.
-  - [ ] Test nước đi mới: Kiểm tra nhãn phân loại của nước cũ biến mất ngay lập tức khi quân cờ vừa di chuyển.
+  - [x] Đã vá và nạp thành công bản `2.0.35` trên Morphe Manager.
+  - [ ] Test hiển thị thẻ Accuracy & Estimated Elo pills: Khi đi cờ, kiểm tra 2 thẻ phía trên và phía dưới bàn cờ cập nhật % chính xác và Elo tương ứng với từng bên.

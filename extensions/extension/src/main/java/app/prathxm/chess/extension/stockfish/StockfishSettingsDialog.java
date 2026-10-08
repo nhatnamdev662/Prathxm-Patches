@@ -559,6 +559,14 @@ public class StockfishSettingsDialog {
 
         addCardSeparator(coachCard, density);
 
+        final CyberSwitchView accuracyEloSwitch = addCyberSwitchRow(coachCard,
+                I18n.get(activity, "show_accuracy_elo"),
+                I18n.get(activity, "show_accuracy_elo_hint"),
+                StockfishSettings.isAccuracyEloEnabled(activity),
+                density, activity);
+
+        addCardSeparator(coachCard, density);
+
         final CyberSwitchView blunderSwitch = addCyberSwitchRow(coachCard,
                 I18n.get(activity, "vibrate_blunder"),
                 I18n.get(activity, "vibrate_hint"),
@@ -842,9 +850,11 @@ public class StockfishSettingsDialog {
             StockfishSettings.setThreatArrowsEnabled(activity, threatSwitch.isChecked());
             StockfishSettings.setMoveClassificationEnabled(activity, classifSwitch.isChecked());
             StockfishSettings.setCoachDepth(activity, Math.max(1, coachDepthSeekBar.getProgress() + 1));
+            StockfishSettings.setAccuracyEloEnabled(activity, accuracyEloSwitch.isChecked());
             StockfishSettings.setBlunderAlertsEnabled(activity, blunderSwitch.isChecked());
             StockfishSettings.setMateAnnouncementEnabled(activity, mateSwitch.isChecked());
             if (!mateSwitch.isChecked()) OverlayManager.hideMateAnnouncement();
+            if (!accuracyEloSwitch.isChecked()) OverlayManager.hideAccuracyEloPills();
 
             Toast.makeText(activity, I18n.get(activity, "settings_saved"), Toast.LENGTH_SHORT).show();
 

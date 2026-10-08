@@ -137,6 +137,10 @@ public class I18n {
                 return isVi ? "Độ Sâu Phân Loại (Torch Depth)" : "Classification Depth (Torch)";
             case "coach_depth_hint":
                 return isVi ? "Độ sâu tính toán của Huấn luyện viên Torch CEE (Mặc định: 2, giống Extension). Số càng thấp phản hồi càng nhanh." : "Calculation depth for Torch CEE Coach (Default: 2, matching Extension). Lower value provides faster responses.";
+            case "show_accuracy_elo":
+                return isVi ? "Độ Chính Xác & Elo Trực Tiếp" : "Live Accuracy & Estimated Elo";
+            case "show_accuracy_elo_hint":
+                return isVi ? "Gắn bảng chỉ số Độ chính xác (%) và Elo ước tính trực tiếp vào thanh thông tin 2 bên bàn cờ." : "Display live Accuracy (%) and Estimated Elo pills directly on player info bars.";
             default:
                 return key;
         }

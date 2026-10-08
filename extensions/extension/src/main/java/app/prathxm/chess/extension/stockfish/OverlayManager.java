@@ -745,4 +745,123 @@ public class OverlayManager {
             }
         });
     }
+
+    public static void updateAccuracyEloPills(final float whiteAcc, final float blackAcc,
+                                               final int whiteElo, final int blackElo,
+                                               final boolean userIsWhite) {
+        new Handler(Looper.getMainLooper()).post(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Activity activity = StockfishExtension.getCurrentActivity();
+                    if (activity == null) return;
+                    Window window = activity.getWindow();
+                    if (window == null) return;
+                    ViewGroup decorView = (ViewGroup) window.getDecorView();
+                    if (decorView == null) return;
+
+                    if (!StockfishSettings.isAccuracyEloEnabled(activity)) {
+                        hideAccuracyEloPills();
+                        return;
+                    }
+
+                    View boardView = findChessBoardView(decorView);
+                    if (boardView == null) return;
+
+                    int[] boardLoc = new int[2];
+                    boardView.getLocationInWindow(boardLoc);
+                    int[] decorLoc = new int[2];
+                    decorView.getLocationInWindow(decorLoc);
+                    int boardX = (boardLoc[0] - decorLoc[0]) - decorView.getPaddingLeft();
+                    int boardY = (boardLoc[1] - decorLoc[1]) - decorView.getPaddingTop();
+                    int boardW = boardView.getWidth();
+                    int boardH = boardView.getHeight();
+                    if (boardW <= 0 || boardH <= 0) return;
+
+                    float density = decorView.getContext().getResources().getDisplayMetrics().density;
+                    int pillH = (int) (26 * density);
+                    int pillW = (int) (185 * density);
+                    int pillMargin = (int) (6 * density);
+
+                    boolean flipped = isBoardFlipped(boardView, StockfishExtension.getStateImpl());
+
+                    // Top Pill: nằm ngay trên bàn cờ
+                    // Bottom Pill: nằm ngay dưới bàn cờ
+                    int topY = Math.max(0, boardY - pillH - pillMargin);
+                    int botY = boardY + boardH + pillMargin;
+                    int pillX = boardX + (boardW - pillW) / 2; // Căn giữa theo chiều ngang bàn cờ
+
+                    // Phân định ai ở trên / ai ở dưới theo chiều bàn cờ
+                    // Nếu flipped = false (Bạn là Trắng ở dưới): Top = Đen (Đối thủ), Bottom = Trắng (Bạn)
+                    // Nếu flipped = true (Bạn là Đen ở dưới): Top = Trắng (Đối thủ), Bottom = Đen (Bạn)
+                    boolean topIsWhite = flipped;
+                    boolean botIsWhite = !flipped;
+                    boolean topIsYou = (topIsWhite == userIsWhite);
+                    boolean botIsYou = (botIsWhite == userIsWhite);
+
+                    float topAcc = topIsWhite ? whiteAcc : blackAcc;
+                    int topElo = topIsWhite ? whiteElo : blackElo;
+                    float botAcc = botIsWhite ? whiteAcc : blackAcc;
+                    int botElo = botIsWhite ? whiteElo : blackElo;
+
+                    // 1. Quản lý Top Pill View
+                    View topView = decorView.findViewWithTag("nnvc_accuracy_top_pill");
+                    PlayerAccuracyPillView topPill;
+                    if (topView instanceof PlayerAccuracyPillView) {
+                        topPill = (PlayerAccuracyPillView) topView;
+                    } else {
+                        if (topView != null) decorView.removeView(topView);
+                        topPill = new PlayerAccuracyPillView(decorView.getContext());
+                        topPill.setTag("nnvc_accuracy_top_pill");
+                        decorView.addView(topPill);
+                    }
+                    topPill.layout(pillX, topY, pillX + pillW, topY + pillH);
+                    topPill.updateData(topIsWhite, topIsYou, topAcc, topElo);
+                    topPill.setVisibility(View.VISIBLE);
+                    topPill.bringToFront();
+
+                    // 2. Quản lý Bottom Pill View
+                    View botView = decorView.findViewWithTag("nnvc_accuracy_bot_pill");
+                    PlayerAccuracyPillView botPill;
+                    if (botView instanceof PlayerAccuracyPillView) {
+                        botPill = (PlayerAccuracyPillView) botView;
+                    } else {
+                        if (botView != null) decorView.removeView(botView);
+                        botPill = new PlayerAccuracyPillView(decorView.getContext());
+                        botPill.setTag("nnvc_accuracy_bot_pill");
+                        decorView.addView(botPill);
+                    }
+                    botPill.layout(pillX, botY, pillX + pillW, botY + pillH);
+                    botPill.updateData(botIsWhite, botIsYou, botAcc, botElo);
+                    botPill.setVisibility(View.VISIBLE);
+                    botPill.bringToFront();
+
+                } catch (Throwable t) {
+                    Log.w(TAG, "updateAccuracyEloPills failed: " + t.getMessage());
+                }
+            }
+        });
+    }
+
+    public static void hideAccuracyEloPills() {
+        new Handler(Looper.getMainLooper()).post(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Activity activity = StockfishExtension.getCurrentActivity();
+                    if (activity == null) return;
+                    Window window = activity.getWindow();
+                    if (window == null) return;
+                    ViewGroup decorView = (ViewGroup) window.getDecorView();
+                    if (decorView == null) return;
+
+                    View top = decorView.findViewWithTag("nnvc_accuracy_top_pill");
+                    if (top != null) top.setVisibility(View.GONE);
+
+                    View bot = decorView.findViewWithTag("nnvc_accuracy_bot_pill");
+                    if (bot != null) bot.setVisibility(View.GONE);
+                } catch (Throwable ignored) {}
+            }
+        });
+    }
 }
