@@ -5,8 +5,10 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
+import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 
 /**
  * A clean, stable vertical evaluation bar.
@@ -57,10 +59,13 @@ public class EvalBarView extends View {
 
         ViewGroup.LayoutParams lp = getLayoutParams();
         if (lp == null) {
-            lp = new ViewGroup.LayoutParams(width, height);
+            lp = new FrameLayout.LayoutParams(width, height);
         } else {
             lp.width  = width;
             lp.height = height;
+        }
+        if (lp instanceof FrameLayout.LayoutParams) {
+            ((FrameLayout.LayoutParams) lp).gravity = Gravity.TOP | Gravity.START;
         }
         setLayoutParams(lp);
         setTranslationX(x);

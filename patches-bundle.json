@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-10-08T16:05:00",
-  "description": "## [2.0.30] (2026-10-08)\n\n### ⚡ NNVC v2.0.30 — Sửa Lỗi Lệch Bàn Cờ Trận Trực Tiếp (Live Match) & Giới Hạn Huy Hiệu Khỏi Tràn Viền\n\n* **Khắc phục triệt để lỗi lệch giao diện ở trận trực tiếp (RealGameActivity / Live Match):** Tự động đồng bộ lại tọa độ bàn cờ, góc nhìn lật bàn cờ (flipped khi cầm quân Đen) và kích thước layout mỗi khi vẽ nước đi hoặc gán huy hiệu phân loại.\n* **Chống tràn viền huy hiệu phân loại (Badge Boundary Clamping):** Cố định tọa độ huy hiệu luôn nằm an toàn 100% bên trong viền bàn cờ, không bao giờ bị cắt mép trên vào thanh thông tin người chơi ở hàng 1 và hàng 8.\n* **Định vị Eval Bar chuẩn xác:** Căn chỉnh thanh đánh giá Eval Bar sang cạnh trái bàn cờ, không che đè lên cột a hay các ô cờ.\n* **Author:** NNVC (@nncutett)",
-  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.30/patches-2.0.30.mpp",
+  "created_at": "2026-10-08T17:55:00",
+  "description": "## [2.0.31] (2026-10-08)\n\n### ⚡ NNVC v2.0.31 — Sửa Triệt Để Lỗi Lệch Bàn Cờ Khi Bị Chèn Bởi ChessBoardLayout (Live Match)\n\n* **Khắc phục lỗi lệch bàn cờ (Root Cause Fixed):** Tìm chính xác `ChessBoardView` bên trong thay vì bị nhận nhầm container ngoài `ChessBoardLayout` (vốn bao gồm cả thẻ thông tin người chơi phía trên và đồng hồ làm đẩy toàn bộ overlay lên trên).\n* **Nhận diện Flipped chính xác 100%:** Kiểm tra trực tiếp hàm `getFlipBoard()` từ `ChessBoardView` giúp nhận diện cầm Đen / Trắng chính xác ngay lập tức trên mọi màn hình đấu trực tiếp.\n* **Chuẩn hóa tọa độ DecorView:** Tính toán delta giữa window location của bàn cờ và decor view cùng padding hệ thống, đảm bảo tuyệt đối khớp 1:1.\n* **Author:** NNVC (@nncutett)",
+  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.31/patches-2.0.31.mpp",
   "signature_download_url": "",
-  "version": "2.0.30"
+  "version": "2.0.31"
 }

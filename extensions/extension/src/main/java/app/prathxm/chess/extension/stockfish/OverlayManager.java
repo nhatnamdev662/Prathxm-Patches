@@ -48,13 +48,15 @@ public class OverlayManager {
                     ViewGroup decorView = (ViewGroup) window.getDecorView();
                     if (decorView == null) return;
 
-                    View boardView = findChessBoardView(decorView);
+                    final View boardView = findChessBoardView(decorView);
                     if (boardView == null) return;
 
-                    int[] loc = new int[2];
-                    boardView.getLocationInWindow(loc);
-                    int boardX = loc[0];
-                    int boardY = loc[1];
+                    int[] boardLoc = new int[2];
+                    boardView.getLocationInWindow(boardLoc);
+                    int[] decorLoc = new int[2];
+                    decorView.getLocationInWindow(decorLoc);
+                    int boardX = (boardLoc[0] - decorLoc[0]) - decorView.getPaddingLeft();
+                    int boardY = (boardLoc[1] - decorLoc[1]) - decorView.getPaddingTop();
                     int boardW = boardView.getWidth();
                     int boardH = boardView.getHeight();
                     if (boardW <= 0 || boardH <= 0) {
@@ -110,7 +112,7 @@ public class OverlayManager {
                         return;
                     }
 
-                    boolean flipped = isBoardFlipped(stateImpl);
+                    boolean flipped = isBoardFlipped(boardView, stateImpl);
                     arrowView.update(boardX, boardY, boardW, boardH, list, flipped);
                     arrowView.setVisibility(View.VISIBLE);
                     arrowView.bringToFront();
@@ -162,13 +164,15 @@ public class OverlayManager {
                     ViewGroup decorView = (ViewGroup) window.getDecorView();
                     if (decorView == null) return;
 
-                    View boardView = findChessBoardView(decorView);
+                    final View boardView = findChessBoardView(decorView);
                     if (boardView == null) return;
 
-                    int[] loc = new int[2];
-                    boardView.getLocationInWindow(loc);
-                    int boardX = loc[0];
-                    int boardY = loc[1];
+                    int[] boardLoc = new int[2];
+                    boardView.getLocationInWindow(boardLoc);
+                    int[] decorLoc = new int[2];
+                    decorView.getLocationInWindow(decorLoc);
+                    int boardX = (boardLoc[0] - decorLoc[0]) - decorView.getPaddingLeft();
+                    int boardY = (boardLoc[1] - decorLoc[1]) - decorView.getPaddingTop();
                     int boardW = boardView.getWidth();
                     int boardH = boardView.getHeight();
                     if (boardW <= 0 || boardH <= 0) {
@@ -198,7 +202,7 @@ public class OverlayManager {
                     }
                     evalBarView.setVisibility(View.VISIBLE);
                     evalBarView.update(evalBarX, boardY, barWidth, boardH,
-                                       score, hasMate, mateIn, isBoardFlipped(stateImpl));
+                                       score, hasMate, mateIn, isBoardFlipped(boardView, stateImpl));
                 } catch (Throwable t) {
                     Log.e(TAG, "updateEvalBar failed: " + t.getMessage());
                 }
@@ -244,10 +248,12 @@ public class OverlayManager {
                     View boardView = findChessBoardView(decorView);
                     if (boardView == null) return;
 
-                    int[] loc = new int[2];
-                    boardView.getLocationInWindow(loc);
-                    int boardX = loc[0];
-                    int boardY = loc[1];
+                    int[] boardLoc = new int[2];
+                    boardView.getLocationInWindow(boardLoc);
+                    int[] decorLoc = new int[2];
+                    decorView.getLocationInWindow(decorLoc);
+                    int boardX = (boardLoc[0] - decorLoc[0]) - decorView.getPaddingLeft();
+                    int boardY = (boardLoc[1] - decorLoc[1]) - decorView.getPaddingTop();
                     int boardW = boardView.getWidth();
                     int boardH = boardView.getHeight();
                     if (boardW <= 0 || boardH <= 0) return;
@@ -315,14 +321,18 @@ public class OverlayManager {
                     ViewGroup decorView = (ViewGroup) activity.getWindow().getDecorView();
                     View boardView = findChessBoardView(decorView);
                     if (boardView == null) return;
-                    int[] loc = new int[2];
-                    boardView.getLocationInWindow(loc);
+                    int[] boardLoc = new int[2];
+                    boardView.getLocationInWindow(boardLoc);
+                    int[] decorLoc = new int[2];
+                    decorView.getLocationInWindow(decorLoc);
+                    int boardX = (boardLoc[0] - decorLoc[0]) - decorView.getPaddingLeft();
+                    int boardY = (boardLoc[1] - decorLoc[1]) - decorView.getPaddingTop();
                     int boardW = boardView.getWidth();
                     if (boardW <= 0) return;
                     float density = decorView.getContext().getResources().getDisplayMetrics().density;
                     int h = (int) (14 * density);
                     int w = (int) (INFO_SLOT_DP * density);
-                    int y = loc[1] - h - (int) (4 * density);
+                    int y = boardY - h - (int) (4 * density);
                     if (y < 0) return;
 
                     View existing = decorView.findViewWithTag("stockfish_engine_info");
@@ -343,7 +353,9 @@ public class OverlayManager {
                         info.setGravity(Gravity.CENTER);
                         info.setIncludeFontPadding(false);
                         info.setSingleLine(true);
-                        info.setLayoutParams(new FrameLayout.LayoutParams(w, h));
+                        FrameLayout.LayoutParams flp = new FrameLayout.LayoutParams(w, h);
+                        flp.gravity = Gravity.TOP | Gravity.START;
+                        info.setLayoutParams(flp);
                         decorView.addView(info);
                     }
                     ViewGroup.LayoutParams lp = info.getLayoutParams();
@@ -353,7 +365,7 @@ public class OverlayManager {
                         info.setLayoutParams(lp);
                     }
                     info.setText(formatEngineInfo(depth, score, hasMate, mateIn));
-                    info.setTranslationX(loc[0] + boardW - w);
+                    info.setTranslationX(boardX + boardW - w);
                     info.setTranslationY(y);
                     info.setVisibility(View.VISIBLE);
                     info.bringToFront();
@@ -406,10 +418,12 @@ public class OverlayManager {
                     View boardView = findChessBoardView(decorView);
                     if (boardView == null) return;
 
-                    int[] loc = new int[2];
-                    boardView.getLocationInWindow(loc);
-                    int boardX = loc[0];
-                    int boardY = loc[1];
+                    int[] boardLoc = new int[2];
+                    boardView.getLocationInWindow(boardLoc);
+                    int[] decorLoc = new int[2];
+                    decorView.getLocationInWindow(decorLoc);
+                    int boardX = (boardLoc[0] - decorLoc[0]) - decorView.getPaddingLeft();
+                    int boardY = (boardLoc[1] - decorLoc[1]) - decorView.getPaddingTop();
                     int boardW = boardView.getWidth();
                     if (boardW <= 0) return;
 
@@ -506,18 +520,88 @@ public class OverlayManager {
         });
     }
 
-    public static View findChessBoardView(View view) {
-        if (view == null) return null;
+    public static View findChessBoardView(View root) {
+        if (root == null) return null;
+        // 1. First priority: Find the actual, inner ChessBoardView (NOT a Layout or Container)
+        View board = findInnerChessBoardView(root);
+        if (board != null) return board;
+
+        // 2. Second priority: Any view with "BoardView" in class name (excluding Layouts)
+        board = findFallbackBoardView(root);
+        if (board != null) return board;
+
+        // 3. Third priority: Last resort fallback (any layout matching ChessBoard)
+        return findAnyBoardLayout(root);
+    }
+
+    private static View findInnerChessBoardView(View view) {
+        if (view == null || view.getVisibility() != View.VISIBLE) return null;
+
         String name = view.getClass().getName();
-        if (name.endsWith("ChessBoardView") || name.contains("ChessBoardLayout") || name.equals("com.chess.chessboard.view.ChessBoardView")) {
-            if (view.getVisibility() == View.VISIBLE) {
+        boolean isLayoutOrContainer = name.contains("Layout")
+                || name.contains("Container")
+                || name.contains("Binding")
+                || name.contains("Manager");
+
+        // Depth-first search: check children first so we reach the innermost board view!
+        if (view instanceof ViewGroup) {
+            ViewGroup group = (ViewGroup) view;
+            for (int i = 0; i < group.getChildCount(); i++) {
+                View found = findInnerChessBoardView(group.getChildAt(i));
+                if (found != null) return found;
+            }
+        }
+
+        // Check if this view itself is the actual chessboard view
+        if (!isLayoutOrContainer) {
+            if (name.equals("com.chess.chessboard.view.ChessBoardView")
+                    || name.equals("com.chess.chessboard.v2.ChessBoardView")
+                    || name.endsWith(".ChessBoardView")
+                    || name.endsWith("$ChessBoardView")
+                    || name.endsWith("ChessBoardView")) {
                 return view;
             }
+        }
+
+        return null;
+    }
+
+    private static View findFallbackBoardView(View view) {
+        if (view == null || view.getVisibility() != View.VISIBLE) return null;
+
+        String name = view.getClass().getName();
+        boolean isLayoutOrContainer = name.contains("Layout")
+                || name.contains("Container")
+                || name.contains("Binding")
+                || name.contains("Manager");
+
+        if (view instanceof ViewGroup) {
+            ViewGroup group = (ViewGroup) view;
+            for (int i = 0; i < group.getChildCount(); i++) {
+                View found = findFallbackBoardView(group.getChildAt(i));
+                if (found != null) return found;
+            }
+        }
+
+        if (!isLayoutOrContainer) {
+            if (name.contains("ChessBoard") || name.contains("BoardView")) {
+                return view;
+            }
+        }
+
+        return null;
+    }
+
+    private static View findAnyBoardLayout(View view) {
+        if (view == null || view.getVisibility() != View.VISIBLE) return null;
+        String name = view.getClass().getName();
+        if (name.contains("ChessBoardLayout") || name.endsWith("ChessBoardView")) {
+            return view;
         }
         if (view instanceof ViewGroup) {
             ViewGroup group = (ViewGroup) view;
             for (int i = 0; i < group.getChildCount(); i++) {
-                View found = findChessBoardView(group.getChildAt(i));
+                View found = findAnyBoardLayout(group.getChildAt(i));
                 if (found != null) return found;
             }
         }
@@ -525,24 +609,54 @@ public class OverlayManager {
     }
 
     public static boolean isBoardFlipped(Object stateImpl) {
-        if (stateImpl == null) return false;
-        try {
-            for (Method m : stateImpl.getClass().getMethods()) {
-                // 4.10.17: CBViewModelStateImpl.getFlipBoard() (also follows manual flips)
-                String n = m.getName();
-                if ((n.equals("getFlipBoard") || n.equals("isFlipped") || n.equals("getFlipped"))
-                        && m.getParameterCount() == 0 && m.getReturnType() == boolean.class) {
-                    return (boolean) m.invoke(stateImpl);
+        Activity act = StockfishExtension.getCurrentActivity();
+        View bv = null;
+        if (act != null && act.getWindow() != null && act.getWindow().getDecorView() != null) {
+            bv = findChessBoardView(act.getWindow().getDecorView());
+        }
+        return isBoardFlipped(bv, stateImpl);
+    }
+
+    public static boolean isBoardFlipped(View boardView, Object stateImpl) {
+        if (boardView != null) {
+            try {
+                for (Method m : boardView.getClass().getMethods()) {
+                    String n = m.getName();
+                    if ((n.equals("getFlipBoard") || n.equals("isFlipped") || n.equals("getFlipped"))
+                            && m.getParameterCount() == 0 && m.getReturnType() == boolean.class) {
+                        return (boolean) m.invoke(boardView);
+                    }
                 }
-            }
-            for (Field f : stateImpl.getClass().getDeclaredFields()) {
-                if ((f.getName().equals("flipped") || f.getName().equals("isFlipped")) && f.getType() == boolean.class) {
-                    f.setAccessible(true);
-                    return f.getBoolean(stateImpl);
+                for (Field f : boardView.getClass().getDeclaredFields()) {
+                    String n = f.getName();
+                    if ((n.equals("flipBoard") || n.equals("flipped") || n.equals("isFlipped"))
+                            && f.getType() == boolean.class) {
+                        f.setAccessible(true);
+                        return f.getBoolean(boardView);
+                    }
                 }
-            }
-        } catch (Throwable ignored) {}
-        
+            } catch (Throwable ignored) {}
+        }
+
+        if (stateImpl != null) {
+            try {
+                for (Method m : stateImpl.getClass().getMethods()) {
+                    String n = m.getName();
+                    if ((n.equals("getFlipBoard") || n.equals("isFlipped") || n.equals("getFlipped"))
+                            && m.getParameterCount() == 0 && m.getReturnType() == boolean.class) {
+                        return (boolean) m.invoke(stateImpl);
+                    }
+                }
+                for (Field f : stateImpl.getClass().getDeclaredFields()) {
+                    String n = f.getName();
+                    if ((n.equals("flipped") || n.equals("isFlipped")) && f.getType() == boolean.class) {
+                        f.setAccessible(true);
+                        return f.getBoolean(stateImpl);
+                    }
+                }
+            } catch (Throwable ignored) {}
+        }
+
         Boolean isWhite = StockfishExtension.isUserWhite(stateImpl);
         return isWhite != null && !isWhite;
     }
@@ -563,20 +677,27 @@ public class OverlayManager {
                     ViewGroup decorView = (ViewGroup) window.getDecorView();
                     if (decorView == null) return;
 
-                    View boardView = findChessBoardView(decorView);
+                    final View boardView = findChessBoardView(decorView);
                     if (boardView == null) return;
-                    int[] loc = new int[2];
-                    boardView.getLocationInWindow(loc);
-                    int boardX = loc[0];
-                    int boardY = loc[1];
+                    int[] boardLoc = new int[2];
+                    boardView.getLocationInWindow(boardLoc);
+                    int[] decorLoc = new int[2];
+                    decorView.getLocationInWindow(decorLoc);
+                    int boardX = (boardLoc[0] - decorLoc[0]) - decorView.getPaddingLeft();
+                    int boardY = (boardLoc[1] - decorLoc[1]) - decorView.getPaddingTop();
                     int boardW = boardView.getWidth();
                     int boardH = boardView.getHeight();
-                    if (boardW <= 0 || boardH <= 0) return;
+                    if (boardW <= 0 || boardH <= 0) {
+                        boardView.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                setClassificationBadge(fromSquare, toSquare, classificationName, isWhite, isMyMove);
+                            }
+                        });
+                        return;
+                    }
 
-                    boolean isFlipped = false;
-                    try {
-                        isFlipped = isBoardFlipped(StockfishExtension.getStateImpl());
-                    } catch (Throwable ignored) {}
+                    boolean isFlipped = isBoardFlipped(boardView, StockfishExtension.getStateImpl());
 
                     View overlay = decorView.findViewWithTag("nnvc_arrow_overlay");
                     ArrowOverlayView arrowView;

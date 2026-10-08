@@ -16,9 +16,11 @@ import android.graphics.Shader;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -190,10 +192,13 @@ public class ArrowOverlayView extends View {
 
         ViewGroup.LayoutParams lp = getLayoutParams();
         if (lp == null) {
-            lp = new ViewGroup.LayoutParams(width, height);
+            lp = new FrameLayout.LayoutParams(width, height);
         } else {
             lp.width = width;
             lp.height = height;
+        }
+        if (lp instanceof FrameLayout.LayoutParams) {
+            ((FrameLayout.LayoutParams) lp).gravity = Gravity.TOP | Gravity.START;
         }
         setLayoutParams(lp);
         setTranslationX(boardX);
@@ -206,10 +211,13 @@ public class ArrowOverlayView extends View {
         this.flipped = flipped;
         ViewGroup.LayoutParams lp = getLayoutParams();
         if (lp == null) {
-            lp = new ViewGroup.LayoutParams(width, height);
+            lp = new FrameLayout.LayoutParams(width, height);
         } else {
             lp.width = width;
             lp.height = height;
+        }
+        if (lp instanceof FrameLayout.LayoutParams) {
+            ((FrameLayout.LayoutParams) lp).gravity = Gravity.TOP | Gravity.START;
         }
         setLayoutParams(lp);
         setTranslationX(boardX);
