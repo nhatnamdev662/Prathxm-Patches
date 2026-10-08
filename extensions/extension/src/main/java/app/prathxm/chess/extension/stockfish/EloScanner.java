@@ -163,20 +163,160 @@ public class EloScanner {
         }
 
         if (activity != null) {
+            // 1. Kiểm tra trực tiếp RealGameActivity / ViewModel
+            try {
+                EloPair vmPair = tryExtractFromRealGameActivity(activity);
+                if (vmPair != null) return vmPair;
+            } catch (Throwable ignored) {}
+
             try {
                 for (Field f : activity.getClass().getDeclaredFields()) {
                     try {
                         f.setAccessible(true);
                         Object val = f.get(activity);
-                        if (val != null && !isFrameworkClass(val.getClass().getName())) {
-                            EloPair pair = inspectObjectForElo(val, 0);
-                            if (pair != null) return pair;
+                        if (val != null) {
+                            if (val.getClass().getName().contains("Lazy")) {
+                                val = unwrapLazy(val);
+                            }
+                            if (val != null && !isFrameworkClass(val.getClass().getName())) {
+                                EloPair pair = inspectObjectForElo(val, 0);
+                                if (pair != null) return pair;
+                            }
                         }
                     } catch (Throwable ignored) {}
                 }
             } catch (Throwable ignored) {}
         }
 
+        return null;
+    }
+
+    private static Object unwrapLazy(Object lazyObj) {
+        if (lazyObj == null) return null;
+        try {
+            Method m = lazyObj.getClass().getMethod("getValue");
+            return m.invoke(lazyObj);
+        } catch (Throwable ignored) {
+            return null;
+        }
+    }
+
+    private static EloPair tryExtractFromRealGameActivity(Activity activity) {
+        Object vm = null;
+        try {
+            Method mX6 = activity.getClass().getMethod("X6");
+            vm = mX6.invoke(activity);
+        } catch (Throwable ignored) {}
+
+        if (vm == null) {
+            try {
+                Method mI8 = activity.getClass().getMethod("I8");
+                vm = mI8.invoke(activity);
+            } catch (Throwable ignored) {}
+        }
+
+        if (vm == null) {
+            try {
+                Field fB = activity.getClass().getDeclaredField("B");
+                fB.setAccessible(true);
+                vm = unwrapLazy(fB.get(activity));
+            } catch (Throwable ignored) {}
+        }
+
+        if (vm == null) return null;
+
+        TorchEngine.log("[ELO REFLECT] Đã tìm thấy ViewModel: " + vm.getClass().getSimpleName());
+
+        // A. Trích xuất từ RcnPlayGameDelegateImpl (field 'm' trong RealGameViewModel)
+        try {
+            Field fm = vm.getClass().getDeclaredField("m");
+            fm.setAccessible(true);
+            Object delegateM = fm.get(vm);
+            if (delegateM != null) {
+                Method mb = delegateM.getClass().getMethod("b");
+                Object playK = mb.invoke(delegateM);
+                if (playK != null) {
+                    EloPair pair = extractFromRcnPlay(playK);
+                    if (pair != null) {
+                        TorchEngine.log("[ELO REFLECT] Thành công qua RcnPlay: " + pair);
+                        return pair;
+                    }
+                }
+            }
+        } catch (Throwable ignored) {}
+
+        // B. Trích xuất từ GameViewModelPlayersImpl (field 'd' trong RealGameViewModel)
+        try {
+            Field fd = vm.getClass().getDeclaredField("d");
+            fd.setAccessible(true);
+            Object playersImpl = fd.get(vm);
+            if (playersImpl != null) {
+                EloPair pair = inspectObjectForElo(playersImpl, 0);
+                if (pair != null) {
+                    TorchEngine.log("[ELO REFLECT] Thành công qua GameViewModelPlayersImpl: " + pair);
+                    return pair;
+                }
+            }
+        } catch (Throwable ignored) {}
+
+        // C. Quét đệ quy toàn bộ fields của ViewModel
+        EloPair vmInspect = inspectObjectForElo(vm, 0);
+        if (vmInspect != null) {
+            TorchEngine.log("[ELO REFLECT] Thành công qua ViewModel fields: " + vmInspect);
+            return vmInspect;
+        }
+
+        return null;
+    }
+
+    private static EloPair extractFromRcnPlay(Object playK) {
+        if (playK == null) return null;
+        try {
+            // playK có thể là RcnPlayPlatformServiceImpl hoặc i
+            // Thử gọi M() để lấy RcnGameState
+            Method mM = findMethod(playK.getClass(), "M");
+            if (mM != null) {
+                Object gameState = mM.invoke(playK);
+                if (gameState != null) {
+                    Method mw = findMethod(gameState.getClass(), "getWhiteRating");
+                    Method mb = findMethod(gameState.getClass(), "getBlackRating");
+                    if (mw != null && mb != null) {
+                        Object w = mw.invoke(gameState);
+                        Object b = mb.invoke(gameState);
+                        if (w instanceof Number && b instanceof Number) {
+                            int wVal = ((Number) w).intValue();
+                            int bVal = ((Number) b).intValue();
+                            if (isValidElo(wVal) && isValidElo(bVal)) {
+                                return new EloPair(wVal, bVal, "reflection_rcn_game_state", true);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Thử field 'r' (RcnGameState) hoặc 'q' (RcnGame) trên playK
+            for (Field f : playK.getClass().getDeclaredFields()) {
+                try {
+                    f.setAccessible(true);
+                    Object val = f.get(playK);
+                    if (val != null) {
+                        Method mw = findMethod(val.getClass(), "getWhiteRating");
+                        Method mb = findMethod(val.getClass(), "getBlackRating");
+                        if (mw != null && mb != null) {
+                            Object w = mw.invoke(val);
+                            Object b = mb.invoke(val);
+                            if (w instanceof Number && b instanceof Number) {
+                                int wVal = ((Number) w).intValue();
+                                int bVal = ((Number) b).intValue();
+                                if (isValidElo(wVal) && isValidElo(bVal)) {
+                                    return new EloPair(wVal, bVal, "reflection_rcn_field_" + f.getName(), true);
+                                }
+                            }
+                        }
+                    }
+                } catch (Throwable ignored) {}
+            }
+        } catch (Throwable ignored) {}
         return null;
     }
 
@@ -213,7 +353,7 @@ public class EloScanner {
             for (Method m : clazz.getMethods()) {
                 if (m.getParameterCount() == 0) {
                     String retName = m.getReturnType().getName();
-                    if (retName.endsWith("UserInfo") || retName.endsWith("LiveUserInfo") || retName.endsWith("DailyUserInfo")) {
+                    if (retName.endsWith("UserInfo") || retName.endsWith("LiveUserInfo") || retName.endsWith("DailyUserInfo") || retName.endsWith("RcnPlayerData")) {
                         Object uInfo = m.invoke(obj);
                         if (uInfo != null) {
                             int r = extractRatingFromUserInfo(uInfo);
@@ -231,16 +371,46 @@ public class EloScanner {
             }
         } catch (Throwable ignored) {}
 
-        // C. Recursive fields search
+        // C. Pair of UserInfo / RcnPlayerData: e.g. com.chess.gameutils.e (a, b)
+        try {
+            Method ma = findMethod(clazz, "a");
+            Method mb = findMethod(clazz, "b");
+            if (ma != null && mb != null) {
+                Object ua = ma.invoke(obj);
+                Object ub = mb.invoke(obj);
+                if (ua != null && ub != null) {
+                    int ra = extractRatingFromUserInfo(ua);
+                    int rb = extractRatingFromUserInfo(ub);
+                    Boolean ca = extractColorFromUserInfo(ua);
+                    Boolean cb = extractColorFromUserInfo(ub);
+                    if (isValidElo(ra) && isValidElo(rb)) {
+                        if (ca != null) {
+                            return ca ? new EloPair(ra, rb, "reflection_pair_" + clazz.getSimpleName(), true)
+                                      : new EloPair(rb, ra, "reflection_pair_" + clazz.getSimpleName(), true);
+                        } else if (cb != null) {
+                            return cb ? new EloPair(rb, ra, "reflection_pair_" + clazz.getSimpleName(), true)
+                                      : new EloPair(ra, rb, "reflection_pair_" + clazz.getSimpleName(), true);
+                        }
+                    }
+                }
+            }
+        } catch (Throwable ignored) {}
+
+        // D. Recursive fields search
         if (depth < 2) {
             try {
                 for (Field f : clazz.getDeclaredFields()) {
                     try {
                         f.setAccessible(true);
                         Object child = f.get(obj);
-                        if (child != null && !isFrameworkClass(child.getClass().getName())) {
-                            EloPair childPair = inspectObjectForElo(child, depth + 1);
-                            if (childPair != null) return childPair;
+                        if (child != null) {
+                            if (child.getClass().getName().contains("Lazy")) {
+                                child = unwrapLazy(child);
+                            }
+                            if (child != null && !isFrameworkClass(child.getClass().getName())) {
+                                EloPair childPair = inspectObjectForElo(child, depth + 1);
+                                if (childPair != null) return childPair;
+                            }
                         }
                     } catch (Throwable ignored) {}
                 }
@@ -263,8 +433,16 @@ public class EloScanner {
     private static int extractRatingFromUserInfo(Object userInfo) {
         if (userInfo == null) return -1;
         try {
-            Method m = userInfo.getClass().getMethod("getRating");
-            Object r = m.invoke(userInfo);
+            Method m = findMethod(userInfo.getClass(), "getRating", "rating");
+            if (m != null) {
+                Object r = m.invoke(userInfo);
+                if (r instanceof Number) return ((Number) r).intValue();
+            }
+        } catch (Throwable ignored) {}
+        try {
+            Field f = userInfo.getClass().getDeclaredField("rating");
+            f.setAccessible(true);
+            Object r = f.get(userInfo);
             if (r instanceof Number) return ((Number) r).intValue();
         } catch (Throwable ignored) {}
         return -1;
@@ -273,8 +451,20 @@ public class EloScanner {
     private static Boolean extractColorFromUserInfo(Object userInfo) {
         if (userInfo == null) return null;
         try {
-            Method m = userInfo.getClass().getMethod("getColor");
-            Object c = m.invoke(userInfo);
+            Method m = findMethod(userInfo.getClass(), "getColor", "color");
+            if (m != null) {
+                Object c = m.invoke(userInfo);
+                if (c != null) {
+                    String s = c.toString().toUpperCase(java.util.Locale.US);
+                    if (s.contains("WHITE")) return Boolean.TRUE;
+                    if (s.contains("BLACK")) return Boolean.FALSE;
+                }
+            }
+        } catch (Throwable ignored) {}
+        try {
+            Field f = userInfo.getClass().getDeclaredField("color");
+            f.setAccessible(true);
+            Object c = f.get(userInfo);
             if (c != null) {
                 String s = c.toString().toUpperCase(java.util.Locale.US);
                 if (s.contains("WHITE")) return Boolean.TRUE;
@@ -381,7 +571,12 @@ public class EloScanner {
     private static void collectSnapshots(View root, List<ViewSnapshot> out) {
         if (root == null || root.getVisibility() != View.VISIBLE) return;
 
-        // 1. Quét sâu qua AccessibilityNodeInfo (Đặc trị 100% Jetpack Compose / ComposeView)
+        // 1. Quét sâu qua Jetpack Compose Semantics (Nếu view là ComposeView hoặc AndroidComposeView)
+        try {
+            collectComposeSnapshots(root, out);
+        } catch (Throwable ignored) {}
+
+        // 2. Quét sâu qua AccessibilityNodeInfo
         try {
             AccessibilityNodeInfo rootNode = root.createAccessibilityNodeInfo();
             if (rootNode != null) {
@@ -392,8 +587,106 @@ public class EloScanner {
             }
         } catch (Throwable ignored) {}
 
-        // 2. Dự phòng: Quét qua cây View/TextView Android truyền thống nếu Accessibility chưa bắt hết
+        // 3. Dự phòng: Quét qua cây View/TextView Android truyền thống
         collectViewSnapshots(root, out);
+    }
+
+    private static void collectComposeSnapshots(View view, List<ViewSnapshot> out) {
+        if (view == null) return;
+        String clsName = view.getClass().getName();
+        if (clsName.contains("AndroidComposeView") || clsName.contains("ComposeView")) {
+            try {
+                // Thử lấy SemanticsOwner (z trên AndroidComposeView hoặc getSemanticsOwner())
+                Object semanticsOwner = null;
+                try {
+                    Method mOwner = findMethod(view.getClass(), "getSemanticsOwner");
+                    if (mOwner != null) semanticsOwner = mOwner.invoke(view);
+                } catch (Throwable ignored) {}
+
+                if (semanticsOwner == null) {
+                    try {
+                        Field fz = view.getClass().getDeclaredField("z");
+                        fz.setAccessible(true);
+                        semanticsOwner = fz.get(view);
+                    } catch (Throwable ignored) {}
+                }
+
+                if (semanticsOwner != null) {
+                    // SemanticsOwner.d() trả về SemanticsNode gốc
+                    Method md = findMethod(semanticsOwner.getClass(), "d");
+                    if (md != null) {
+                        Object rootNode = md.invoke(semanticsOwner);
+                        if (rootNode != null) {
+                            collectFromSemanticsNode(rootNode, out);
+                        }
+                    }
+                }
+            } catch (Throwable ignored) {}
+        }
+
+        if (view instanceof ViewGroup) {
+            ViewGroup g = (ViewGroup) view;
+            int count = g.getChildCount();
+            for (int i = 0; i < count; i++) {
+                collectComposeSnapshots(g.getChildAt(i), out);
+            }
+        }
+    }
+
+    private static void collectFromSemanticsNode(Object semanticsNode, List<ViewSnapshot> out) {
+        if (semanticsNode == null) return;
+        try {
+            // Lấy toạ độ y
+            int nodeY = 0;
+            try {
+                Method mf = findMethod(semanticsNode.getClass(), "f"); // NodeCoordinator
+                if (mf != null) {
+                    Object coordinator = mf.invoke(semanticsNode);
+                    if (coordinator != null) {
+                        Method mPos = findMethod(coordinator.getClass(), "c");
+                        // vị trí toạ độ
+                    }
+                }
+            } catch (Throwable ignored) {}
+
+            // Lấy text/contentDescription từ config (field 'd' trên SemanticsNode: com.google.android.seb)
+            Field fd = semanticsNode.getClass().getDeclaredField("d");
+            fd.setAccessible(true);
+            Object config = fd.get(semanticsNode);
+            if (config != null) {
+                // config có field 'b' : Map<SemanticsPropertyKey, Object>
+                Field fb = config.getClass().getDeclaredField("b");
+                fb.setAccessible(true);
+                Object mapObj = fb.get(config);
+                if (mapObj instanceof java.util.Map) {
+                    java.util.Map<?, ?> map = (java.util.Map<?, ?>) mapObj;
+                    for (Object val : map.values()) {
+                        if (val != null) {
+                            if (val instanceof CharSequence) {
+                                out.add(new ViewSnapshot(val.toString(), nodeY));
+                            } else if (val instanceof java.util.List) {
+                                for (Object elem : (java.util.List<?>) val) {
+                                    if (elem instanceof CharSequence) {
+                                        out.add(new ViewSnapshot(elem.toString(), nodeY));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Đệ quy duyệt children của SemanticsNode: gọi g() hoặc h() trả về List<SemanticsNode>
+            Method mg = findMethod(semanticsNode.getClass(), "g", "h");
+            if (mg != null) {
+                Object children = mg.invoke(semanticsNode);
+                if (children instanceof java.util.List) {
+                    for (Object child : (java.util.List<?>) children) {
+                        collectFromSemanticsNode(child, out);
+                    }
+                }
+            }
+        } catch (Throwable ignored) {}
     }
 
     private static void collectAccessibilitySnapshots(AccessibilityNodeInfo node, List<ViewSnapshot> out) {
@@ -484,9 +777,9 @@ public class EloScanner {
             return null;
         }
 
-        // 4. Ưu tiên số trong ngoặc đơn: "Magnus (2850)", "Bot Martin (250)", "(1500)"
-        Matcher mBracket = Pattern.compile(".*?\\((\\d{2,4})\\??\\).*?").matcher(s);
-        if (mBracket.matches()) {
+        // 4. Ưu tiên số trong ngoặc đơn (dùng find() để bắt trúng ngay cả khi có emoji/cờ/ký tự lạ)
+        Matcher mBracket = Pattern.compile("\\((\\d{3,4})\\??\\)").matcher(s);
+        if (mBracket.find()) {
             try {
                 int val = Integer.parseInt(mBracket.group(1));
                 if (isValidElo(val)) return val;
@@ -494,16 +787,16 @@ public class EloScanner {
         }
 
         // 5. Dạng kèm từ khoá: "Rating: 1500", "Elo: 1500", "1500 Rapid", "Blitz • 1820"
-        Matcher mWord = Pattern.compile(".*?(?:rating|elo|rapid|blitz|bullet|daily)\\s*[:•\\-\\s]\\s*\\(?(\\d{2,4})\\??\\)?.*?", Pattern.CASE_INSENSITIVE).matcher(s);
-        if (mWord.matches()) {
+        Matcher mWord = Pattern.compile("(?:rating|elo|rapid|blitz|bullet|daily)\\s*[:•\\-\\s]\\s*\\(?(\\d{3,4})\\??\\)?", Pattern.CASE_INSENSITIVE).matcher(s);
+        if (mWord.find()) {
             try {
                 int val = Integer.parseInt(mWord.group(1));
                 if (isValidElo(val)) return val;
             } catch (Throwable ignored) {}
         }
 
-        Matcher mWordRev = Pattern.compile(".*?\\(?(\\d{2,4})\\??\\)?\\s*[:•\\-\\s]\\s*(?:rating|elo|rapid|blitz|bullet|daily).*?", Pattern.CASE_INSENSITIVE).matcher(s);
-        if (mWordRev.matches()) {
+        Matcher mWordRev = Pattern.compile("\\(?(\\d{3,4})\\??\\)?\\s*[:•\\-\\s]\\s*(?:rating|elo|rapid|blitz|bullet|daily)", Pattern.CASE_INSENSITIVE).matcher(s);
+        if (mWordRev.find()) {
             try {
                 int val = Integer.parseInt(mWordRev.group(1));
                 if (isValidElo(val)) return val;
@@ -511,7 +804,7 @@ public class EloScanner {
         }
 
         // 6. Số đứng độc lập hoặc trong ngoặc: "1500", "(1500)"
-        Matcher mDirect = Pattern.compile("^\\(?(\\d{2,4})\\??\\)?$").matcher(s);
+        Matcher mDirect = Pattern.compile("^\\(?(\\d{3,4})\\??\\)?$").matcher(s);
         if (mDirect.matches()) {
             try {
                 int val = Integer.parseInt(mDirect.group(1));

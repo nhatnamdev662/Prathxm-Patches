@@ -3,5 +3,7 @@
   "description": "## [2.0.31] (2026-10-08)\n\n### ⚡ NNVC v2.0.31 — Sửa Triệt Để Lỗi Lệch Bàn Cờ Khi Bị Chèn Bởi ChessBoardLayout (Live Match)\n\n* **Khắc phục lỗi lệch bàn cờ (Root Cause Fixed):** Tìm chính xác `ChessBoardView` bên trong thay vì bị nhận nhầm container ngoài `ChessBoardLayout` (vốn bao gồm cả thẻ thông tin người chơi phía trên và đồng hồ làm đẩy toàn bộ overlay lên trên).\n* **Nhận diện Flipped chính xác 100%:** Kiểm tra trực tiếp hàm `getFlipBoard()` từ `ChessBoardView` giúp nhận diện cầm Đen / Trắng chính xác ngay lập tức trên mọi màn hình đấu trực tiếp.\n* **Chuẩn hóa tọa độ DecorView:** Tính toán delta giữa window location của bàn cờ và decor view cùng padding hệ thống, đảm bảo tuyệt đối khớp 1:1.\n* **Author:** NNVC (@nncutett)",
   "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.31/patches-2.0.31.mpp",
   "signature_download_url": "",
-  "version": "2.0.31"
+  "version": "2.0.32",
+  "versionCode": 20032,
+  "downloadUrl": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.32/patches-2.0.32.mpp"
 }
