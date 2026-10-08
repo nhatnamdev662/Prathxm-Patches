@@ -99,8 +99,7 @@ public class ArrowOverlayView extends View {
     private final List<ArrowData> arrows = new ArrayList<>();
     private boolean flipped = false;
 
-    private ClassificationBadgeData whiteBadge = null;
-    private ClassificationBadgeData blackBadge = null;
+    private ClassificationBadgeData currentBadge = null;
     private final Paint badgeCirclePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint badgeTextPaint2 = new Paint(Paint.ANTI_ALIAS_FLAG);
 
@@ -153,23 +152,17 @@ public class ArrowOverlayView extends View {
     }
 
     public void setClassificationBadge(String fromSquare, String toSquare, String classificationName, boolean isWhite, boolean isMyMove) {
-        ClassificationBadgeData data = new ClassificationBadgeData(fromSquare, toSquare, classificationName, isWhite, isMyMove);
-        if (isWhite) {
-            this.whiteBadge = data;
-        } else {
-            this.blackBadge = data;
-        }
+        this.currentBadge = new ClassificationBadgeData(fromSquare, toSquare, classificationName, isWhite, isMyMove);
         invalidate();
     }
 
     public void clearClassificationBadge() {
-        this.whiteBadge = null;
-        this.blackBadge = null;
+        this.currentBadge = null;
         invalidate();
     }
 
     public boolean hasBadges() {
-        return whiteBadge != null || blackBadge != null;
+        return currentBadge != null;
     }
 
     public void clearArrowsOnly() {
@@ -211,8 +204,7 @@ public class ArrowOverlayView extends View {
 
     public void clear() {
         this.arrows.clear();
-        this.whiteBadge = null;
-        this.blackBadge = null;
+        this.currentBadge = null;
         invalidate();
     }
 
@@ -240,12 +232,9 @@ public class ArrowOverlayView extends View {
             drawEvalBadges(canvas, sqSize);
         }
 
-        // 3. Draw Square Classification Badges (Both White and Black recent moves)
-        if (whiteBadge != null) {
-            drawSingleClassificationBadge(canvas, sqSize, whiteBadge);
-        }
-        if (blackBadge != null) {
-            drawSingleClassificationBadge(canvas, sqSize, blackBadge);
+        // 3. Draw Square Classification Badge (Chỉ hiển thị nước đi mới nhất hiện tại)
+        if (currentBadge != null) {
+            drawSingleClassificationBadge(canvas, sqSize, currentBadge);
         }
     }
 

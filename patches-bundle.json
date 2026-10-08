@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-10-08T14:35:00",
-  "description": "## [2.0.26] (2026-10-08)\n\n### ⚡ NNVC v2.0.26 — Trọn bộ Hiệu ứng Ô cờ & Hoạt ảnh Pop-in Huy hiệu Game Review Chess.com\n\n* **Hiệu ứng Tô màu Ô cờ (Square Highlights):** Tự động tô màu lớp phủ chuẩn Game Review lên ô xuất phát và ô đích theo đúng gam màu phân loại (Brilliant/Great: Xanh ngọc, Best/Excellent: Xanh lá, Good/Book: Nâu/Vàng nhạt, Inaccuracy: Vàng chanh, Mistake: Cam, Blunder/Miss: Đỏ).\n* **Hiệu ứng Hoạt ảnh Nảy (Pop-in Scale Animation):** Huy hiệu khi xuất hiện có hiệu ứng phóng to nảy đàn hồi (scale overshoot 0.3 -> 1.15 -> 1.0) cực mượt mà.\n* **Hiệu ứng Hào quang Phát sáng (Radial Glow):** Ô cờ phát ra ánh sáng tỏa mờ (Blur Glow) rực rỡ khi người chơi thực hiện nước cờ Brilliant (!!) hoặc Great Move (!).\n* **Author:** NNVC (@nncutett)",
-  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.26/patches-2.0.26.mpp",
+  "created_at": "2026-10-08T14:40:00",
+  "description": "## [2.0.27] (2026-10-08)\n\n### ⚡ NNVC v2.0.27 — Chuẩn hoá Hiển thị Đúng 1 Phân loại Nước đi Mới nhất theo Game Review Chess.com\n\n* **Chỉ hiển thị đúng 1 phân loại duy nhất:** Khi đối thủ đi cờ, huy hiệu và hiệu ứng ô cờ của người chơi được thay thế ngay lập tức bằng nước đi mới của đối thủ (không còn tồn tại song song 2 huy hiệu trên bàn cờ).\n* **Hiệu ứng Tô màu Ô cờ (Square Highlights):** Tô màu chuẩn xác ô xuất phát và ô đích theo đúng loại nước đi hiện tại.\n* **Hoạt ảnh nảy đàn hồi (Pop-in Scale):** Scale overshoot 250ms cực mượt mỗi khi xuất hiện nước đi mới.\n* **Author:** NNVC (@nncutett)",
+  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.27/patches-2.0.27.mpp",
   "signature_download_url": "",
-  "version": "2.0.26"
+  "version": "2.0.27"
 }
