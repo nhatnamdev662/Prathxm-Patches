@@ -16,6 +16,11 @@ import android.view.Window;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.view.animation.DecelerateInterpolator;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
+import android.text.style.ForegroundColorSpan;
+import android.text.style.StyleSpan;
+import android.widget.HorizontalScrollView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
@@ -1442,76 +1447,254 @@ public class StockfishSettingsDialog {
         logDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
 
         final GradientDrawable bg = new GradientDrawable();
-        bg.setColor(0xF20A0D14);
-        bg.setCornerRadius(18 * density);
-        bg.setStroke((int) (1.2f * density), COLOR_ACCENT_CYAN);
+        bg.setColor(0xF4080B12); // Deep Cyber Black Glass
+        bg.setCornerRadius(20 * density);
+        bg.setStroke((int) (1.4f * density), COLOR_ACCENT_BLUE);
         logDialog.getWindow().setBackgroundDrawable(bg);
 
         LinearLayout root = new LinearLayout(activity);
         root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding((int) (16 * density), (int) (16 * density), (int) (16 * density), (int) (16 * density));
+        root.setPadding((int) (14 * density), (int) (14 * density), (int) (14 * density), (int) (14 * density));
 
-        // Header Title
+        // ── 1. Header: Console Title & System Status Dot ─────────────────────────
+        LinearLayout headerRow = new LinearLayout(activity);
+        headerRow.setOrientation(LinearLayout.HORIZONTAL);
+        headerRow.setGravity(Gravity.CENTER_VERTICAL);
+
         TextView titleTv = new TextView(activity);
-        titleTv.setText("📋 NHẬT KÝ CHẨN ĐOÁN (TORCH & ENGINE)");
+        titleTv.setText("⚡ NHẬT KÝ HỆ THỐNG & TORCH");
         titleTv.setTextColor(COLOR_ACCENT_CYAN);
         titleTv.setTextSize(13.5f);
         titleTv.setTypeface(Typeface.create("monospace", Typeface.BOLD));
-        root.addView(titleTv);
+        LinearLayout.LayoutParams titleLp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+        headerRow.addView(titleTv, titleLp);
 
-        TextView subTv = new TextView(activity);
-        subTv.setText("Ghi lại tiến trình khởi động WASM, tải file và phân loại nước đi.");
+        // Status Badge
+        boolean isTorchReady = TorchEngine.getInstance(activity).isReady();
+        TextView statusBadge = new TextView(activity);
+        statusBadge.setText(isTorchReady ? "● SẴN SÀNG" : "○ ĐANG KHỞI ĐỘNG");
+        statusBadge.setTextColor(isTorchReady ? COLOR_GREEN_READY : COLOR_ACCENT_GOLD);
+        statusBadge.setTextSize(10.5f);
+        statusBadge.setTypeface(Typeface.create("monospace", Typeface.BOLD));
+        statusBadge.setPadding((int) (8 * density), (int) (3 * density), (int) (8 * density), (int) (3 * density));
+        GradientDrawable badgeBg = new GradientDrawable();
+        badgeBg.setColor(isTorchReady ? 0x2230D158 : 0x22FFD760);
+        badgeBg.setCornerRadius(6 * density);
+        badgeBg.setStroke((int) (1 * density), isTorchReady ? 0x6630D158 : 0x66FFD760);
+        statusBadge.setBackground(badgeBg);
+        headerRow.addView(statusBadge);
+
+        root.addView(headerRow);
+
+        // Subtitle / Counter
+        final TextView subTv = new TextView(activity);
         subTv.setTextColor(COLOR_TEXT_MUTED);
-        subTv.setTextSize(11f);
-        subTv.setPadding(0, (int) (2 * density), 0, (int) (8 * density));
+        subTv.setTextSize(10.5f);
+        subTv.setPadding(0, (int) (4 * density), 0, (int) (6 * density));
         root.addView(subTv);
 
-        // Scrollable Log Box
-        ScrollView sv = new ScrollView(activity);
+        // ── 2. Filter Chips Row (Tất cả / Torch / Stockfish / Elo / Lỗi) ─────────
+        HorizontalScrollView filterScroll = new HorizontalScrollView(activity);
+        filterScroll.setHorizontalScrollBarEnabled(false);
+        LinearLayout filterRow = new LinearLayout(activity);
+        filterRow.setOrientation(LinearLayout.HORIZONTAL);
+        filterRow.setPadding(0, (int) (2 * density), 0, (int) (8 * density));
+
+        final String[] FILTER_KEYS = {"ALL", "TORCH", "STOCKFISH", "BOARD_ELO", "ERROR"};
+        final String[] FILTER_LABELS = {"Tất cả", "Torch / Phân loại", "Stockfish", "Bàn cờ & Elo", "Lỗi / Cảnh báo"};
+        final TextView[] chipViews = new TextView[FILTER_KEYS.length];
+        final String[] currentFilter = {"ALL"};
+
+        filterScroll.addView(filterRow);
+        root.addView(filterScroll);
+
+        // ── 3. Terminal Log Container ───────────────────────────────────────────
+        final ScrollView sv = new ScrollView(activity);
         sv.setLayoutParams(new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, (int) (dm.heightPixels * 0.45f)
+                ViewGroup.LayoutParams.MATCH_PARENT, (int) (dm.heightPixels * 0.48f)
         ));
-        sv.setBackgroundColor(0xCC05070A);
+        GradientDrawable termBg = new GradientDrawable();
+        termBg.setColor(0xFF06090F); // True Midnight Terminal
+        termBg.setCornerRadius(12 * density);
+        termBg.setStroke((int) (1.2f * density), 0x3338BDF8);
+        sv.setBackground(termBg);
+        sv.setVerticalScrollBarEnabled(true);
+        sv.setScrollbarFadingEnabled(false);
         sv.setPadding((int) (10 * density), (int) (10 * density), (int) (10 * density), (int) (10 * density));
 
         final TextView logContentTv = new TextView(activity);
-        final String currentLogs = TorchEngine.getFormattedLogs();
-        logContentTv.setText(currentLogs);
-        logContentTv.setTextColor(COLOR_TEXT_SECONDARY);
+        logContentTv.setTextColor(0xFFE2E8F0);
         logContentTv.setTextSize(10.5f);
         logContentTv.setTypeface(Typeface.create("monospace", Typeface.NORMAL));
+        logContentTv.setLineSpacing(3 * density, 1f);
         logContentTv.setTextIsSelectable(true);
         sv.addView(logContentTv);
         root.addView(sv);
 
-        addDialogSpacer(root, 12, density);
+        // Hàm auto-scroll xuống cuối cùng
+        final Runnable scrollToBottom = () -> {
+            sv.post(() -> sv.fullScroll(ScrollView.FOCUS_DOWN));
+        };
 
-        // Action Buttons Row
-        LinearLayout btnRow = new LinearLayout(activity);
-        btnRow.setOrientation(LinearLayout.HORIZONTAL);
-        btnRow.setGravity(Gravity.END);
+        // Hàm cập nhật hiển thị log theo filter
+        final Runnable reloadLogs = () -> {
+            java.util.List<String> raw = TorchEngine.getRawLogs();
+            subTv.setText("Tổng cộng: " + raw.size() + "/300 mục nhật ký • Bộ lọc: " + currentFilter[0]);
+            SpannableStringBuilder spanned = buildHighlightedLogs(raw, currentFilter[0]);
+            logContentTv.setText(spanned);
+            scrollToBottom.run();
+            sv.postDelayed(scrollToBottom, 120);
+        };
 
-        // Close Button
+        // Tạo các filter chips
+        for (int i = 0; i < FILTER_KEYS.length; i++) {
+            final int idx = i;
+            final String key = FILTER_KEYS[i];
+            TextView chip = new TextView(activity);
+            chip.setText(FILTER_LABELS[i]);
+            chip.setTextSize(11f);
+            chip.setPadding((int) (12 * density), (int) (5 * density), (int) (12 * density), (int) (5 * density));
+            chipViews[i] = chip;
+
+            chip.setOnClickListener(v -> {
+                HapticHelper.pop(activity, v);
+                currentFilter[0] = key;
+                for (int j = 0; j < chipViews.length; j++) {
+                    boolean sel = (j == idx);
+                    GradientDrawable cBg = new GradientDrawable();
+                    cBg.setCornerRadius(14 * density);
+                    if (sel) {
+                        cBg.setColor(COLOR_ACCENT_BLUE);
+                        cBg.setStroke((int) (1 * density), COLOR_ACCENT_CYAN);
+                        chipViews[j].setTextColor(COLOR_TEXT_PRIMARY);
+                        chipViews[j].setTypeface(Typeface.DEFAULT_BOLD);
+                    } else {
+                        cBg.setColor(0x441E2536);
+                        cBg.setStroke((int) (1 * density), 0x2264D2FF);
+                        chipViews[j].setTextColor(0xFFA0B4D2);
+                        chipViews[j].setTypeface(Typeface.DEFAULT);
+                    }
+                    chipViews[j].setBackground(cBg);
+                }
+                reloadLogs.run();
+            });
+
+            LinearLayout.LayoutParams clp = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT
+            );
+            clp.setMargins(0, 0, (int) (6 * density), 0);
+            filterRow.addView(chip, clp);
+        }
+
+        // Kích hoạt mặc định chip "Tất cả"
+        GradientDrawable initSelBg = new GradientDrawable();
+        initSelBg.setColor(COLOR_ACCENT_BLUE);
+        initSelBg.setCornerRadius(14 * density);
+        initSelBg.setStroke((int) (1 * density), COLOR_ACCENT_CYAN);
+        chipViews[0].setBackground(initSelBg);
+        chipViews[0].setTextColor(COLOR_TEXT_PRIMARY);
+        chipViews[0].setTypeface(Typeface.DEFAULT_BOLD);
+
+        for (int j = 1; j < chipViews.length; j++) {
+            GradientDrawable unBg = new GradientDrawable();
+            unBg.setColor(0x441E2536);
+            unBg.setCornerRadius(14 * density);
+            unBg.setStroke((int) (1 * density), 0x2264D2FF);
+            chipViews[j].setBackground(unBg);
+            chipViews[j].setTextColor(0xFFA0B4D2);
+        }
+
+        addDialogSpacer(root, 10, density);
+
+        // ── 4. Quick Toolbar & Action Buttons Row ───────────────────────────────
+        LinearLayout actionRow = new LinearLayout(activity);
+        actionRow.setOrientation(LinearLayout.HORIZONTAL);
+        actionRow.setGravity(Gravity.CENTER_VERTICAL);
+
+        // Nút Cuộn xuống cuối (Jump to Bottom)
+        TextView jumpBottomBtn = new TextView(activity);
+        jumpBottomBtn.setText("⬇ Cuối");
+        jumpBottomBtn.setTextColor(0xFF38BDF8);
+        jumpBottomBtn.setTextSize(11.5f);
+        jumpBottomBtn.setTypeface(Typeface.DEFAULT_BOLD);
+        jumpBottomBtn.setPadding((int) (10 * density), (int) (6 * density), (int) (10 * density), (int) (6 * density));
+        GradientDrawable jumpBg = new GradientDrawable();
+        jumpBg.setColor(0x330284C7);
+        jumpBg.setCornerRadius(8 * density);
+        jumpBg.setStroke((int) (1 * density), 0x6638BDF8);
+        jumpBottomBtn.setBackground(jumpBg);
+        jumpBottomBtn.setOnClickListener(v -> {
+            HapticHelper.pop(activity, v);
+            scrollToBottom.run();
+        });
+        actionRow.addView(jumpBottomBtn);
+
+        View sp1 = new View(activity);
+        sp1.setLayoutParams(new LinearLayout.LayoutParams((int) (6 * density), 1));
+        actionRow.addView(sp1);
+
+        // Nút Cuộn lên đầu (Jump to Top)
+        TextView jumpTopBtn = new TextView(activity);
+        jumpTopBtn.setText("⬆ Đầu");
+        jumpTopBtn.setTextColor(COLOR_TEXT_MUTED);
+        jumpTopBtn.setTextSize(11.5f);
+        jumpTopBtn.setPadding((int) (10 * density), (int) (6 * density), (int) (10 * density), (int) (6 * density));
+        GradientDrawable topBg = new GradientDrawable();
+        topBg.setColor(0x221E2536);
+        topBg.setCornerRadius(8 * density);
+        jumpTopBtn.setBackground(topBg);
+        jumpTopBtn.setOnClickListener(v -> {
+            HapticHelper.pop(activity, v);
+            sv.fullScroll(ScrollView.FOCUS_UP);
+        });
+        actionRow.addView(jumpTopBtn);
+
+        View sp2 = new View(activity);
+        sp2.setLayoutParams(new LinearLayout.LayoutParams((int) (6 * density), 1));
+        actionRow.addView(sp2);
+
+        // Nút Xóa Log (Clear)
+        TextView clearBtn = new TextView(activity);
+        clearBtn.setText("🗑️ Xóa");
+        clearBtn.setTextColor(COLOR_DANGER_RED);
+        clearBtn.setTextSize(11.5f);
+        clearBtn.setPadding((int) (10 * density), (int) (6 * density), (int) (10 * density), (int) (6 * density));
+        GradientDrawable clearBg = new GradientDrawable();
+        clearBg.setColor(0x22FF453A);
+        clearBg.setCornerRadius(8 * density);
+        clearBg.setStroke((int) (1 * density), 0x44FF453A);
+        clearBtn.setBackground(clearBg);
+        clearBtn.setOnClickListener(v -> {
+            HapticHelper.pop(activity, v);
+            TorchEngine.clearLogs();
+            reloadLogs.run();
+        });
+        actionRow.addView(clearBtn);
+
+        // Spacer đẩy nút sang phải
+        View flexSpacer = new View(activity);
+        actionRow.addView(flexSpacer, new LinearLayout.LayoutParams(0, 1, 1f));
+
+        // Nút Đóng
         TextView closeBtn = new TextView(activity);
         closeBtn.setText("Đóng");
         closeBtn.setTextColor(COLOR_TEXT_MUTED);
-        closeBtn.setTextSize(13);
-        closeBtn.setPadding((int) (14 * density), (int) (8 * density), (int) (14 * density), (int) (8 * density));
+        closeBtn.setTextSize(12.5f);
+        closeBtn.setPadding((int) (12 * density), (int) (8 * density), (int) (12 * density), (int) (8 * density));
         closeBtn.setOnClickListener(v -> logDialog.dismiss());
-        btnRow.addView(closeBtn);
+        actionRow.addView(closeBtn);
 
-        View sp = new View(activity);
-        sp.setLayoutParams(new LinearLayout.LayoutParams((int) (8 * density), 1));
-        btnRow.addView(sp);
+        View sp3 = new View(activity);
+        sp3.setLayoutParams(new LinearLayout.LayoutParams((int) (6 * density), 1));
+        actionRow.addView(sp3);
 
-        // Copy Button
+        // Nút Sao chép Log
         TextView copyBtn = new TextView(activity);
-        copyBtn.setText("📋 Sao chép Log");
+        copyBtn.setText("📋 Sao chép");
         copyBtn.setTextColor(COLOR_TEXT_PRIMARY);
-        copyBtn.setTextSize(13);
+        copyBtn.setTextSize(12.5f);
         copyBtn.setTypeface(Typeface.create("sans-serif-medium", Typeface.BOLD));
-        copyBtn.setPadding((int) (18 * density), (int) (8 * density), (int) (18 * density), (int) (8 * density));
-
+        copyBtn.setPadding((int) (16 * density), (int) (8 * density), (int) (16 * density), (int) (8 * density));
         GradientDrawable copyBg = new GradientDrawable();
         copyBg.setColor(COLOR_ACCENT_BLUE);
         copyBg.setCornerRadius(10 * density);
@@ -1523,7 +1706,8 @@ public class StockfishSettingsDialog {
             try {
                 android.content.ClipboardManager cm = (android.content.ClipboardManager) activity.getSystemService(android.content.Context.CLIPBOARD_SERVICE);
                 if (cm != null) {
-                    android.content.ClipData clip = android.content.ClipData.newPlainText("Torch Diagnostics", currentLogs);
+                    CharSequence textToCopy = logContentTv.getText();
+                    android.content.ClipData clip = android.content.ClipData.newPlainText("Torch Diagnostics", textToCopy);
                     cm.setPrimaryClip(clip);
                     Toast.makeText(activity, "Đã sao chép Log vào bộ nhớ tạm!", Toast.LENGTH_SHORT).show();
                 }
@@ -1531,13 +1715,106 @@ public class StockfishSettingsDialog {
                 Toast.makeText(activity, "Lỗi sao chép: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
-        btnRow.addView(copyBtn);
+        actionRow.addView(copyBtn);
 
-        root.addView(btnRow);
+        root.addView(actionRow);
+
+        // Tải nội dung log ban đầu và auto-scroll xuống đáy
+        reloadLogs.run();
 
         logDialog.setContentView(root);
         logDialog.show();
-        logDialog.getWindow().setLayout((int) (dm.widthPixels * 0.92f), ViewGroup.LayoutParams.WRAP_CONTENT);
+        logDialog.getWindow().setLayout((int) (dm.widthPixels * 0.94f), ViewGroup.LayoutParams.WRAP_CONTENT);
+    }
+
+    private static SpannableStringBuilder buildHighlightedLogs(java.util.List<String> rawLogs, String filterMode) {
+        SpannableStringBuilder sb = new SpannableStringBuilder();
+        if (rawLogs == null || rawLogs.isEmpty()) {
+            sb.append("Chưa có log nào được ghi nhận.");
+            return sb;
+        }
+
+        for (String line : rawLogs) {
+            if (line == null || line.trim().isEmpty()) continue;
+
+            // Bộ lọc filterMode
+            if ("TORCH".equals(filterMode)) {
+                if (!line.contains("[TORCH") && !line.contains("[CLASSIFIER") && !line.contains("[BRIDGE") && !line.contains("[CLASSIFIED") && !line.contains("[ANALYZE")) {
+                    continue;
+                }
+            } else if ("STOCKFISH".equals(filterMode)) {
+                if (!line.contains("[STOCKFISH")) {
+                    continue;
+                }
+            } else if ("BOARD_ELO".equals(filterMode)) {
+                if (!line.contains("[BOARD") && !line.contains("[POSITION") && !line.contains("[ELO")) {
+                    continue;
+                }
+            } else if ("ERROR".equals(filterMode)) {
+                if (!line.contains("ERROR") && !line.contains("WARN") && !line.contains("BLOCKED") && !line.contains("Abort") && !line.contains("FAIL")) {
+                    continue;
+                }
+            }
+
+            int lineStart = sb.length();
+            sb.append(line).append("\n");
+
+            // 1. Timestamp (ví dụ 13:01:53.306)
+            int firstSpace = line.indexOf(' ');
+            if (firstSpace > 0 && firstSpace <= 16) {
+                sb.setSpan(new ForegroundColorSpan(0xFF64748B), lineStart, lineStart + firstSpace, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            }
+
+            // 2. Tag trong dấu [ ... ]
+            int openBracket = line.indexOf('[');
+            int closeBracket = line.indexOf(']', openBracket);
+            if (openBracket >= 0 && closeBracket > openBracket) {
+                String tag = line.substring(openBracket, closeBracket + 1);
+                int tagStart = lineStart + openBracket;
+                int tagEnd = lineStart + closeBracket + 1;
+
+                int tagColor;
+                boolean isBold = true;
+                if (tag.contains("ERROR") || tag.contains("Abort") || tag.contains("FAIL")) {
+                    tagColor = 0xFFFF453A; // Đỏ tươi
+                } else if (tag.contains("WARN") || tag.contains("BLOCKED")) {
+                    tagColor = 0xFFFF9F0A; // Vàng cam
+                } else if (tag.contains("BESTMOVE") || tag.contains("CLASSIFIED")) {
+                    tagColor = 0xFF30D158; // Xanh lá
+                } else if (tag.contains("PARSED") || tag.contains("RESULT")) {
+                    tagColor = 0xFFFFD760; // Vàng kim
+                } else if (tag.contains("STOCKFISH GO") || tag.contains("ANALYZE SEND")) {
+                    tagColor = 0xFF64D2FF; // Xanh lơ cyan
+                } else if (tag.contains("BRIDGE") || tag.contains("TORCH") || tag.contains("INIT") || tag.contains("HTTP")) {
+                    tagColor = 0xFFBF5AF2; // Tím neon
+                } else if (tag.contains("ELO")) {
+                    tagColor = 0xFF34D399; // Xanh ngọc mint
+                } else if (tag.contains("BOARD") || tag.contains("POSITION")) {
+                    tagColor = 0xFFFF375F; // Hồng rose
+                } else {
+                    tagColor = 0xFF0A84FF; // Xanh royal
+                    isBold = false;
+                }
+
+                sb.setSpan(new ForegroundColorSpan(tagColor), tagStart, tagEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                if (isBold) {
+                    sb.setSpan(new StyleSpan(Typeface.BOLD), tagStart, tagEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                }
+
+                // Nội dung tin nhắn sau tag
+                if (tagEnd < lineStart + line.length()) {
+                    sb.setSpan(new ForegroundColorSpan(0xFFF1F5F9), tagEnd, lineStart + line.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                }
+            } else {
+                int msgStart = (firstSpace > 0) ? lineStart + firstSpace : lineStart;
+                sb.setSpan(new ForegroundColorSpan(0xFFE2E8F0), msgStart, lineStart + line.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            }
+        }
+
+        if (sb.length() == 0) {
+            sb.append("Không có log nào khớp với bộ lọc đã chọn.");
+        }
+        return sb;
     }
 }
 

@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-10-08T13:30:00",
-  "description": "## [2.0.22] (2026-10-08)\n\n### ⚡ NNVC v2.0.22 — Triệt tiêu Lag, Phân biệt [Bạn]/[Đối thủ] & Hoàn thiện nhãn Torch CEE\n\n* **Triệt tiêu 100% hiện tượng khựng/lag khi đi cờ:** Chuyển toàn bộ tác vụ quét Elo và reflection sang Background Thread riêng, snapshot giao diện < 1ms không gây nghẽn Main Thread.\n* **Phân biệt rành mạch [Bạn] vs [Đối thủ]:** Toast phân loại gắn tag [Bạn] hoặc [Đối thủ] rõ ràng theo đúng góc nhìn và màu quân thực tế của người chơi.\n* **Sửa lỗi map nhãn Great Move:** Bổ sung ánh xạ 'greatfind' / 'great_find' thành 'Nước cờ xuất sắc (Great)' [!] thay vì bị nhảy về Good Move [✓].\n* **Nâng cấp nhận diện v1 & v2 ChessBoardView:** Hỗ trợ cả hai thế hệ bàn cờ của Chess.com và mở rộng vùng quét Top/Bottom player.\n* **Author:** NNVC (@nncutett)",
-  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.22/patches-2.0.22.mpp",
+  "created_at": "2026-10-08T13:50:00",
+  "description": "## [2.0.23] (2026-10-08)\n\n### ⚡ NNVC v2.0.23 — Xóa Toast rác chạy ngầm & Thiết kế lại Giao diện Log Console hiện đại\n\n* **Loại bỏ 100% Toast rác:** Xóa sạch các thông báo hệ thống làm phiền ('WASM sẵn sàng', 'Đang tải engine', cảnh báo startpos, v.v.), không còn bị popup khi thoát app hay chạy ngầm.\n* **Thiết kế lại Giao diện Log Console chuyên nghiệp:** Giao diện Terminal Sapphire chuẩn Cyberpunk, viền mờ bo cong 20dp, bố cục rộng rãi thoáng đãng.\n* **Tự động cuộn xuống đáy (Auto-scroll to bottom):** Vừa mở Log là lập tức thấy các dòng log mới nhất, không cần phải vuốt kéo.\n* **Tô màu cú pháp thông minh (Syntax Highlighting):** Phân màu chi tiết từng tag [ERROR], [WARN], [BESTMOVE], [CLASSIFIED], [TORCH], [STOCKFISH], [ELO], [BOARD] và timestamp xám mờ.\n* **Thanh lọc nhanh (Filter Chips):** Dễ dàng lọc log theo danh mục: [Tất cả], [Torch / Phân loại], [Stockfish], [Bàn cờ & Elo], [Lỗi / Cảnh báo].\n* **Thao tác nhanh tiện lợi:** Bổ sung các nút [⬇ Cuối], [⬆ Đầu], [🗑️ Xóa log], [📋 Sao chép].\n* **Author:** NNVC (@nncutett)",
+  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.23/patches-2.0.23.mpp",
   "signature_download_url": "",
-  "version": "2.0.22"
+  "version": "2.0.23"
 }

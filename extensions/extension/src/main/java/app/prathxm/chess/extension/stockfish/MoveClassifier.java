@@ -473,11 +473,6 @@ public class MoveClassifier {
                 String firstMove = moves.get(0);
                 if (!STARTPOS_LEGAL_FIRST_MOVES.contains(firstMove)) {
                     TorchEngine.log("[TORCH CLASSIFIER BLOCKED] Nước đầu tiên '" + firstMove + "' không thể đi từ startpos (Vào lại giữa ván và không có lịch sử). Chặn gửi lệnh để bảo vệ WebAssembly khỏi Abort.");
-                    if (currentAct != null) {
-                        boolean isVi = "vi".equalsIgnoreCase(StockfishSettings.getLanguage(currentAct));
-                        final String blockedText = isVi ? "⚠️ [Torch Coach] Cần lịch sử nước đi từ đầu ván" : "⚠️ [Torch Coach] Missing moves from startpos";
-                        currentAct.runOnUiThread(() -> Toast.makeText(currentAct, blockedText, Toast.LENGTH_SHORT).show());
-                    }
                     return;
                 }
 
@@ -493,29 +488,15 @@ public class MoveClassifier {
                             });
                         }
                     } else {
-                        // 100% phụ thuộc vào Torch: Không chuyển sang Stockfish, báo lỗi rõ ràng nếu thiếu lịch sử startpos
+                        // 100% phụ thuộc vào Torch: Không chuyển sang Stockfish, chỉ ghi log
                         TorchEngine.log("[TORCH CLASSIFIER ERROR] Không thể phân loại: Torch CEE trả về null (Thiếu chuỗi startpos hoặc lỗi WebAssembly)");
-                        if (currentAct != null) {
-                            boolean isVi = "vi".equalsIgnoreCase(StockfishSettings.getLanguage(currentAct));
-                            final String errText = isVi ? "⚠️ [Torch Coach] Không thể phân loại (Thiếu lịch sử nước đi)" : "⚠️ [Torch Coach] Classification failed (Missing move history)";
-                            currentAct.runOnUiThread(() -> {
-                                Toast.makeText(currentAct, errText, Toast.LENGTH_SHORT).show();
-                            });
-                        }
                     }
                 });
                 return;
             }
 
-            // Torch Engine chưa sẵn sàng: Báo lỗi và ghi log, tuyệt đối không gọi SF
+            // Torch Engine chưa sẵn sàng: Ghi log, không hiện toast làm phiền người dùng
             TorchEngine.log("[TORCH CLASSIFIER ERROR] Torch Engine WASM chưa sẵn sàng!");
-            if (activity != null) {
-                boolean isVi = "vi".equalsIgnoreCase(StockfishSettings.getLanguage(activity));
-                final String notReadyText = isVi ? "⚠️ [Torch Coach] Engine đang khởi động..." : "⚠️ [Torch Coach] Engine initializing...";
-                activity.runOnUiThread(() -> {
-                    Toast.makeText(activity, notReadyText, Toast.LENGTH_SHORT).show();
-                });
-            }
         } catch (Throwable t) {
             Log.e(TAG, "Error in classifyMoveIfPossible: " + t.getMessage());
         }
@@ -523,6 +504,8 @@ public class MoveClassifier {
 
     private static void displayTorchClassification(Activity activity, String torchName, String uciMove, String speechText, boolean isMyMove) {
         if (activity == null || torchName == null) return;
+        if (activity.isFinishing()) return;
+        if (Build.VERSION.SDK_INT >= 17 && activity.isDestroyed()) return;
         boolean isVi = "vi".equalsIgnoreCase(StockfishSettings.getLanguage(activity));
         String classification;
         String emoji;

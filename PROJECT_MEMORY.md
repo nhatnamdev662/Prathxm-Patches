@@ -1,6 +1,6 @@
 # NHẬT KÝ DỰ ÁN & BỘ GHI NHỚ DẶN DÒ (PROJECT MEMORY)
 *Dự án: Chess Mobile - ReVanced Extension Patches cho Chess.com Android*
-*Phiên bản hiện tại: v2.0.22*
+*Phiên bản hiện tại: v2.0.23*
 *Cập nhật lần cuối: 2026-10-08*
 
 ---
@@ -167,18 +167,26 @@
   - **Hỗ trợ v1 và v2 ChessBoardView**:
     - Mở rộng `findChessBoardView` nhận diện cả `com.chess.chessboard.v2.ChessBoardView`.
     - Bổ sung log chẩn đoán `[ELO DEBUG]` chi tiết từng bước.
+- **v2.0.23**:
+  - **Triệt tiêu 100% Toast rác chạy ngầm / hệ thống**:
+    - Xóa bỏ toàn bộ các Toast thông báo trạng thái nội bộ (`[Torch] Engine WASM sẵn sàng (100% Real)`, `Đang tải engine Torch`, `Tải hoàn tất`, cảnh báo startpos, v.v.).
+    - Đảm bảo khi người dùng đóng app hoặc ra ngoài màn hình không bao giờ bị popup làm phiền.
+    - Thêm kiểm tra vòng đời `isFinishing()` và `isDestroyed()` để bảo vệ toast phân loại nước đi.
+  - **Đại tu giao diện Nhật ký chẩn đoán (Log Console)**:
+    - **Tự động cuộn xuống đáy (Auto-scroll to bottom)**: Khi mở màn hình Log, tự động cuộn xuống dưới cùng để người dùng thấy ngay các log mới nhất.
+    - **Tô màu cú pháp thông minh (Syntax Highlighting)**: Dùng `SpannableStringBuilder` phân biệt rực rỡ các tag `[ERROR]`, `[WARN]`, `[BESTMOVE]`, `[CLASSIFIED]`, `[TORCH]`, `[STOCKFISH]`, `[ELO]`, `[BOARD]` và timestamp.
+    - **Thanh lọc nhanh (Filter Chips)**: Thêm 5 chip lựa chọn: `Tất cả`, `Torch / Phân loại`, `Stockfish`, `Bàn cờ & Elo`, `Lỗi / Cảnh báo`.
+    - **Thao tác nhanh**: Thêm nút `⬇ Cuối`, `⬆ Đầu`, `🗑️ Xóa log`, `📋 Sao chép`.
 
 ---
 
 ## 3. TRẠNG THÁI HIỆN TẠI & KẾ HOẠCH TIẾP THEO
 
 ### 3.1. Trạng thái hiện tại
-- **Phiên bản mới nhất**: **v2.0.22** (`patches-2.0.22.mpp`).
-- **Kho lưu trữ GitHub**: Đã sẵn sàng phát hành Release v2.0.22.
+- **Phiên bản mới nhất**: **v2.0.23** (`patches-2.0.23.mpp`).
+- **Kho lưu trữ GitHub**: Đã sẵn sàng phát hành Release v2.0.23.
 - **Trạng thái Repo**: 100% sạch, không commit file `.py`.
 - **Tiến trình kỹ thuật**:
-  1. Triệt tiêu hoàn toàn lag khi đi cờ nhờ off-thread scanning.
-  2. Gắn tag [Bạn] / [Đối thủ] rõ ràng trên Toast phân loại.
-  3. Hoàn thiện toàn bộ các nhãn phân loại Torch CEE (Great Move, Missed Win, v.v.).
-  4. Hỗ trợ đầy đủ v1 và v2 ChessBoardView.
-  5. Giữ vững tính ổn định 100% của WebAssembly Worker.
+  1. Loại bỏ toàn bộ toast rác chạy ngầm, không quấy rầy người dùng.
+  2. Giao diện Log Console hiện đại, tự động cuộn xuống đáy, tô màu cú pháp và có bộ lọc theo danh mục.
+  3. Hoàn thiện ổn định toàn bộ phân hệ Torch CEE và Stockfish Engine.

@@ -58,6 +58,14 @@ public class TorchEngine {
         }
     }
 
+    public static void clearLogs() {
+        DIAGNOSTIC_LOGS.clear();
+    }
+
+    public static List<String> getRawLogs() {
+        return new ArrayList<>(DIAGNOSTIC_LOGS);
+    }
+
     public static String getFormattedLogs() {
         if (DIAGNOSTIC_LOGS.isEmpty()) return "Chưa có log nào được ghi nhận.";
         StringBuilder sb = new StringBuilder();
@@ -335,7 +343,6 @@ public class TorchEngine {
             isReady = true;
             log("[BRIDGE] onTorchReady() -> Engine WASM đã SẴN SÀNG!");
             Log.i(TAG, "Torch WebAssembly engine is READY (100% authentic CEE)");
-            mainHandler.post(() -> Toast.makeText(context, "[Torch] Engine WASM sẵn sàng (100% Real)", Toast.LENGTH_SHORT).show());
         }
 
         @JavascriptInterface
@@ -394,7 +401,7 @@ public class TorchEngine {
 
         new Thread(() -> {
             try {
-                mainHandler.post(() -> Toast.makeText(context, "[Torch] Đang tải engine Torch (26MB) lần đầu...", Toast.LENGTH_LONG).show());
+                log("[TORCH DOWNLOAD] Bắt đầu tải engine Torch (26MB)...");
 
                 File dir = getTorchDir();
                 File wasmFile = new File(dir, "torch.wasm");
@@ -408,15 +415,15 @@ public class TorchEngine {
                 }
 
                 isDownloading.set(false);
+                log("[TORCH DOWNLOAD] Tải hoàn tất! Đang khởi động WebView...");
                 mainHandler.post(() -> {
-                    Toast.makeText(context, "[Torch] Tải hoàn tất! Đang khởi động...", Toast.LENGTH_SHORT).show();
                     initWebView();
                 });
 
             } catch (Throwable t) {
                 isDownloading.set(false);
                 Log.e(TAG, "Download torch files failed: " + t.getMessage(), t);
-                mainHandler.post(() -> Toast.makeText(context, "[Torch] Tải engine thất bại: " + t.getMessage(), Toast.LENGTH_SHORT).show());
+                log("[TORCH DOWNLOAD ERROR] Tải engine thất bại: " + t.getMessage());
             }
         }).start();
     }
