@@ -1,6 +1,6 @@
 # NHẬT KÝ DỰ ÁN & BỘ GHI NHỚ DẶN DÒ (PROJECT MEMORY)
 *Dự án: Chess Mobile - ReVanced Extension Patches cho Chess.com Android*
-*Phiên bản hiện tại: v2.0.20*
+*Phiên bản hiện tại: v2.0.21*
 *Cập nhật lần cuối: 2026-10-08*
 
 ---
@@ -147,17 +147,23 @@
       - Chuyển đổi từng phần tử sang chuỗi UCI move bằng `com.chess.chessboard.compengine.MoveConverterKt.c(item)` (hoặc `b(move)`).
       - Cung cấp chuỗi nước đi đầy đủ 100% từ `startpos` cho `torch.analyze(moves, userColor, ...)`.
       - Giải quyết dứt điểm vấn đề vào giữa ván: Torch CEE phân loại chính xác mọi nước đi mà không bao giờ bị thiếu lịch sử hay crash WebAssembly.
+- **v2.0.21**:
+  - **Deep Reflection & Enhanced Scanner tự động nhận diện Elo cho Torch Coach**:
+    - **Đục sâu Reflection từ Game Models**: Quét đa tầng qua `stateImplObject` và `Activity` (ViewModel, Game Controller) để tìm trực tiếp `RcnGameState` (`getWhiteRating()`, `getBlackRating()`) và `UserInfo` / `LiveUserInfo` (`getRating()`, `getColor()`) của cả 2 bên.
+    - **Nâng cấp Enhanced Regex Scanner**: Hỗ trợ nhận diện số Elo kèm tên hoặc thể loại cờ (ví dụ `Magnus (2850)`, `Bot Martin (250)`, `1500 Rapid`), tự động phát hiện Elo người chơi (Bottom) và đối thủ (Top) dựa theo chiều bàn cờ (Flipped).
+    - **Tự động đồng bộ Elo vào Torch CEE**: Gửi ngay lệnh `setoption name WhiteElo value X` và `setoption name BlackElo value Y` vào WebAssembly Engine để tính toán phân loại chuẩn xác theo trình độ thực tế của ván đấu.
 
 ---
 
 ## 3. TRẠNG THÁI HIỆN TẠI & KẾ HOẠCH TIẾP THEO
 
 ### 3.1. Trạng thái hiện tại
-- **Phiên bản mới nhất**: **v2.0.20** (`patches-2.0.20.mpp`).
-- **Kho lưu trữ GitHub**: Đã sẵn sàng phát hành Release v2.0.20.
+- **Phiên bản mới nhất**: **v2.0.21** (`patches-2.0.21.mpp`).
+- **Kho lưu trữ GitHub**: Đã sẵn sàng phát hành Release v2.0.21.
 - **Trạng thái Repo**: 100% sạch, không commit file `.py`.
 - **Tiến trình kỹ thuật**:
   1. Hook hoàn chỉnh lịch sử nước đi từ `positionObject` cho Torch CEE.
-  2. Bọc an toàn tuyệt đối chống Abort WebAssembly.
-  3. Phân hệ Coach 100% Torch độc lập, không dính dáng tới Stockfish.
-  4. Cấu trúc 5 Tab chuẩn Extension `[ LIVE | ENGINE | COACH | VISUAL | ARROWS ]`.
+  2. Deep Reflection + Enhanced Scanner tự động nhận diện Elo 2 bên.
+  3. Bọc an toàn tuyệt đối chống Abort WebAssembly.
+  4. Phân hệ Coach 100% Torch độc lập, không dính dáng tới Stockfish.
+  5. Cấu trúc 5 Tab chuẩn Extension `[ LIVE | ENGINE | COACH | VISUAL | ARROWS ]`.

@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-10-08T12:40:00",
-  "description": "## [2.0.20] (2026-10-08)\n\n### ⚡ NNVC v2.0.20 — Hook Move History từ PositionObject cho Torch Coach Engine\n\n* **Hook trực tiếp lịch sử nước đi từ Android App:** Trích xuất toàn bộ chuỗi nước đi từ Move 1 thông qua reflection trên positionObject (StandardPosition.h() và MoveConverterKt), đảm bảo Torch CEE luôn nhận được chuỗi moves đầy đủ từ startpos ngay cả khi vào lại giữa ván đấu.\n* **Chống triệt để lỗi Abort WebAssembly:** Loại bỏ hoàn toàn tình trạng WebAssembly Abort do thiếu nước mở màn hoặc chuỗi moves bị ngắt quãng.\n* **Phân loại nước cờ 100% Torch CEE:** Độc lập hoàn toàn, không liên quan đến Stockfish.\n* **Author:** NNVC (@nncutett)",
-  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.20/patches-2.0.20.mpp",
+  "created_at": "2026-10-08T12:55:00",
+  "description": "## [2.0.21] (2026-10-08)\n\n### ⚡ NNVC v2.0.21 — Deep Reflection & Enhanced Scanner tự động nhận diện Elo cho Torch Coach\n\n* **Đục sâu Reflection từ Game Models:** Tự động phát hiện chỉ số Elo trực tiếp từ RcnGameState, UserInfo, LiveUserInfo của Chess.com app mà không cần nhìn giao diện.\n* **Nâng cấp Enhanced Regex Scanner:** Nhận diện linh hoạt các định dạng tên kèm Elo (ví dụ 'Magnus (2850)', 'Bot Martin (250)', '1500 Rapid') ở cả hai bên Trắng và Đen.\n* **Tự động đồng bộ Elo vào Torch CEE:** Gửi ngay lệnh 'setoption name WhiteElo/BlackElo' vào WebAssembly Engine để tính toán phân loại chuẩn xác theo trình độ.\n* **Author:** NNVC (@nncutett)",
+  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.21/patches-2.0.21.mpp",
   "signature_download_url": "",
-  "version": "2.0.20"
+  "version": "2.0.21"
 }

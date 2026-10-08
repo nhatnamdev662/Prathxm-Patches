@@ -85,13 +85,16 @@ public class EloScanner {
     }
 
     /**
-     * Nhận diện cặp Elo với độ chính xác cao.
+     * Nhận diện cặp Elo với độ chính xác cao:
+     * 1. Deep Reflection từ Model/State/Activity (RcnGameState, UserInfo, LiveUserInfo)
+     * 2. Quét View Hierarchy theo toạ độ bàn cờ (Top/Bottom Player Zones)
+     * 3. Fallback: Cài đặt người dùng
      */
     public static EloPair detectEloPair(Activity activity, Object stateImplObject) {
         if (activity == null) return null;
 
-        // ── 1. Thử qua Reflection từ State/ViewModel trước ──
-        EloPair reflectPair = tryReflectionElo(stateImplObject);
+        // ── 1. Thử qua Deep Reflection từ State / ViewModel / Activity ──
+        EloPair reflectPair = tryReflectionElo(activity, stateImplObject);
         if (reflectPair != null) {
             return reflectPair;
         }
@@ -107,26 +110,131 @@ public class EloScanner {
         return new EloPair(defaultElo, defaultElo, "cài đặt mặc định", false);
     }
 
-    private static EloPair tryReflectionElo(Object stateImpl) {
-        if (stateImpl == null) return null;
+    private static EloPair tryReflectionElo(Activity activity, Object stateImpl) {
+        // 1. Thử từ stateImplObject
+        if (stateImpl != null) {
+            EloPair pair = inspectObjectForElo(stateImpl, 0);
+            if (pair != null) return pair;
+        }
+
+        // 2. Thử từ Activity fields (ViewModel, Presenter, Game Controller)
+        if (activity != null) {
+            try {
+                for (Field f : activity.getClass().getDeclaredFields()) {
+                    try {
+                        f.setAccessible(true);
+                        Object val = f.get(activity);
+                        if (val != null && !isFrameworkClass(val.getClass().getName())) {
+                            EloPair pair = inspectObjectForElo(val, 0);
+                            if (pair != null) return pair;
+                        }
+                    } catch (Throwable ignored) {}
+                }
+            } catch (Throwable ignored) {}
+        }
+
+        return null;
+    }
+
+    private static boolean isFrameworkClass(String name) {
+        return name.startsWith("android.") || name.startsWith("java.") || name.startsWith("androidx.") || name.startsWith("kotlin.");
+    }
+
+    private static EloPair inspectObjectForElo(Object obj, int depth) {
+        if (obj == null || depth > 2) return null;
+        Class<?> clazz = obj.getClass();
+        if (isFrameworkClass(clazz.getName())) return null;
+
+        // A. Kiểm tra direct getters: getWhiteRating / getBlackRating
         try {
-            // Kiểm tra các getter của người chơi
-            for (Method m : stateImpl.getClass().getMethods()) {
-                String name = m.getName();
+            Method wM = findMethod(clazz, "getWhiteRating", "getWhiteElo");
+            Method bM = findMethod(clazz, "getBlackRating", "getBlackElo");
+            if (wM != null && bM != null) {
+                Object w = wM.invoke(obj);
+                Object b = bM.invoke(obj);
+                if (w instanceof Number && b instanceof Number) {
+                    int wVal = ((Number) w).intValue();
+                    int bVal = ((Number) b).intValue();
+                    if (isValidElo(wVal) && isValidElo(bVal)) {
+                        return new EloPair(wVal, bVal, "reflection_" + clazz.getSimpleName(), true);
+                    }
+                }
+            }
+        } catch (Throwable ignored) {}
+
+        // B. Kiểm tra nếu có UserInfo / LiveUserInfo
+        try {
+            Integer whiteElo = null;
+            Integer blackElo = null;
+            for (Method m : clazz.getMethods()) {
                 if (m.getParameterCount() == 0) {
-                    if (name.equalsIgnoreCase("getWhiteRating") || name.equalsIgnoreCase("getWhiteElo")) {
-                        Object w = m.invoke(stateImpl);
-                        Method bM = stateImpl.getClass().getMethod(name.replace("White", "Black"));
-                        Object b = bM.invoke(stateImpl);
-                        if (w instanceof Number && b instanceof Number) {
-                            int wVal = ((Number) w).intValue();
-                            int bVal = ((Number) b).intValue();
-                            if (isValidElo(wVal) && isValidElo(bVal)) {
-                                return new EloPair(wVal, bVal, "reflection_state", true);
+                    String retName = m.getReturnType().getName();
+                    if (retName.endsWith("UserInfo") || retName.endsWith("LiveUserInfo") || retName.endsWith("DailyUserInfo")) {
+                        Object uInfo = m.invoke(obj);
+                        if (uInfo != null) {
+                            int r = extractRatingFromUserInfo(uInfo);
+                            Boolean isWhite = extractColorFromUserInfo(uInfo);
+                            if (isValidElo(r) && isWhite != null) {
+                                if (isWhite) whiteElo = r;
+                                else blackElo = r;
                             }
                         }
                     }
                 }
+            }
+            if (whiteElo != null && blackElo != null) {
+                return new EloPair(whiteElo, blackElo, "reflection_userinfo_" + clazz.getSimpleName(), true);
+            }
+        } catch (Throwable ignored) {}
+
+        // C. Kiểm tra các fields con đến độ sâu 2
+        if (depth < 2) {
+            try {
+                for (Field f : clazz.getDeclaredFields()) {
+                    try {
+                        f.setAccessible(true);
+                        Object child = f.get(obj);
+                        if (child != null && !isFrameworkClass(child.getClass().getName())) {
+                            EloPair childPair = inspectObjectForElo(child, depth + 1);
+                            if (childPair != null) return childPair;
+                        }
+                    } catch (Throwable ignored) {}
+                }
+            } catch (Throwable ignored) {}
+        }
+
+        return null;
+    }
+
+    private static Method findMethod(Class<?> clazz, String... names) {
+        for (String n : names) {
+            try {
+                Method m = clazz.getMethod(n);
+                if (m.getParameterCount() == 0) return m;
+            } catch (Throwable ignored) {}
+        }
+        return null;
+    }
+
+    private static int extractRatingFromUserInfo(Object userInfo) {
+        if (userInfo == null) return -1;
+        try {
+            Method m = userInfo.getClass().getMethod("getRating");
+            Object r = m.invoke(userInfo);
+            if (r instanceof Number) return ((Number) r).intValue();
+        } catch (Throwable ignored) {}
+        return -1;
+    }
+
+    private static Boolean extractColorFromUserInfo(Object userInfo) {
+        if (userInfo == null) return null;
+        try {
+            Method m = userInfo.getClass().getMethod("getColor");
+            Object c = m.invoke(userInfo);
+            if (c != null) {
+                String s = c.toString().toUpperCase(java.util.Locale.US);
+                if (s.contains("WHITE")) return Boolean.TRUE;
+                if (s.contains("BLACK")) return Boolean.FALSE;
             }
         } catch (Throwable ignored) {}
         return null;
@@ -217,11 +325,14 @@ public class EloScanner {
     /**
      * Bộ lọc nghiêm ngặt (Strict Filter):
      * Chỉ chấp nhận chuỗi là số Elo chuẩn (100 - 3800).
+     * Hỗ trợ:
+     * - Số trong ngoặc đơn dạng "(2850)" hoặc "Magnus (2850)"
+     * - Dạng tiền tố / hậu tố "1500 Rapid", "Blitz • 1820", "Rating: 1500"
+     * - Số đứng một mình "1500", "2070"
      * Loại bỏ triệt để:
      * - Đồng hồ thời gian ("10:00", "03:15", "0:45")
      * - Thời lượng ván ("10 min", "3|2", "5+3")
      * - Chênh lệch quân ("+1", "+3", "-2")
-     * - Tên tài khoản hoặc chuỗi hỗn hợp chữ cái dài
      */
     public static Integer parseStrictElo(String rawText) {
         if (rawText == null) return null;
@@ -235,7 +346,7 @@ public class EloScanner {
 
         // 2. Loại bỏ các chuỗi chứa đơn vị thời gian
         String lower = s.toLowerCase(java.util.Locale.US);
-        if (lower.contains("min") || lower.contains("sec") || lower.contains("phút") || lower.contains("giây")) {
+        if (lower.contains("min") || lower.contains("sec") || lower.contains("phút") || lower.contains("giây") || lower.contains("ms")) {
             return null;
         }
 
@@ -244,20 +355,37 @@ public class EloScanner {
             return null;
         }
 
-        // 4. Khớp trực tiếp dạng "(1500)" hoặc "(1500?)" hoặc "1500" hoặc "1500?"
-        Matcher m1 = Pattern.compile("^\\(?(\\d{3,4})\\??\\)?$").matcher(s);
-        if (m1.matches()) {
+        // 4. Ưu tiên số trong ngoặc đơn dạng "(1500)" hoặc "Tên (1500)"
+        Matcher mBracket = Pattern.compile(".*?\\((\\d{2,4})\\??\\).*?").matcher(s);
+        if (mBracket.matches()) {
             try {
-                int val = Integer.parseInt(m1.group(1));
+                int val = Integer.parseInt(mBracket.group(1));
                 if (isValidElo(val)) return val;
             } catch (Throwable ignored) {}
         }
 
-        // 5. Khớp dạng tiền tố "Rating: 1500" hoặc "Elo: 1500"
-        Matcher m2 = Pattern.compile("^(?:rating|elo)\\s*[:\\s]\\s*\\(?(\\d{3,4})\\??\\)?$", Pattern.CASE_INSENSITIVE).matcher(s);
-        if (m2.matches()) {
+        // 5. Khớp trực tiếp dạng "1500" hoặc "1500?"
+        Matcher mDirect = Pattern.compile("^\\(?(\\d{2,4})\\??\\)?$").matcher(s);
+        if (mDirect.matches()) {
             try {
-                int val = Integer.parseInt(m2.group(1));
+                int val = Integer.parseInt(mDirect.group(1));
+                if (isValidElo(val)) return val;
+            } catch (Throwable ignored) {}
+        }
+
+        // 6. Khớp dạng có chữ: "Rating: 1500", "Elo: 1500", "1500 Rapid", "Blitz • 1500"
+        Matcher mWord1 = Pattern.compile(".*?(?:rating|elo|rapid|blitz|bullet|daily)\\s*[:•\\s]\\s*\\(?(\\d{2,4})\\??\\)?.*?", Pattern.CASE_INSENSITIVE).matcher(s);
+        if (mWord1.matches()) {
+            try {
+                int val = Integer.parseInt(mWord1.group(1));
+                if (isValidElo(val)) return val;
+            } catch (Throwable ignored) {}
+        }
+
+        Matcher mWord2 = Pattern.compile(".*?\\(?(\\d{2,4})\\??\\)?\\s*[:•\\s]\\s*(?:rating|elo|rapid|blitz|bullet|daily).*?", Pattern.CASE_INSENSITIVE).matcher(s);
+        if (mWord2.matches()) {
+            try {
+                int val = Integer.parseInt(mWord2.group(1));
                 if (isValidElo(val)) return val;
             } catch (Throwable ignored) {}
         }
