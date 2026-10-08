@@ -581,12 +581,14 @@ public class MoveClassifier {
         String playerPrefix = isMyMove ? (isVi ? "[Bạn]" : "[You]") : (isVi ? "[Đối thủ]" : "[Opponent]");
         TorchEngine.log("[CLASSIFIED] " + playerPrefix + " " + emoji + " " + classification + " (" + uciMove + ")" + (comment.isEmpty() ? "" : " " + comment));
 
-        // 1. Hiển thị huy hiệu đồ họa Chess.com chính hãng trên ô cờ vừa đi
+        // 1. Hiển thị huy hiệu đồ họa Chess.com chính hãng trên ô cờ vừa đi kèm hiệu ứng tô màu ô cờ
+        String fromSquare = null;
         String targetSquare = null;
         if (uciMove != null && uciMove.length() >= 4) {
+            fromSquare = uciMove.substring(0, 2);
             targetSquare = uciMove.substring(2, 4);
-            OverlayManager.setClassificationBadge(targetSquare, torchName, isWhite, isMyMove);
-            TorchEngine.log("[BOARD BADGE] Đã vẽ huy hiệu Chess.com '" + torchName + "' tại ô " + targetSquare);
+            OverlayManager.setClassificationBadge(fromSquare, targetSquare, torchName, isWhite, isMyMove);
+            TorchEngine.log("[BOARD BADGE] Đã vẽ huy hiệu & hiệu ứng Chess.com '" + torchName + "' tại ô " + fromSquare + "->" + targetSquare);
         }
 
         // 2. Phát âm thanh Brilliant chính hãng khi có nước cờ thiên tài

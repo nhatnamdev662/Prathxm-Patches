@@ -543,6 +543,10 @@ public class OverlayManager {
     }
 
     public static void setClassificationBadge(final String square, final String classificationName, final boolean isWhite, final boolean isMyMove) {
+        setClassificationBadge(null, square, classificationName, isWhite, isMyMove);
+    }
+
+    public static void setClassificationBadge(final String fromSquare, final String toSquare, final String classificationName, final boolean isWhite, final boolean isMyMove) {
         new Handler(Looper.getMainLooper()).post(new Runnable() {
             @Override
             public void run() {
@@ -583,7 +587,7 @@ public class OverlayManager {
 
                     arrowView.setVisibility(View.VISIBLE);
                     arrowView.bringToFront();
-                    arrowView.setClassificationBadge(square, classificationName, isWhite, isMyMove);
+                    arrowView.setClassificationBadge(fromSquare, toSquare, classificationName, isWhite, isMyMove);
                 } catch (Throwable t) {
                     Log.w(TAG, "Failed to set classification badge: " + t.getMessage());
                 }

@@ -31,16 +31,20 @@ import java.util.List;
 public class ArrowOverlayView extends View {
 
     public static class ClassificationBadgeData {
-        public final String square;
+        public final String fromSquare;
+        public final String toSquare;
         public final String classificationName;
         public final boolean isWhite;
         public final boolean isMyMove;
+        public final long timestamp;
 
-        public ClassificationBadgeData(String square, String classificationName, boolean isWhite, boolean isMyMove) {
-            this.square = square;
+        public ClassificationBadgeData(String fromSquare, String toSquare, String classificationName, boolean isWhite, boolean isMyMove) {
+            this.fromSquare = fromSquare;
+            this.toSquare = toSquare;
             this.classificationName = classificationName;
             this.isWhite = isWhite;
             this.isMyMove = isMyMove;
+            this.timestamp = android.os.SystemClock.uptimeMillis();
         }
     }
 
@@ -109,6 +113,9 @@ public class ArrowOverlayView extends View {
     private final Paint badgeTextPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint badgeGlowPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 
+    private final Paint squareHighlightPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint squareGlowPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+
     public ArrowOverlayView(Context context) {
         super(context);
         setClickable(false);
@@ -136,10 +143,17 @@ public class ArrowOverlayView extends View {
 
         badgeTextPaint.setTypeface(android.graphics.Typeface.create("monospace", android.graphics.Typeface.BOLD));
         badgeTextPaint.setTextAlign(Paint.Align.CENTER);
+
+        squareHighlightPaint.setStyle(Paint.Style.FILL);
+        squareGlowPaint.setStyle(Paint.Style.STROKE);
     }
 
     public void setClassificationBadge(String square, String classificationName, boolean isWhite, boolean isMyMove) {
-        ClassificationBadgeData data = new ClassificationBadgeData(square, classificationName, isWhite, isMyMove);
+        setClassificationBadge(null, square, classificationName, isWhite, isMyMove);
+    }
+
+    public void setClassificationBadge(String fromSquare, String toSquare, String classificationName, boolean isWhite, boolean isMyMove) {
+        ClassificationBadgeData data = new ClassificationBadgeData(fromSquare, toSquare, classificationName, isWhite, isMyMove);
         if (isWhite) {
             this.whiteBadge = data;
         } else {
@@ -772,12 +786,43 @@ public class ArrowOverlayView extends View {
         }
     }
 
-    private void drawSingleClassificationBadge(Canvas canvas, float sqSize, ClassificationBadgeData badge) {
-        if (badge == null || badge.square == null || badge.square.length() < 2) {
-            return;
+    private static int getClassificationThemeColor(String classificationName) {
+        if (classificationName == null) return 0xFF96BC4B;
+        String lower = classificationName.toLowerCase(java.util.Locale.US).replace(" ", "_");
+        switch (lower) {
+            case "brilliant":
+                return 0xFF1BACA6; // Cyan Teal
+            case "great":
+            case "greatfind":
+            case "great_find":
+                return 0xFF5C8BB0; // Blue Teal
+            case "best":
+            case "excellent":
+                return 0xFF96BC4B; // Chess.com Green
+            case "good":
+                return 0xFFA88865;
+            case "book":
+                return 0xFFD5A47D;
+            case "inaccuracy":
+                return 0xFFF0C15C;
+            case "mistake":
+                return 0xFFE6912C;
+            case "blunder":
+                return 0xFFCA3431;
+            case "miss":
+            case "missed":
+            case "missedwin":
+            case "missed_win":
+                return 0xFFEA5753;
+            case "forced":
+                return 0xFF9B9B9B;
+            default:
+                return 0xFF96BC4B;
         }
+    }
 
-        String sq = badge.square;
+    private void drawSquareHighlight(Canvas canvas, float sqSize, String sq, int themeColor, int alpha) {
+        if (sq == null || sq.length() < 2) return;
         int file = sq.charAt(0) - 'a';
         int rank = sq.charAt(1) - '1';
         if (file < 0 || file > 7 || rank < 0 || rank > 7) return;
@@ -788,25 +833,86 @@ public class ArrowOverlayView extends View {
         float left = col * sqSize;
         float top = row * sqSize;
 
-        // Kích thước huy hiệu chuẩn của Chess.com (khoảng 38% kích thước ô cờ)
-        float badgeSize = sqSize * 0.38f;
-        // Vị trí: góc trên bên phải của ô cờ đích
-        float badgeX = left + sqSize - badgeSize - sqSize * 0.03f;
-        float badgeY = top + sqSize * 0.03f;
+        squareHighlightPaint.setColor(themeColor);
+        squareHighlightPaint.setAlpha(alpha);
+        canvas.drawRect(left, top, left + sqSize, top + sqSize, squareHighlightPaint);
+    }
 
-        // 1. Thử lấy Drawable gốc từ resource của Chess.com APK
+    private void drawSingleClassificationBadge(Canvas canvas, float sqSize, ClassificationBadgeData badge) {
+        if (badge == null || badge.toSquare == null || badge.toSquare.length() < 2) {
+            return;
+        }
+
+        String toSq = badge.toSquare;
+        int file = toSq.charAt(0) - 'a';
+        int rank = toSq.charAt(1) - '1';
+        if (file < 0 || file > 7 || rank < 0 || rank > 7) return;
+
+        int col = flipped ? (7 - file) : file;
+        int row = flipped ? rank : (7 - rank);
+
+        float left = col * sqSize;
+        float top = row * sqSize;
+
+        int themeColor = getClassificationThemeColor(badge.classificationName);
+
+        // 1. Tô màu ô cờ chuẩn Game Review (Square Highlights)
+        // Ô xuất phát (fromSquare): màu nhạt hơn (alpha ~ 20%)
+        if (badge.fromSquare != null && badge.fromSquare.length() >= 2) {
+            drawSquareHighlight(canvas, sqSize, badge.fromSquare, themeColor, 45);
+        }
+        // Ô đích (toSquare): màu đậm rõ nét (alpha ~ 35%)
+        drawSquareHighlight(canvas, sqSize, toSq, themeColor, 80);
+
+        // 2. Tính toán Pop-in / Scale Animation (250ms)
+        long elapsed = android.os.SystemClock.uptimeMillis() - badge.timestamp;
+        float scale = 1.0f;
+        if (elapsed < 250) {
+            float progress = (float) elapsed / 250f;
+            // Overshoot interpolator: nở ra 1.15 rồi thu về 1.0
+            if (progress < 0.6f) {
+                scale = 0.3f + (0.85f * (progress / 0.6f)); // 0.3 -> 1.15
+            } else {
+                scale = 1.15f - (0.15f * ((progress - 0.6f) / 0.4f)); // 1.15 -> 1.0
+            }
+            postInvalidateOnAnimation();
+        }
+
+        // 3. Hiệu ứng Glow phát sáng đặc biệt cho Brilliant & Great Move
+        String lower = badge.classificationName != null ? badge.classificationName.toLowerCase(java.util.Locale.US) : "";
+        boolean isBrilliantOrGreat = lower.contains("brilliant") || lower.contains("great");
+        if (isBrilliantOrGreat) {
+            squareGlowPaint.setColor(themeColor);
+            squareGlowPaint.setStrokeWidth(sqSize * 0.05f);
+            squareGlowPaint.setMaskFilter(new BlurMaskFilter(sqSize * 0.12f, BlurMaskFilter.Blur.NORMAL));
+            canvas.drawRect(left + 2f, top + 2f, left + sqSize - 2f, top + sqSize - 2f, squareGlowPaint);
+            squareGlowPaint.setMaskFilter(null);
+        }
+
+        // 4. Kích thước & Vị trí huy hiệu Chess.com (góc trên bên phải ô đích)
+        float baseBadgeSize = sqSize * 0.38f;
+        float badgeSize = baseBadgeSize * scale;
+
+        // Tâm của huy hiệu tại góc trên bên phải
+        float targetCenterX = left + sqSize - baseBadgeSize / 2f - sqSize * 0.03f;
+        float targetCenterY = top + baseBadgeSize / 2f + sqSize * 0.03f;
+
+        float badgeX = targetCenterX - badgeSize / 2f;
+        float badgeY = targetCenterY - badgeSize / 2f;
+
+        // Thử lấy Drawable vector gốc từ APK Chess.com
         Drawable nativeDrawable = getClassificationDrawable(getContext(), badge.classificationName);
 
         if (nativeDrawable != null) {
-            // Vẽ bóng đổ tròn nhẹ để nổi bật trên nền cờ tối/sáng
+            // Bóng đổ tròn mờ
             badgeCirclePaint.setStyle(Paint.Style.FILL);
             badgeCirclePaint.setColor(0x66000000);
-            canvas.drawCircle(badgeX + badgeSize / 2f, badgeY + badgeSize / 2f + 2f, badgeSize / 2f, badgeCirclePaint);
+            canvas.drawCircle(targetCenterX, targetCenterY + 2f * scale, badgeSize / 2f, badgeCirclePaint);
 
             nativeDrawable.setBounds((int) badgeX, (int) badgeY, (int) (badgeX + badgeSize), (int) (badgeY + badgeSize));
             nativeDrawable.draw(canvas);
         } else {
-            // Fallback: Vẽ huy hiệu bo tròn với icon glyph và màu chuẩn Chess.com
+            // Fallback đồ hoạ bo tròn glyph
             drawFallbackBadge(canvas, badgeX, badgeY, badgeSize, badge.classificationName);
         }
     }
