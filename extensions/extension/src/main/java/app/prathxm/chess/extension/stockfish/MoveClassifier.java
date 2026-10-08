@@ -44,6 +44,13 @@ public class MoveClassifier {
     /** Minimum depth for an interrupted / intermediate search to be trusted for a rating. */
     private static final int MIN_RATING_DEPTH = 8;
 
+    /** 20 legal first moves from startpos for White. Used to verify move list validity for Torch WASM. */
+    private static final java.util.Set<String> STARTPOS_LEGAL_FIRST_MOVES = new java.util.HashSet<>(java.util.Arrays.asList(
+        "a2a3", "a2a4", "b2b3", "b2b4", "c2c3", "c2c4", "d2d3", "d2d4",
+        "e2e3", "e2e4", "f2f3", "f2f4", "g2g3", "g2g4", "h2h3", "h2h4",
+        "b1a3", "b1c3", "g1f3", "g1h3"
+    ));
+
     public static void clearHistory() {
         synchronized (fenHistory) {
             fenHistory.clear();
@@ -331,8 +338,22 @@ public class MoveClassifier {
                 classifiedMoves.add(transitionKey);
 
                 List<String> moves = getPlayedMoves();
-                if (moves.isEmpty() || !moves.get(moves.size() - 1).equals(uciMove)) {
+                if (moves.isEmpty()) {
                     moves.add(uciMove);
+                } else if (!moves.get(moves.size() - 1).equals(uciMove)) {
+                    moves.add(uciMove);
+                }
+
+                // Kiểm tra tính hợp lệ của chuỗi nước đi tính từ bàn cờ ban đầu (startpos)
+                String firstMove = moves.get(0);
+                if (!STARTPOS_LEGAL_FIRST_MOVES.contains(firstMove)) {
+                    TorchEngine.log("[TORCH CLASSIFIER BLOCKED] Nước đầu tiên '" + firstMove + "' không thể đi từ startpos (Vào lại giữa ván). Chặn gửi lệnh để bảo vệ WebAssembly khỏi Abort.");
+                    if (currentAct != null) {
+                        boolean isVi = "vi".equalsIgnoreCase(StockfishSettings.getLanguage(currentAct));
+                        final String blockedText = isVi ? "⚠️ [Torch Coach] Cần lịch sử nước đi từ đầu ván" : "⚠️ [Torch Coach] Missing moves from startpos";
+                        currentAct.runOnUiThread(() -> Toast.makeText(currentAct, blockedText, Toast.LENGTH_SHORT).show());
+                    }
+                    return;
                 }
 
                 torch.analyze(moves, userColor, (classificationName, playedMoveLan, bestMoveLan, speechText, rawJson) -> {

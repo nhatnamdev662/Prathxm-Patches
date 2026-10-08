@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-10-07T22:55:00",
-  "description": "## [2.0.18] (2026-10-07)\n\n### ⚡ NNVC v2.0.18 — Kiến trúc 5 Tab chuẩn Extension & Phân loại nước đi 100% độc lập bằng Torch Coach Engine\n\n* **Chia lại 5 Tab chuẩn 100% Extension:** Đưa toàn bộ cấu trúc giao diện bám sát Extension gồm: `[ LIVE | ENGINE | COACH | VISUAL | ARROWS ]`.\n* **Phân hệ COACH độc lập 100%:** Toàn bộ tính năng phân loại nước đi (Brilliant, Great, Best, Blunder...) do duy nhất Torch CEE 26MB (Komodo WebAssembly) đảm nhiệm. Tuyệt đối không can thiệp hay fallback sang Stockfish.\n* **Chẩn đoán & Báo lỗi trung thực:** Khi Torch chưa sẵn sàng hoặc thiếu chuỗi nước đi startpos, hệ thống ghi log và hiển thị thông báo lỗi rõ ràng thay vì gán nhãn bừa bãi.\n* **Author:** NNVC (@nncutett)",
-  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.18/patches-2.0.18.mpp",
+  "created_at": "2026-10-08T11:45:00",
+  "description": "## [2.0.19] (2026-10-08)\n\n### ⚡ NNVC v2.0.19 — Chống sập WebAssembly & Bọc an toàn Move History cho Torch Coach Engine\n\n* **Khắc phục triệt để lỗi RuntimeError Aborted:** Bổ sung bộ lọc an toàn STARTPOS_LEGAL_FIRST_MOVES để ngăn chặn việc gửi chuỗi nước đi khuyết thiếu khi vào app giữa ván, bảo vệ tuyệt đối WebAssembly Worker không bao giờ bị crash hay rơi vào vòng lặp restart.\n* **Phân loại nước cờ 100% Torch CEE:** Độc lập hoàn toàn, không phụ thuộc và không fallback sang Stockfish. Hiển thị thông báo hướng dẫn rõ ràng khi thiếu lịch sử nước đi từ đầu ván.\n* **Author:** NNVC (@nncutett)",
+  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.19/patches-2.0.19.mpp",
   "signature_download_url": "",
-  "version": "2.0.18"
+  "version": "2.0.19"
 }
