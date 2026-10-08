@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-10-08T13:50:00",
-  "description": "## [2.0.23] (2026-10-08)\n\n### ⚡ NNVC v2.0.23 — Xóa Toast rác chạy ngầm & Thiết kế lại Giao diện Log Console hiện đại\n\n* **Loại bỏ 100% Toast rác:** Xóa sạch các thông báo hệ thống làm phiền ('WASM sẵn sàng', 'Đang tải engine', cảnh báo startpos, v.v.), không còn bị popup khi thoát app hay chạy ngầm.\n* **Thiết kế lại Giao diện Log Console chuyên nghiệp:** Giao diện Terminal Sapphire chuẩn Cyberpunk, viền mờ bo cong 20dp, bố cục rộng rãi thoáng đãng.\n* **Tự động cuộn xuống đáy (Auto-scroll to bottom):** Vừa mở Log là lập tức thấy các dòng log mới nhất, không cần phải vuốt kéo.\n* **Tô màu cú pháp thông minh (Syntax Highlighting):** Phân màu chi tiết từng tag [ERROR], [WARN], [BESTMOVE], [CLASSIFIED], [TORCH], [STOCKFISH], [ELO], [BOARD] và timestamp xám mờ.\n* **Thanh lọc nhanh (Filter Chips):** Dễ dàng lọc log theo danh mục: [Tất cả], [Torch / Phân loại], [Stockfish], [Bàn cờ & Elo], [Lỗi / Cảnh báo].\n* **Thao tác nhanh tiện lợi:** Bổ sung các nút [⬇ Cuối], [⬆ Đầu], [🗑️ Xóa log], [📋 Sao chép].\n* **Author:** NNVC (@nncutett)",
-  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.23/patches-2.0.23.mpp",
+  "created_at": "2026-10-08T14:05:00",
+  "description": "## [2.0.24] (2026-10-08)\n\n### ⚡ NNVC v2.0.24 — Trích xuất Huy hiệu & Âm thanh Phân loại cờ Chính hãng Chess.com\n\n* **Huy hiệu Phân loại trực tiếp trên Ô cờ (Square Classification Badge):** Trích xuất 100% Vector Drawable nguyên bản từ APK Chess.com (Brilliant, Great Find, Best, Excellent, Good, Book, Inaccuracy, Mistake, Blunder, Missed Win, Forced). Huy hiệu hiển thị trực tiếp ngay góc trên ô cờ vừa đi như Game Review thật!\n* **Âm thanh Thiên tài chính hãng (Brilliant Sound):** Tích hợp hiệu ứng âm thanh 'brilliant.mp3' chính thức của Chess.com vang lên khi người chơi thực hiện nước cờ thiên tài.\n* **Xóa bỏ hoàn toàn Toast hệ thống:** Không còn dùng Toast Android làm phiền tầm nhìn hay che bàn cờ.\n* **Author:** NNVC (@nncutett)",
+  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.24/patches-2.0.24.mpp",
   "signature_download_url": "",
-  "version": "2.0.23"
+  "version": "2.0.24"
 }

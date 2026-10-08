@@ -577,10 +577,22 @@ public class MoveClassifier {
 
         String comment = (speechText != null && !speechText.trim().isEmpty()) ? "\n\"" + speechText.trim() + "\"" : "";
         String playerPrefix = isMyMove ? (isVi ? "[Bạn]" : "[You]") : (isVi ? "[Đối thủ]" : "[Opponent]");
-        final String toastText = "[Torch] " + playerPrefix + " [" + emoji + "] " + classification + " (" + uciMove + ")" + comment;
-        TorchEngine.log("[CLASSIFIED TOAST] " + playerPrefix + " " + emoji + " " + classification + " (" + uciMove + ")");
-        Toast.makeText(activity, toastText, Toast.LENGTH_SHORT).show();
+        TorchEngine.log("[CLASSIFIED] " + playerPrefix + " " + emoji + " " + classification + " (" + uciMove + ")" + (comment.isEmpty() ? "" : " " + comment));
 
+        // 1. Hiển thị huy hiệu đồ họa Chess.com chính hãng trên ô cờ vừa đi
+        String targetSquare = null;
+        if (uciMove != null && uciMove.length() >= 4) {
+            targetSquare = uciMove.substring(2, 4);
+            OverlayManager.setClassificationBadge(targetSquare, torchName, isMyMove);
+            TorchEngine.log("[BOARD BADGE] Đã vẽ huy hiệu Chess.com '" + torchName + "' tại ô " + targetSquare);
+        }
+
+        // 2. Phát âm thanh Brilliant chính hãng khi có nước cờ thiên tài
+        if ("brilliant".equalsIgnoreCase(torchName)) {
+            playBrilliantSound(activity);
+        }
+
+        // 3. Rung cảnh báo Blunder / Mistake nếu người dùng bật
         if (isBlunderOrMistake && StockfishSettings.isBlunderAlertsEnabled(activity)) {
             Vibrator vibrator = (Vibrator) activity.getSystemService(Context.VIBRATOR_SERVICE);
             if (vibrator != null && vibrator.hasVibrator()) {
@@ -590,6 +602,21 @@ public class MoveClassifier {
                     vibrator.vibrate(150);
                 }
             }
+        }
+    }
+
+    private static void playBrilliantSound(Context context) {
+        if (context == null) return;
+        try {
+            android.content.res.AssetFileDescriptor afd = context.getAssets().openFd("sounds/brilliant.mp3");
+            android.media.MediaPlayer mp = new android.media.MediaPlayer();
+            mp.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
+            afd.close();
+            mp.prepare();
+            mp.setOnCompletionListener(android.media.MediaPlayer::release);
+            mp.start();
+        } catch (Throwable t) {
+            TorchEngine.log("[BRILLIANT SOUND] " + t.getMessage());
         }
     }
 }

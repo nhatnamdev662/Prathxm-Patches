@@ -1,6 +1,6 @@
 # NHẬT KÝ DỰ ÁN & BỘ GHI NHỚ DẶN DÒ (PROJECT MEMORY)
 *Dự án: Chess Mobile - ReVanced Extension Patches cho Chess.com Android*
-*Phiên bản hiện tại: v2.0.23*
+*Phiên bản hiện tại: v2.0.24*
 *Cập nhật lần cuối: 2026-10-08*
 
 ---
@@ -176,17 +176,26 @@
     - **Tự động cuộn xuống đáy (Auto-scroll to bottom)**: Khi mở màn hình Log, tự động cuộn xuống dưới cùng để người dùng thấy ngay các log mới nhất.
     - **Tô màu cú pháp thông minh (Syntax Highlighting)**: Dùng `SpannableStringBuilder` phân biệt rực rỡ các tag `[ERROR]`, `[WARN]`, `[BESTMOVE]`, `[CLASSIFIED]`, `[TORCH]`, `[STOCKFISH]`, `[ELO]`, `[BOARD]` và timestamp.
     - **Thanh lọc nhanh (Filter Chips)**: Thêm 5 chip lựa chọn: `Tất cả`, `Torch / Phân loại`, `Stockfish`, `Bàn cờ & Elo`, `Lỗi / Cảnh báo`.
-    - **Thao tác nhanh**: Thêm nút `⬇ Cuối`, `⬆ Đầu`, `🗑️ Xóa log`, `📋 Sao chép`.
+- **v2.0.24**:
+  - **Trích xuất & Hiển thị Huy hiệu Phân loại chính hãng Chess.com trên Ô cờ (Square Classification Badge)**:
+    - Nạp trực tiếp các Vector Drawable gốc từ resource APK Chess.com (`move_classification_classification_brilliant`, `great_find`, `best`, `excellent`, `good`, `book`, `inaccuracy`, `mistake`, `blunder`, `miss`, `missed_win`, `forced`).
+    - Vẽ huy hiệu tròn chính thức ngay góc trên ô cờ vừa đi với bóng đổ mượt mà, biến mất khi bắt đầu ván mới.
+    - Có cơ chế Fallback vẽ huy hiệu màu sắc chuẩn Chess.com nếu không nạp được drawable.
+  - **Tích hợp Âm thanh Nước cờ Thiên tài (Brilliant Sound)**:
+    - Tự động phát âm thanh chính thức `sounds/brilliant.mp3` của Chess.com khi phát hiện nước cờ Thiên tài.
+  - **Loại bỏ Toast che màn hình**:
+    - Chuyển hoàn toàn từ Toast hệ thống sang hiển thị trực quan trực tiếp trên bàn cờ.
 
 ---
 
 ## 3. TRẠNG THÁI HIỆN TẠI & KẾ HOẠCH TIẾP THEO
 
 ### 3.1. Trạng thái hiện tại
-- **Phiên bản mới nhất**: **v2.0.23** (`patches-2.0.23.mpp`).
-- **Kho lưu trữ GitHub**: Đã sẵn sàng phát hành Release v2.0.23.
+- **Phiên bản mới nhất**: **v2.0.24** (`patches-2.0.24.mpp`).
+- **Kho lưu trữ GitHub**: Đã sẵn sàng phát hành Release v2.0.24.
 - **Trạng thái Repo**: 100% sạch, không commit file `.py`.
 - **Tiến trình kỹ thuật**:
-  1. Loại bỏ toàn bộ toast rác chạy ngầm, không quấy rầy người dùng.
-  2. Giao diện Log Console hiện đại, tự động cuộn xuống đáy, tô màu cú pháp và có bộ lọc theo danh mục.
-  3. Hoàn thiện ổn định toàn bộ phân hệ Torch CEE và Stockfish Engine.
+  1. Hiển thị huy hiệu phân loại chính hãng Chess.com trực tiếp trên ô cờ.
+  2. Âm thanh Brilliant sound chính hãng.
+  3. Giao diện Log Console hiện đại, tô màu cú pháp, lọc theo danh mục và tự cuộn xuống đáy.
+  4. Đã loại bỏ hoàn toàn các Toast rác và Toast che màn hình.

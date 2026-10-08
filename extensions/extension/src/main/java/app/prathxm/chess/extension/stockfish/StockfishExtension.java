@@ -254,6 +254,9 @@ public class StockfishExtension {
 
         Log.d(TAG, "Position changed → FEN: " + fen);
         TorchEngine.log("[BOARD FEN] " + fen);
+        if (fen.startsWith("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR")) {
+            OverlayManager.clearClassificationBadge();
+        }
         MoveClassifier.updateHistory(fen, positionObject);
         if (activity != null) {
             EloScanner.scanAndApply(activity, stateImplObject);

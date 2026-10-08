@@ -535,4 +535,71 @@ public class OverlayManager {
         Boolean isWhite = StockfishExtension.isUserWhite(stateImpl);
         return isWhite != null && !isWhite;
     }
+
+    public static void setClassificationBadge(final String square, final String classificationName, final boolean isMyMove) {
+        new Handler(Looper.getMainLooper()).post(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Activity activity = StockfishExtension.getCurrentActivity();
+                    if (activity == null) return;
+                    Window window = activity.getWindow();
+                    if (window == null) return;
+                    ViewGroup decorView = (ViewGroup) window.getDecorView();
+                    if (decorView == null) return;
+
+                    View overlay = decorView.findViewWithTag("nnvc_arrow_overlay");
+                    ArrowOverlayView arrowView;
+                    if (overlay instanceof ArrowOverlayView) {
+                        arrowView = (ArrowOverlayView) overlay;
+                    } else {
+                        View boardView = findChessBoardView(decorView);
+                        if (boardView == null) return;
+                        int[] loc = new int[2];
+                        boardView.getLocationInWindow(loc);
+                        int boardX = loc[0];
+                        int boardY = loc[1];
+                        int boardW = boardView.getWidth();
+                        int boardH = boardView.getHeight();
+                        if (boardW <= 0 || boardH <= 0) return;
+
+                        if (overlay != null) decorView.removeView(overlay);
+                        arrowView = new ArrowOverlayView(decorView.getContext());
+                        arrowView.setTag("nnvc_arrow_overlay");
+                        decorView.addView(arrowView);
+
+                        boolean isFlipped = false;
+                        try {
+                            isFlipped = isBoardFlipped(StockfishExtension.getStateImpl());
+                        } catch (Throwable ignored) {}
+                        arrowView.update(boardX, boardY, boardW, boardH, null, isFlipped);
+                    }
+
+                    arrowView.setClassificationBadge(square, classificationName, isMyMove);
+                } catch (Throwable t) {
+                    Log.w(TAG, "Failed to set classification badge: " + t.getMessage());
+                }
+            }
+        });
+    }
+
+    public static void clearClassificationBadge() {
+        new Handler(Looper.getMainLooper()).post(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Activity activity = StockfishExtension.getCurrentActivity();
+                    if (activity == null) return;
+                    Window window = activity.getWindow();
+                    if (window == null) return;
+                    ViewGroup decorView = (ViewGroup) window.getDecorView();
+                    if (decorView == null) return;
+                    View overlay = decorView.findViewWithTag("nnvc_arrow_overlay");
+                    if (overlay instanceof ArrowOverlayView) {
+                        ((ArrowOverlayView) overlay).clearClassificationBadge();
+                    }
+                } catch (Throwable ignored) {}
+            }
+        });
+    }
 }

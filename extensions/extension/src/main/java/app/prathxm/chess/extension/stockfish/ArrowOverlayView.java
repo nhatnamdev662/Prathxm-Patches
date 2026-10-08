@@ -13,6 +13,9 @@ import android.graphics.LinearGradient;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Shader;
+import android.graphics.drawable.Drawable;
+import android.os.Build;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,6 +29,18 @@ import java.util.List;
  * and neon drop shadows / blur glows.
  */
 public class ArrowOverlayView extends View {
+
+    public static class ClassificationBadgeData {
+        public final String square;
+        public final String classificationName;
+        public final boolean isMyMove;
+
+        public ClassificationBadgeData(String square, String classificationName, boolean isMyMove) {
+            this.square = square;
+            this.classificationName = classificationName;
+            this.isMyMove = isMyMove;
+        }
+    }
 
     public static class ArrowData {
         public final String move;
@@ -78,6 +93,10 @@ public class ArrowOverlayView extends View {
     private final List<ArrowData> arrows = new ArrayList<>();
     private boolean flipped = false;
 
+    private ClassificationBadgeData classificationBadge = null;
+    private final Paint badgeCirclePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint badgeTextPaint2 = new Paint(Paint.ANTI_ALIAS_FLAG);
+
     private final Paint glowPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint fillPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint edgePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -116,6 +135,16 @@ public class ArrowOverlayView extends View {
         badgeTextPaint.setTextAlign(Paint.Align.CENTER);
     }
 
+    public void setClassificationBadge(String square, String classificationName, boolean isMyMove) {
+        this.classificationBadge = new ClassificationBadgeData(square, classificationName, isMyMove);
+        invalidate();
+    }
+
+    public void clearClassificationBadge() {
+        this.classificationBadge = null;
+        invalidate();
+    }
+
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         // Never consume touches so user can move pieces underneath
@@ -150,13 +179,14 @@ public class ArrowOverlayView extends View {
 
     public void clear() {
         this.arrows.clear();
+        this.classificationBadge = null;
         invalidate();
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        if (arrows.isEmpty()) return;
+        if (arrows.isEmpty() && classificationBadge == null) return;
 
         int w = getWidth();
         int h = getHeight();
@@ -165,15 +195,20 @@ public class ArrowOverlayView extends View {
         float sqSize = Math.min(w, h) / 8.0f;
 
         // 1. Draw arrows in reverse order (Tier 5 first, Tier 1 last so Tier 1 is on top)
-        for (int i = arrows.size() - 1; i >= 0; i--) {
-            ArrowData arrow = arrows.get(i);
-            float perpOffset = computePerpOffset(i, sqSize);
-            float targetOffset = computeTargetOffset(i, sqSize);
-            drawSingleArrow(canvas, arrow, sqSize, perpOffset, targetOffset);
+        if (!arrows.isEmpty()) {
+            for (int i = arrows.size() - 1; i >= 0; i--) {
+                ArrowData arrow = arrows.get(i);
+                float perpOffset = computePerpOffset(i, sqSize);
+                float targetOffset = computeTargetOffset(i, sqSize);
+                drawSingleArrow(canvas, arrow, sqSize, perpOffset, targetOffset);
+            }
+
+            // 2. Draw Eval Badges with Anti-collision avoidance synchronized with arrows
+            drawEvalBadges(canvas, sqSize);
         }
 
-        // 2. Draw Eval Badges with Anti-collision avoidance synchronized with arrows
-        drawEvalBadges(canvas, sqSize);
+        // 3. Draw Square Classification Badge (Chess.com Official Vector Drawable)
+        drawClassificationBadge(canvas, sqSize);
     }
 
     /**
@@ -711,5 +746,192 @@ public class ArrowOverlayView extends View {
             float textX = labelX + pillW / 2f;
             canvas.drawText(lblText, textX, textBaseline, badgeTextPaint);
         }
+    }
+
+    private void drawClassificationBadge(Canvas canvas, float sqSize) {
+        if (classificationBadge == null || classificationBadge.square == null || classificationBadge.square.length() < 2) {
+            return;
+        }
+
+        String sq = classificationBadge.square;
+        int file = sq.charAt(0) - 'a';
+        int rank = sq.charAt(1) - '1';
+        if (file < 0 || file > 7 || rank < 0 || rank > 7) return;
+
+        int col = flipped ? (7 - file) : file;
+        int row = flipped ? rank : (7 - rank);
+
+        float left = col * sqSize;
+        float top = row * sqSize;
+
+        // Kích thước huy hiệu chuẩn của Chess.com (khoảng 38% kích thước ô cờ)
+        float badgeSize = sqSize * 0.38f;
+        // Vị trí: góc trên bên phải của ô cờ đích
+        float badgeX = left + sqSize - badgeSize - sqSize * 0.03f;
+        float badgeY = top + sqSize * 0.03f;
+
+        // 1. Thử lấy Drawable gốc từ resource của Chess.com APK
+        Drawable nativeDrawable = getClassificationDrawable(getContext(), classificationBadge.classificationName);
+
+        if (nativeDrawable != null) {
+            // Vẽ bóng đổ tròn nhẹ để nổi bật trên nền cờ tối/sáng
+            badgeCirclePaint.setStyle(Paint.Style.FILL);
+            badgeCirclePaint.setColor(0x66000000);
+            canvas.drawCircle(badgeX + badgeSize / 2f, badgeY + badgeSize / 2f + 2f, badgeSize / 2f, badgeCirclePaint);
+
+            nativeDrawable.setBounds((int) badgeX, (int) badgeY, (int) (badgeX + badgeSize), (int) (badgeY + badgeSize));
+            nativeDrawable.draw(canvas);
+        } else {
+            // Fallback: Vẽ huy hiệu bo tròn với icon glyph và màu chuẩn Chess.com
+            drawFallbackBadge(canvas, badgeX, badgeY, badgeSize, classificationBadge.classificationName);
+        }
+    }
+
+    public static Drawable getClassificationDrawable(Context context, String classificationName) {
+        if (context == null || classificationName == null) return null;
+        String resName;
+        String lower = classificationName.toLowerCase(java.util.Locale.US).replace(" ", "_");
+        switch (lower) {
+            case "brilliant":
+                resName = "move_classification_classification_brilliant";
+                break;
+            case "great":
+            case "greatfind":
+            case "great_find":
+                resName = "move_classification_classification_great_find";
+                break;
+            case "best":
+                resName = "move_classification_classification_best";
+                break;
+            case "excellent":
+                resName = "move_classification_classification_excellent";
+                break;
+            case "good":
+                resName = "move_classification_classification_good";
+                break;
+            case "book":
+                resName = "move_classification_classification_book";
+                break;
+            case "inaccuracy":
+                resName = "move_classification_classification_inaccuracy";
+                break;
+            case "mistake":
+                resName = "move_classification_classification_mistake";
+                break;
+            case "blunder":
+                resName = "move_classification_classification_blunder";
+                break;
+            case "miss":
+            case "missed":
+                resName = "move_classification_classification_miss";
+                break;
+            case "missedwin":
+            case "missed_win":
+                resName = "move_classification_classification_missed_win";
+                break;
+            case "forced":
+                resName = "move_classification_classification_forced";
+                break;
+            default:
+                resName = "move_classification_classification_good";
+                break;
+        }
+
+        try {
+            int resId = context.getResources().getIdentifier(resName, "drawable", context.getPackageName());
+            if (resId != 0) {
+                if (Build.VERSION.SDK_INT >= 21) {
+                    return context.getDrawable(resId);
+                }
+            }
+        } catch (Throwable t) {
+            Log.w("ArrowOverlayView", "Failed to load drawable " + resName + ": " + t.getMessage());
+        }
+        return null;
+    }
+
+    private void drawFallbackBadge(Canvas canvas, float x, float y, float size, String classificationName) {
+        int bgColor;
+        String glyph;
+        String lower = classificationName != null ? classificationName.toLowerCase(java.util.Locale.US).replace(" ", "_") : "";
+        switch (lower) {
+            case "brilliant":
+                bgColor = 0xFF1BACA6; // Cyan Teal
+                glyph = "!!";
+                break;
+            case "great":
+            case "greatfind":
+            case "great_find":
+                bgColor = 0xFF5C8BB0; // Blue Teal
+                glyph = "!";
+                break;
+            case "best":
+                bgColor = 0xFF96BC4B; // Chess.com Green
+                glyph = "★";
+                break;
+            case "excellent":
+                bgColor = 0xFF96BC4B;
+                glyph = "✓";
+                break;
+            case "good":
+                bgColor = 0xFFA88865;
+                glyph = "✓";
+                break;
+            case "book":
+                bgColor = 0xFFD5A47D;
+                glyph = "📖";
+                break;
+            case "inaccuracy":
+                bgColor = 0xFFF0C15C;
+                glyph = "?!";
+                break;
+            case "mistake":
+                bgColor = 0xFFE6912C;
+                glyph = "?";
+                break;
+            case "blunder":
+                bgColor = 0xFFCA3431;
+                glyph = "??";
+                break;
+            case "miss":
+            case "missed":
+            case "missedwin":
+            case "missed_win":
+                bgColor = 0xFFEA5753;
+                glyph = "✕";
+                break;
+            case "forced":
+                bgColor = 0xFF9B9B9B;
+                glyph = "➔";
+                break;
+            default:
+                bgColor = 0xFF96BC4B;
+                glyph = "✓";
+                break;
+        }
+
+        float radius = size / 2.0f;
+        float cx = x + radius;
+        float cy = y + radius;
+
+        // Vẽ nền tròn
+        badgeCirclePaint.setStyle(Paint.Style.FILL);
+        badgeCirclePaint.setColor(bgColor);
+        canvas.drawCircle(cx, cy, radius, badgeCirclePaint);
+
+        // Viền trắng mỏng
+        badgeCirclePaint.setStyle(Paint.Style.STROKE);
+        badgeCirclePaint.setColor(0xFFFFFFFF);
+        badgeCirclePaint.setStrokeWidth(Math.max(1.5f, size * 0.08f));
+        canvas.drawCircle(cx, cy, radius, badgeCirclePaint);
+
+        // Vẽ text glyph
+        badgeTextPaint2.setColor(0xFFFFFFFF);
+        badgeTextPaint2.setTextSize(size * 0.55f);
+        badgeTextPaint2.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+        badgeTextPaint2.setTextAlign(Paint.Align.CENTER);
+        Paint.FontMetrics fm = badgeTextPaint2.getFontMetrics();
+        float textY = cy - (fm.ascent + fm.descent) / 2f;
+        canvas.drawText(glyph, cx, textY, badgeTextPaint2);
     }
 }
