@@ -103,7 +103,10 @@ public class OverlayManager {
                     }
 
                     if (list.isEmpty()) {
-                        arrowView.setVisibility(View.GONE);
+                        arrowView.clearArrowsOnly();
+                        if (!arrowView.hasBadges()) {
+                            arrowView.setVisibility(View.GONE);
+                        }
                         return;
                     }
 
@@ -180,6 +183,8 @@ public class OverlayManager {
 
                     float density = decorView.getContext().getResources().getDisplayMetrics().density;
                     int barWidth = (int) (12 * density);
+                    // Đặt eval bar sát cạnh trái của bàn cờ (hoặc mép trong nếu màn hình tràn viền)
+                    int evalBarX = boardX >= barWidth ? (boardX - barWidth) : boardX;
 
                     View evalBar = decorView.findViewWithTag("stockfish_eval_bar");
                     EvalBarView evalBarView;
@@ -192,7 +197,7 @@ public class OverlayManager {
                         decorView.addView(evalBarView);
                     }
                     evalBarView.setVisibility(View.VISIBLE);
-                    evalBarView.update(boardX, boardY, barWidth, boardH,
+                    evalBarView.update(evalBarX, boardY, barWidth, boardH,
                                        score, hasMate, mateIn, isBoardFlipped(stateImpl));
                 } catch (Throwable t) {
                     Log.e(TAG, "updateEvalBar failed: " + t.getMessage());
@@ -558,30 +563,31 @@ public class OverlayManager {
                     ViewGroup decorView = (ViewGroup) window.getDecorView();
                     if (decorView == null) return;
 
+                    View boardView = findChessBoardView(decorView);
+                    if (boardView == null) return;
+                    int[] loc = new int[2];
+                    boardView.getLocationInWindow(loc);
+                    int boardX = loc[0];
+                    int boardY = loc[1];
+                    int boardW = boardView.getWidth();
+                    int boardH = boardView.getHeight();
+                    if (boardW <= 0 || boardH <= 0) return;
+
+                    boolean isFlipped = false;
+                    try {
+                        isFlipped = isBoardFlipped(StockfishExtension.getStateImpl());
+                    } catch (Throwable ignored) {}
+
                     View overlay = decorView.findViewWithTag("nnvc_arrow_overlay");
                     ArrowOverlayView arrowView;
                     if (overlay instanceof ArrowOverlayView) {
                         arrowView = (ArrowOverlayView) overlay;
+                        arrowView.updatePosition(boardX, boardY, boardW, boardH, isFlipped);
                     } else {
-                        View boardView = findChessBoardView(decorView);
-                        if (boardView == null) return;
-                        int[] loc = new int[2];
-                        boardView.getLocationInWindow(loc);
-                        int boardX = loc[0];
-                        int boardY = loc[1];
-                        int boardW = boardView.getWidth();
-                        int boardH = boardView.getHeight();
-                        if (boardW <= 0 || boardH <= 0) return;
-
                         if (overlay != null) decorView.removeView(overlay);
                         arrowView = new ArrowOverlayView(decorView.getContext());
                         arrowView.setTag("nnvc_arrow_overlay");
                         decorView.addView(arrowView);
-
-                        boolean isFlipped = false;
-                        try {
-                            isFlipped = isBoardFlipped(StockfishExtension.getStateImpl());
-                        } catch (Throwable ignored) {}
                         arrowView.update(boardX, boardY, boardW, boardH, null, isFlipped);
                     }
 

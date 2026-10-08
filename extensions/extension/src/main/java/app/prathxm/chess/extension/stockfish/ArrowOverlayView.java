@@ -202,6 +202,21 @@ public class ArrowOverlayView extends View {
         invalidate();
     }
 
+    public void updatePosition(int boardX, int boardY, int width, int height, boolean flipped) {
+        this.flipped = flipped;
+        ViewGroup.LayoutParams lp = getLayoutParams();
+        if (lp == null) {
+            lp = new ViewGroup.LayoutParams(width, height);
+        } else {
+            lp.width = width;
+            lp.height = height;
+        }
+        setLayoutParams(lp);
+        setTranslationX(boardX);
+        setTranslationY(boardY);
+        invalidate();
+    }
+
     public void clear() {
         this.arrows.clear();
         this.currentBadge = null;
@@ -879,16 +894,24 @@ public class ArrowOverlayView extends View {
             squareGlowPaint.setMaskFilter(null);
         }
 
-        // 4. Kích thước & Vị trí huy hiệu Chess.com (góc trên bên phải ô đích)
-        float baseBadgeSize = sqSize * 0.38f;
+        // 4. Kích thước & Vị trí huy hiệu Chess.com (góc trên bên phải ô đích, căn chỉnh an toàn không tràn viền)
+        float baseBadgeSize = sqSize * 0.34f;
         float badgeSize = baseBadgeSize * scale;
 
-        // Tâm của huy hiệu tại góc trên bên phải
-        float targetCenterX = left + sqSize - baseBadgeSize / 2f - sqSize * 0.03f;
-        float targetCenterY = top + baseBadgeSize / 2f + sqSize * 0.03f;
+        // Tâm của huy hiệu tại góc trên bên phải ô đích
+        float targetCenterX = left + sqSize - baseBadgeSize / 2f - sqSize * 0.05f;
+        float targetCenterY = top + baseBadgeSize / 2f + sqSize * 0.05f;
 
         float badgeX = targetCenterX - badgeSize / 2f;
         float badgeY = targetCenterY - badgeSize / 2f;
+
+        // Giới hạn tuyệt đối trong kích thước bàn cờ (tránh bị cắt mép trên/dưới/trái/phải)
+        int bw = getWidth();
+        int bh = getHeight();
+        if (bw > 0 && bh > 0) {
+            badgeX = Math.max(2f, Math.min(bw - badgeSize - 2f, badgeX));
+            badgeY = Math.max(2f, Math.min(bh - badgeSize - 2f, badgeY));
+        }
 
         // Thử lấy Drawable vector gốc từ APK Chess.com
         Drawable nativeDrawable = getClassificationDrawable(getContext(), badge.classificationName);
@@ -897,7 +920,7 @@ public class ArrowOverlayView extends View {
             // Bóng đổ tròn mờ
             badgeCirclePaint.setStyle(Paint.Style.FILL);
             badgeCirclePaint.setColor(0x66000000);
-            canvas.drawCircle(targetCenterX, targetCenterY + 2f * scale, badgeSize / 2f, badgeCirclePaint);
+            canvas.drawCircle(badgeX + badgeSize / 2f, badgeY + badgeSize / 2f + 2f * scale, badgeSize / 2f, badgeCirclePaint);
 
             nativeDrawable.setBounds((int) badgeX, (int) badgeY, (int) (badgeX + badgeSize), (int) (badgeY + badgeSize));
             nativeDrawable.draw(canvas);

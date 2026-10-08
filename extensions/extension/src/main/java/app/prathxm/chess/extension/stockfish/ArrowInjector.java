@@ -245,18 +245,7 @@ public class ArrowInjector {
 
                 float opacity = Math.max(0.2f, baseOpacity - (i * opacityStep));
 
-                int moveColor;
-                if (i == 0) {
-                    moveColor = 0xFFF0B84B; // NNVC Gold
-                } else if (i == 1) {
-                    moveColor = 0xFF58B8FF; // NNVC Cyan / Sky Blue
-                } else if (i == 2) {
-                    moveColor = 0xFFD9DDE6; // NNVC Silver
-                } else if (i == 3) {
-                    moveColor = 0xFFC084FC; // NNVC Lavender
-                } else {
-                    moveColor = 0xFF34D399; // NNVC Mint
-                }
+                int moveColor = StockfishSettings.getArrowTierColor(context, i + 1);
 
                 Object arrow = newArrow(hintArrowClass, fromSquare, toSquare, moveColor, opacity);
                 arrowList.add(arrow);
