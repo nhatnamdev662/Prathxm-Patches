@@ -364,6 +364,7 @@ public class ArrowOverlayView extends View {
         glowPaint.setStrokeWidth(edgeStroke + sqSize * 0.045f);
         glowPaint.setMaskFilter(new BlurMaskFilter(Math.max(1.0f, sqSize * 0.06f), BlurMaskFilter.Blur.NORMAL));
         canvas.drawPath(arrowPath, glowPaint);
+        glowPaint.setMaskFilter(null);
 
         // 2. Linear Gradient Fill
         int cTail = Color.argb((int)(0.88f * opacity * 255), colTail[0], colTail[1], colTail[2]);
@@ -776,6 +777,7 @@ public class ArrowOverlayView extends View {
             badgeGlowPaint.setStrokeWidth(Math.max(1f, sqSize * 0.02f));
             badgeGlowPaint.setMaskFilter(new BlurMaskFilter(Math.max(1.5f, sqSize * 0.035f), BlurMaskFilter.Blur.NORMAL));
             canvas.drawRoundRect(rect, cornerRadius, cornerRadius, badgeGlowPaint);
+            badgeGlowPaint.setMaskFilter(null);
 
             // Background Fill (Frosted Glass with tint/shade)
             badgeBgPaint.setColor(bgCol);
@@ -992,7 +994,8 @@ public class ArrowOverlayView extends View {
             int resId = context.getResources().getIdentifier(resName, "drawable", context.getPackageName());
             if (resId != 0) {
                 if (Build.VERSION.SDK_INT >= 21) {
-                    return context.getDrawable(resId);
+                    Drawable d = context.getDrawable(resId);
+                    return d != null ? d.mutate() : null;
                 }
             }
         } catch (Throwable t) {

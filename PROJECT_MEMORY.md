@@ -1,6 +1,6 @@
 # NHẬT KÝ DỰ ÁN & BỘ GHI NHỚ DẶN DÒ (PROJECT MEMORY)
 *Dự án: Chess Mobile - ReVanced Extension Patches cho Chess.com Android*
-*Phiên bản hiện tại: v2.0.35*
+*Phiên bản hiện tại: v2.0.36*
 *Cập nhật lần cuối: 2026-10-08*
 
 ---
@@ -203,18 +203,22 @@
   - **Nhận diện đúng màu quân người chơi**: Người chơi cầm Trắng thì thẻ phía bạn là Trắng, cầm Đen thì thẻ phía bạn là Đen kèm viền Cyber Blue phát sáng và nhãn `[BẠN]`, phía đối thủ mang nhãn `[ĐỐI THỦ]`.
   - **Bật/tắt linh hoạt**: Nút switch `Độ Chính Xác & Elo Trực Tiếp` trong Tab COACH menu cài đặt.
   - **Tự động dọn dẹp**: Tự ẩn khi hết ván hoặc tắt engine.
+- **v2.0.36 (Sửa Lỗi Tối Màn Hình & Ghim Chặt Layout Thẻ Accuracy)**:
+  - **Vô hiệu hóa triệt để StockfishTourOverlay**: Loại bỏ hoàn toàn overlay hướng dẫn tự động kích hoạt gây bóng elip tối mờ 80% màn hình trong trận đấu.
+  - **Ghim Layout Thẻ Bằng Translation**: Sửa `OverlayManager` dùng `FrameLayout.LayoutParams` và `setTranslationX/Y()` để ghim chặt thẻ phía trên và dưới bàn cờ, không bị trôi hay co giật.
+  - **Reset MaskFilter & Mutate Drawable**: Đảm bảo vẽ shadow và nạp tài nguyên icon không bị lem màu hoặc đè shader giữa các nước đi.
 
 ---
 
 ## 3. TRẠNG THÁI HIỆN TẠI & KẾ HOẠCH TIẾP THEO
 
 ### 3.1. Trạng thái hiện tại
-- **Phiên bản mới nhất**: **v2.0.35** (`patches-2.0.35.mpp`).
-- **Kho lưu trữ GitHub**: Đã phát hành Release `v2.0.35`.
+- **Phiên bản mới nhất**: **v2.0.36** (`patches-2.0.36.mpp`).
+- **Kho lưu trữ GitHub**: Đã phát hành Release `v2.0.36`.
 - **Trạng thái Repo**: 100% sạch, không commit file `.py`.
 - **Tiến trình kỹ thuật**:
   1. Đã đưa Torch Depth về mặc định = 2.
   2. Đã giải quyết triệt để vấn đề "hàng chờ dồn lệnh" nhờ cơ chế `reqId` token cancellation.
   3. Đã xử lý xóa nhãn phân loại ngay lập tức khi vừa có nước cờ mới.
-  4. Đã hoàn thiện 2 thẻ Accuracy & Estimated Elo pills gắn trực tiếp vào bàn cờ.
-  5. Đã xử lý dọn dẹp bàn cờ tự động khi kết thúc ván đấu hoặc sang ván mới.
+  4. Đã hoàn thiện 2 thẻ Accuracy & Estimated Elo pills gắn trực tiếp vào bàn cờ, ghim chặt vị trí.
+  5. Đã tắt vĩnh viễn tour overlay gây tối màn hình.

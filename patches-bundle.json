@@ -1,9 +1,9 @@
 {
-  "created_at": "2026-10-08T19:50:00",
-  "description": "## [2.0.35] (2026-10-08)\n\n### ⚡ NNVC v2.0.35 — Bảng Độ Chính Xác (%) & Elo Ước Tính Gắn Trực Tiếp Vào Bàn Cờ\n\n* **Gắn trực tiếp vào bàn cờ Chess.com (Player Accuracy & Elo Pills):** Tự động gắn 2 thẻ Cyber Glass hiển thị Độ chính xác (%) và Estimated Elo thời gian thực vào thanh người chơi ở mép trên và mép dưới bàn cờ.\n* **Nhận diện đúng màu quân:** Người chơi cầm quân nào (Trắng hay Đen) thì thẻ ở phía người chơi tự động hiển thị đúng màu quân đó kèm viền Cyber Blue phát sáng và nhãn `[BẠN]`.\n* **Tự động dọn dẹp khi hết ván:** Biến mất khi bắt đầu ván mới hoặc khi tắt engine.\n* **Author:** NNVC (@nncutett)",
-  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.35/patches-2.0.35.mpp",
+  "created_at": "2026-10-08T20:40:00",
+  "description": "## [2.0.36] (2026-10-08)\n\n### ⚡ NNVC v2.0.36 — Sửa Lỗi Tối Màn Hình & Ghim Chuẩn Vị Trí Thẻ Độ Chính Xác\n\n* **Tắt vĩnh viễn Tour Overlay tự động:** Vô hiệu hóa triệt để `StockfishTourOverlay` và lệnh gọi từ `GestureInterceptor`, khắc phục hoàn toàn hiện tượng elip tối mờ 80% màn hình trong trận đấu.\n* **Ghim thẻ Accuracy & Elo cố định trên bàn cờ:** Sử dụng `FrameLayout.LayoutParams` và translation chuẩn (thay cho gọi `layout()` thuần túy) giúp 2 thẻ Cyber Glass ghim cứng, không bị trôi hay co giật.\n* **Làm sạch đồ họa MaskFilter & Mutate Drawable:** Đảm bảo drop shadow mũi tên, badge và resource icon không bị lem nền hay đè màu giữa các nước đi.\n* **Author:** NNVC (@nncutett)",
+  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.36/patches-2.0.36.mpp",
   "signature_download_url": "",
-  "version": "2.0.35",
-  "versionCode": 20035,
-  "downloadUrl": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.35/patches-2.0.35.mpp"
+  "version": "2.0.36",
+  "versionCode": 20036,
+  "downloadUrl": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.36/patches-2.0.36.mpp"
 }

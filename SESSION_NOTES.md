@@ -91,11 +91,17 @@
     - **Bật/tắt linh hoạt**: Nút switch `Độ Chính Xác & Elo Trực Tiếp` trong Tab COACH menu cài đặt.
     - **Tự động dọn dẹp**: Tự ẩn khi hết ván hoặc tắt engine.
 
+18. **Phát Hành Bản v2.0.36 (Sửa Lỗi Tối Màn Hình & Ghim Chặt Layout Thẻ Accuracy)**:
+    - **Vô hiệu hóa triệt để StockfishTourOverlay**: Xóa bỏ hoàn toàn việc hiển thị tự động overlay hướng dẫn từ `GestureInterceptor` và `StockfishTourOverlay`, triệt tiêu dứt điểm bóng elip tối mờ 80% màn hình khi vào trận.
+    - **Ghim Layout Thẻ Bằng Translation**: Sửa `OverlayManager` dùng `FrameLayout.LayoutParams(pillW, pillH)` kết hợp `setTranslationX/Y()` ghim cứng thẻ trên và dưới bàn cờ, không bị trôi dạt.
+    - **Reset MaskFilter & Mutate Drawable**: Đảm bảo vẽ shadow và resource icon trong sạch 100%, không bị đè shader hay lem màu giữa các lượt đi.
+
 ---
 
 ## 3. Trạng Thái Hiện Tại & Checklist Kiểm Thử
-- **Phiên bản mới nhất trên GitHub**: `v2.0.35` (tag `v2.0.35`).
-- **File tải bundle**: `https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.35/patches-2.0.35.mpp`
+- **Phiên bản mới nhất trên GitHub**: `v2.0.36` (tag `v2.0.36`).
+- **File tải bundle**: `https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.36/patches-2.0.36.mpp`
 - **Checklist Kiểm Thử**:
-  - [x] Đã vá và nạp thành công bản `2.0.35` trên Morphe Manager.
-  - [ ] Test hiển thị thẻ Accuracy & Estimated Elo pills: Khi đi cờ, kiểm tra 2 thẻ phía trên và phía dưới bàn cờ cập nhật % chính xác và Elo tương ứng với từng bên.
+  - [x] Đã vá và nạp thành công bản `2.0.36` trên Morphe Manager.
+  - [ ] Kiểm tra màn hình trận đấu: Không còn bất kỳ bóng elip hay màn hình tối đen nào che bàn cờ.
+  - [ ] Kiểm tra thẻ Accuracy & Estimated Elo: Ghim chuẩn vị trí mép trên và dưới bàn cờ, hiển thị đúng màu quân và cập nhật mượt mà.

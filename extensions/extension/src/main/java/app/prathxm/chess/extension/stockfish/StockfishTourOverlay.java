@@ -26,23 +26,8 @@ import android.widget.TextView;
 public class StockfishTourOverlay extends Dialog {
 
     public static void showTourIfNeeded(final Activity activity) {
-        if (activity == null) return;
-        
-        // Only show the tour on the main HomeActivity
-        String name = activity.getClass().getName();
-        if (!name.contains("HomeActivity")) {
-            return;
-        }
-
-        activity.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                if (!StockfishSettings.isTourShown(activity)) {
-                    StockfishTourOverlay dialog = new StockfishTourOverlay(activity);
-                    dialog.show();
-                }
-            }
-        });
+        // Completely disabled: Never pop up tour overlay automatically to prevent darkening match screen
+        return;
     }
 
     public StockfishTourOverlay(Context context) {

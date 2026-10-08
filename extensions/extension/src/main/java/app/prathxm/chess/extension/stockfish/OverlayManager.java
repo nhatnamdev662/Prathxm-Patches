@@ -815,7 +815,11 @@ public class OverlayManager {
                         topPill.setTag("nnvc_accuracy_top_pill");
                         decorView.addView(topPill);
                     }
-                    topPill.layout(pillX, topY, pillX + pillW, topY + pillH);
+                    FrameLayout.LayoutParams topLp = new FrameLayout.LayoutParams(pillW, pillH);
+                    topLp.gravity = Gravity.TOP | Gravity.START;
+                    topPill.setLayoutParams(topLp);
+                    topPill.setTranslationX(pillX);
+                    topPill.setTranslationY(topY);
                     topPill.updateData(topIsWhite, topIsYou, topAcc, topElo);
                     topPill.setVisibility(View.VISIBLE);
                     topPill.bringToFront();
@@ -831,7 +835,11 @@ public class OverlayManager {
                         botPill.setTag("nnvc_accuracy_bot_pill");
                         decorView.addView(botPill);
                     }
-                    botPill.layout(pillX, botY, pillX + pillW, botY + pillH);
+                    FrameLayout.LayoutParams botLp = new FrameLayout.LayoutParams(pillW, pillH);
+                    botLp.gravity = Gravity.TOP | Gravity.START;
+                    botPill.setLayoutParams(botLp);
+                    botPill.setTranslationX(pillX);
+                    botPill.setTranslationY(botY);
                     botPill.updateData(botIsWhite, botIsYou, botAcc, botElo);
                     botPill.setVisibility(View.VISIBLE);
                     botPill.bringToFront();
