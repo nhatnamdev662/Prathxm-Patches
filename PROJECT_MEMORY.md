@@ -1,6 +1,6 @@
 # NHẬT KÝ DỰ ÁN & BỘ GHI NHỚ DẶN DÒ (PROJECT MEMORY)
 *Dự án: Chess Mobile - ReVanced Extension Patches cho Chess.com Android*
-*Phiên bản hiện tại: v2.0.29*
+*Phiên bản hiện tại: v2.0.32*
 *Cập nhật lần cuối: 2026-10-08*
 
 ---
@@ -185,17 +185,29 @@
     - Tự động phát âm thanh chính thức `sounds/brilliant.mp3` của Chess.com khi phát hiện nước cờ Thiên tài.
   - **Loại bỏ Toast che màn hình**:
     - Chuyển hoàn toàn từ Toast hệ thống sang hiển thị trực quan trực tiếp trên bàn cờ.
+- **v2.0.27 - v2.0.29**:
+  - **Chuẩn hóa hiển thị đúng 1 phân loại duy nhất (v2.0.27)**: Khi đối thủ đi cờ, huy hiệu và hiệu ứng ô cờ của người chơi được thay thế ngay lập tức bằng nước đi mới của đối thủ.
+  - **Bảng màu nguyên bản 100% từ APK (v2.0.28)**: Trích xuất trực tiếp giá trị màu nhị phân từ resource `color_classification_*.xml` trong APK Chess.com gốc.
+  - **Gỡ bỏ cấm chụp màn hình (v2.0.29)**: Can thiệp Window và xóa cờ `FLAG_SECURE` trên toàn bộ Activity để người dùng tự do quay/chụp màn hình.
+- **v2.0.30 - v2.0.31 (Sửa Lỗi Lệch Bàn Cờ Trận Trực Tiếp Live Match)**:
+  - **Nhận diện chính xác ChessBoardView**: Không bị nhận nhầm container ngoài `ChessBoardLayout` (vốn bao gồm cả player bar và clock làm đẩy overlay lên trên).
+  - **Nhận diện Flipped động**: Gọi trực tiếp `getFlipBoard()` từ `ChessBoardView` phản hồi ngay lập tức chiều bàn cờ.
+  - **Chuẩn hóa tọa độ DecorView**: Tính toán delta giữa window location của bàn cờ và decor view cùng padding hệ thống, đảm bảo tuyệt đối khớp 1:1.
+  - **Giới hạn biên huy hiệu (Clamping)**: Huy hiệu phân loại luôn nằm an toàn 100% trong ô cờ, không tràn viền.
+- **v2.0.32 (Đột Phá Quét Elo Trong Trận Trực Tiếp RealGameActivity)**:
+  - **Đục sâu RealGameViewModel qua Reflection**: Mở `Lazy` delegate, truy xuất `RcnPlayGameDelegateImpl` (`field m` -> `b()` -> `RcnGameState.getWhiteRating()` / `getBlackRating()`), `GameViewModelPlayersImpl` (`field d`), và danh sách `UserInfo` (`field e`).
+  - **Bóc tách Jetpack Compose Semantics Tree**: Duyệt sâu `AndroidComposeView` / `ComposeView` qua `SemanticsOwner` (`field z` / `getSemanticsOwner()`) và config maps để lấy Elo và tên người chơi hiển thị trên giao diện Live.
+  - **Regex Nâng Cấp**: Sử dụng `find()` thay cho `matches()` với mẫu `\\((\\d{3,4})\\??\\)` chấp nhận tên có emoji, cờ quốc gia, ký tự đặc biệt.
 
 ---
 
 ## 3. TRẠNG THÁI HIỆN TẠI & KẾ HOẠCH TIẾP THEO
 
 ### 3.1. Trạng thái hiện tại
-- **Phiên bản mới nhất**: **v2.0.24** (`patches-2.0.24.mpp`).
-- **Kho lưu trữ GitHub**: Đã sẵn sàng phát hành Release v2.0.24.
+- **Phiên bản mới nhất**: **v2.0.32** (`patches-2.0.32.mpp`).
+- **Kho lưu trữ GitHub**: Đã phát hành Release `v2.0.32`.
 - **Trạng thái Repo**: 100% sạch, không commit file `.py`.
 - **Tiến trình kỹ thuật**:
-  1. Hiển thị huy hiệu phân loại chính hãng Chess.com trực tiếp trên ô cờ.
-  2. Âm thanh Brilliant sound chính hãng.
-  3. Giao diện Log Console hiện đại, tô màu cú pháp, lọc theo danh mục và tự cuộn xuống đáy.
-  4. Đã loại bỏ hoàn toàn các Toast rác và Toast che màn hình.
+  1. Đã sửa triệt để lỗi lệch bàn cờ (căn đúng `ChessBoardView`, tính delta tọa độ chuẩn).
+  2. Đã nâng cấp `EloScanner` đọc sâu cả ViewModel và Compose Semantics trong Live Match (`RealGameActivity`).
+  3. Đã đồng bộ `patches-bundle.json` và `patches-list.json` chuẩn v2.0.32.

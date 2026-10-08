@@ -70,21 +70,22 @@
       - Kết quả: Khi Morphe Manager chạy đến Hook 5 thì kết thúc ngay lập tức, bỏ qua toàn bộ Game Analysis & Game Review bytecode patch. Không còn `VerifyError`, Chess.com dùng 100% Game Review gốc máy chủ không lỗi `NoSuchMethodError`.
     - Đã phát hành Release **`v2.0.3`** chứa file `patches-2.0.3.mpp` lên GitHub.
 
+13. **Phát Hành Bản v2.0.30 - v2.0.31 (Khắc Phục Lỗi Lệch Bàn Cờ Trận Trực Tiếp Live Match)**:
+    - **Căn chỉnh đúng ChessBoardView**: Không lấy nhầm container `ChessBoardLayout` (chứa cả player card và clock).
+    - **Lật bàn cờ động**: Đọc `getFlipBoard()` trực tiếp từ view để đồng bộ ngay lập tức khi cầm quân Đen.
+    - **Chuẩn hóa tọa độ**: Tính delta giữa window location của bàn cờ và decor view, triệt tiêu 100% hiện tượng lệch eval bar và mũi tên.
+    - **Giới hạn biên huy hiệu**: Clamping đảm bảo huy hiệu nằm gọn trong ô cờ.
+14. **Phát Hành Bản v2.0.32 (Đột Phá Nhận Diện Elo Trận Trực Tiếp RealGameActivity)**:
+    - **Deep Reflection RealGameViewModel**: Mở `Lazy` delegate, quét `RcnPlayGameDelegateImpl` (`field m` -> `b()` -> `RcnGameState.getWhiteRating()` / `getBlackRating()`), `GameViewModelPlayersImpl` (`field d`), và `UserInfo` (`field e`).
+    - **Jetpack Compose Semantics Tree**: Duyệt cấu trúc Compose qua `SemanticsOwner` / `SemanticsNode` trích xuất Elo trên giao diện Live.
+    - **Regex Nâng Cấp**: Dùng `find()` với mẫu `\\((\\d{3,4})\\??\\)` chấp nhận tên chứa emoji, cờ quốc gia, ký tự đặc biệt.
+
 ---
 
-## 3. Trạng Thái Hiện Tại & Checklist Kiểm Thử (Cho Phiên Sau / Ngày Mai)
-- **Phiên bản mới nhất trên GitHub**: `v2.0.3` (tag `v2.0.3`).
-- **File tải bundle**: `https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.3/patches-2.0.3.mpp`
-- **Thao tác cài đặt trước khi test**:
-  1. Mở app **Morphe Manager** trên điện thoại.
-  2. Vào tab Nguồn (Sources) -> Bấm **Refresh** (Làm mới) để Morphe nhận diện bản patch `2.0.3`.
-  3. Chọn APK `Chess.com 4.10.20-googleplay` -> Bấm Patch lại và cài đặt đè hoặc cài mới.
-- **Checklist Kiểm Thử Cần Test**:
-  - [ ] **Morphe Manager Patch Thành Công**: Xác nhận không còn lỗi `VerifyError: Verifier rejected class ... GameAnalysisPermissionsGetCanCreateFingerprint.<init>()`, patch chạy mượt mà 12/12 patches.
-  - [ ] **Game Review Real**: Sau khi chơi xong trận (hoặc mở ván cờ cũ trong kho lưu trữ), bấm **Game Review** -> Xác nhận chạy bình thường bằng server Chess.com, không bị crash `NoSuchMethodError: getLocalAnalysisFlowForConfig`.
-  - [ ] **Nước 0 & Nhận Diện Quân Trắng**: Vừa vào ván cờ mới (khi người chơi cầm quân Trắng), bật chế độ "Chỉ hiện bên mình" (`mySideOnly`) -> Xác nhận mũi tên gợi ý và thanh eval hiện ngay lập tức ở move 0 mà không cần phải đi trước 1 nước.
-  - [ ] **Khôi Phục Mũi Tên Khi Đa Nhiệm**: Đang trong ván cờ đến lượt mình (đang có mũi tên) -> Bấm nút Home thoát ra màn hình chính điện thoại -> Chuyển lại vào app Chess.com -> Xác nhận mũi tên tự động vẽ lại đầy đủ trên bàn cờ, không bị mất.
-  - [ ] **Né Mũi Tên Trùng (Lane Separation)**: Kiểm tra các thế cờ có nhiều nước đi trùng đích / trùng điểm xuất phát / ngược chiều xem mũi tên có né nhau song song theo cơ chế `perpOffset` hay không.
-  - [ ] **Mũi Tên Hiểm Họa Gốc Chess.com**: Bật "Hiểm hoạ" trong menu -> Xác nhận hiện mũi tên vector màu đỏ native gốc của Chess.com.
-  - [ ] **Bảng Màu Cyber Palette**: Vào menu cài đặt Tab VISUAL -> Đổi màu cho các bậc 1..5 -> Xác nhận mũi tên đổi màu chuẩn theo bảng màu đã chọn.
-  - [ ] **Engine Luôn Hoạt Động**: Tab ENGINE kiểm tra Depth và ELO luôn chạy song song và nằm sát nhau.
+## 3. Trạng Thái Hiện Tại & Checklist Kiểm Thử
+- **Phiên bản mới nhất trên GitHub**: `v2.0.32` (tag `v2.0.32`).
+- **File tải bundle**: `https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.32/patches-2.0.32.mpp`
+- **Checklist Kiểm Thử**:
+  - [x] Đã vá và nạp thành công bản `2.0.32` trên Morphe Manager.
+  - [ ] Test trận Live Match (`RealGameActivity`): Kiểm tra mũi tên và thanh eval bar không còn bị lệch lên trên.
+  - [ ] Test quét Elo trong Live Match: Mở log kiểm tra `[ELO DEBUG]` hoặc `[STOCKFISH GO] (Elo=xxxx)` xem đã tự nhận diện đúng Elo người chơi và đối thủ thay vì default 3500.
