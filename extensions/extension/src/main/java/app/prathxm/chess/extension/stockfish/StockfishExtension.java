@@ -254,7 +254,7 @@ public class StockfishExtension {
 
         Log.d(TAG, "Position changed → FEN: " + fen);
         TorchEngine.log("[BOARD FEN] " + fen);
-        MoveClassifier.updateHistory(fen);
+        MoveClassifier.updateHistory(fen, positionObject);
         if (activity != null) {
             EloScanner.scanAndApply(activity, stateImplObject);
         }
@@ -630,6 +630,7 @@ public class StockfishExtension {
                 if (positionObject != null) {
                     String fen = extractFen(positionObject);
                     if (fen != null) {
+                        MoveClassifier.updateHistory(fen, positionObject);
                         scheduleAnalysis(fen, true);
                     }
                 }

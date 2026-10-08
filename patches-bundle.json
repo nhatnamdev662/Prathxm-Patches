@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-10-08T11:45:00",
-  "description": "## [2.0.19] (2026-10-08)\n\n### ⚡ NNVC v2.0.19 — Chống sập WebAssembly & Bọc an toàn Move History cho Torch Coach Engine\n\n* **Khắc phục triệt để lỗi RuntimeError Aborted:** Bổ sung bộ lọc an toàn STARTPOS_LEGAL_FIRST_MOVES để ngăn chặn việc gửi chuỗi nước đi khuyết thiếu khi vào app giữa ván, bảo vệ tuyệt đối WebAssembly Worker không bao giờ bị crash hay rơi vào vòng lặp restart.\n* **Phân loại nước cờ 100% Torch CEE:** Độc lập hoàn toàn, không phụ thuộc và không fallback sang Stockfish. Hiển thị thông báo hướng dẫn rõ ràng khi thiếu lịch sử nước đi từ đầu ván.\n* **Author:** NNVC (@nncutett)",
-  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.19/patches-2.0.19.mpp",
+  "created_at": "2026-10-08T12:40:00",
+  "description": "## [2.0.20] (2026-10-08)\n\n### ⚡ NNVC v2.0.20 — Hook Move History từ PositionObject cho Torch Coach Engine\n\n* **Hook trực tiếp lịch sử nước đi từ Android App:** Trích xuất toàn bộ chuỗi nước đi từ Move 1 thông qua reflection trên positionObject (StandardPosition.h() và MoveConverterKt), đảm bảo Torch CEE luôn nhận được chuỗi moves đầy đủ từ startpos ngay cả khi vào lại giữa ván đấu.\n* **Chống triệt để lỗi Abort WebAssembly:** Loại bỏ hoàn toàn tình trạng WebAssembly Abort do thiếu nước mở màn hoặc chuỗi moves bị ngắt quãng.\n* **Phân loại nước cờ 100% Torch CEE:** Độc lập hoàn toàn, không liên quan đến Stockfish.\n* **Author:** NNVC (@nncutett)",
+  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.20/patches-2.0.20.mpp",
   "signature_download_url": "",
-  "version": "2.0.19"
+  "version": "2.0.20"
 }

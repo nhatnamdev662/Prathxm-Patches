@@ -13,6 +13,7 @@ import android.os.Build;
 import android.util.Log;
 import android.widget.Toast;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -33,13 +34,22 @@ public class MoveClassifier {
     private static final Map<String, Boolean> fenToMateMap = new ConcurrentHashMap<>();
     /** Search depth behind each stored evaluation, so a shallower result never overwrites a deeper one. */
     private static final Map<String, Integer> fenToDepthMap = new ConcurrentHashMap<>();
-    /** Moves ("prevKey|currentKey") that already produced a toast, so a move is rated only once. */
+    /** Moves ("prevKey|currentKey" or "seqLen:uci") that already produced a toast, so a move is rated only once. */
     private static final java.util.Set<String> classifiedMoves = ConcurrentHashMap.newKeySet();
 
     /** Move and loss tracking across plies for recapture and missed win / miss detection. */
     private static volatile String lastPlayedUci = null;
     private static volatile boolean lastWasCapture = false;
     private static volatile float lastOppLoss = -1f;
+
+    /** Hooked moves from Chess.com positionObject (StandardPosition) */
+    private static volatile Object lastPositionObject = null;
+    private static volatile List<String> currentPositionMoves = null;
+
+    private static volatile Class<?> cachedMoveConverterClass = null;
+    private static volatile Method cachedConvertHistoryMethod = null;
+    private static volatile Method cachedConvertMoveMethod = null;
+    private static volatile boolean converterResolved = false;
 
     /** Minimum depth for an interrupted / intermediate search to be trusted for a rating. */
     private static final int MIN_RATING_DEPTH = 8;
@@ -55,6 +65,90 @@ public class MoveClassifier {
         synchronized (fenHistory) {
             fenHistory.clear();
             clearMaps();
+        }
+        currentPositionMoves = null;
+        lastPositionObject = null;
+    }
+
+    private static void resolveConverter(ClassLoader cl) {
+        if (converterResolved) return;
+        try {
+            Class<?> clazz = cl.loadClass("com.chess.chessboard.compengine.MoveConverterKt");
+            cachedMoveConverterClass = clazz;
+            for (Method m : clazz.getMethods()) {
+                if (m.getParameterCount() == 1 && m.getReturnType() == String.class) {
+                    if ("c".equals(m.getName())) {
+                        cachedConvertHistoryMethod = m;
+                    } else if ("b".equals(m.getName())) {
+                        cachedConvertMoveMethod = m;
+                    }
+                }
+            }
+        } catch (Throwable t) {
+            TorchEngine.log("[EXTRACT MOVES] Không load được MoveConverterKt: " + t.getMessage());
+        } finally {
+            converterResolved = true;
+        }
+    }
+
+    public static List<String> extractMovesFromPosition(Object positionObject) {
+        if (positionObject == null) return null;
+        try {
+            Method hMethod = null;
+            try {
+                hMethod = positionObject.getClass().getMethod("h");
+            } catch (NoSuchMethodException e) {
+                for (Method m : positionObject.getClass().getMethods()) {
+                    if (m.getName().equals("h") && m.getParameterCount() == 0 && List.class.isAssignableFrom(m.getReturnType())) {
+                        hMethod = m;
+                        break;
+                    }
+                }
+            }
+            if (hMethod == null) return null;
+
+            Object listObj = hMethod.invoke(positionObject);
+            if (!(listObj instanceof List)) return null;
+
+            List<?> historyList = (List<?>) listObj;
+            if (historyList.isEmpty()) {
+                return new ArrayList<>();
+            }
+
+            resolveConverter(positionObject.getClass().getClassLoader());
+
+            List<String> moves = new ArrayList<>();
+            for (Object item : historyList) {
+                if (item == null) continue;
+                String uci = null;
+                if (cachedConvertHistoryMethod != null) {
+                    try {
+                        Object res = cachedConvertHistoryMethod.invoke(null, item);
+                        if (res instanceof String) {
+                            uci = (String) res;
+                        }
+                    } catch (Throwable ignored) {}
+                }
+                if (uci == null && cachedConvertMoveMethod != null) {
+                    try {
+                        Method bMethod = item.getClass().getMethod("b");
+                        Object moveObj = bMethod.invoke(item);
+                        if (moveObj != null) {
+                            Object res = cachedConvertMoveMethod.invoke(null, moveObj);
+                            if (res instanceof String) {
+                                uci = (String) res;
+                            }
+                        }
+                    } catch (Throwable ignored) {}
+                }
+                if (uci != null && !uci.trim().isEmpty()) {
+                    moves.add(uci.trim().toLowerCase(java.util.Locale.US));
+                }
+            }
+            return moves;
+        } catch (Throwable t) {
+            TorchEngine.log("[EXTRACT MOVES ERROR] " + t.getMessage());
+            return null;
         }
     }
 
@@ -125,6 +219,18 @@ public class MoveClassifier {
 
     public static Map<String, List<String>> getFenToBestMovesMap() {
         return fenToBestMovesMap;
+    }
+
+    public static void updateHistory(String fen, Object positionObject) {
+        lastPositionObject = positionObject;
+        if (positionObject != null) {
+            List<String> moves = extractMovesFromPosition(positionObject);
+            if (moves != null && !moves.isEmpty()) {
+                currentPositionMoves = moves;
+                TorchEngine.log("[POSITION HOOK] Đã trích xuất " + moves.size() + " nước từ positionObject: " + moves);
+            }
+        }
+        updateHistory(fen);
     }
 
     public static void updateHistory(String fen) {
@@ -296,58 +402,68 @@ public class MoveClassifier {
         if (!StockfishSettings.isMoveClassificationEnabled(context)) return;
 
         try {
+            List<String> hookMoves = currentPositionMoves;
             String currentKey = getFenKey(currentFen);
-            if (currentKey == null) return;
-
-            String prevKey = null;
-            synchronized (fenHistory) {
-                int idx = fenHistory.indexOf(currentKey);
-                if (idx >= 1) {
-                    prevKey = fenHistory.get(idx - 1);
-                }
-            }
-
-            if (prevKey == null) return;
-            final String transition = prevKey + "|" + currentKey;
-            if (classifiedMoves.contains(transition)) return;
-
-            boolean whiteMoved = prevKey.endsWith(" w");
-            String uciMove = deduceUciMove(prevKey, currentKey);
-            if (uciMove == null) {
-                TorchEngine.log("[CLASSIFIER DEDUCE NULL] prev=" + prevKey + ", curr=" + currentKey);
-                return;
-            }
-
-            if (currentFen != null) {
+            if (currentKey == null && (hookMoves == null || hookMoves.isEmpty())) return;
+            if (currentFen != null && currentKey != null) {
                 keyToFullFenMap.put(currentKey, currentFen);
             }
 
-            final Activity currentAct = activity;
-            TorchEngine.log("[CLASSIFIER TRIGGER] Move=" + uciMove + ", whiteMoved=" + whiteMoved + ", torchReady=" + TorchEngine.getInstance(context).isReady());
+            String uciMove = null;
+            boolean whiteMoved = false;
+            String moveIdentifier = null;
+            List<String> moves = null;
 
-            final String finalPrevKey = prevKey;
-            final boolean finalWhiteMoved = whiteMoved;
-            final StockfishProcess.AnalysisResult finalResult = currentResult;
+            if (hookMoves != null && !hookMoves.isEmpty()) {
+                // Ưu tiên 100%: Dùng danh sách nước đi đầy đủ được hook trực tiếp từ positionObject
+                moves = new ArrayList<>(hookMoves);
+                uciMove = moves.get(moves.size() - 1);
+                whiteMoved = (moves.size() % 2 == 1);
+                moveIdentifier = moves.size() + ":" + uciMove;
+                if (classifiedMoves.contains(moveIdentifier)) return;
+            } else {
+                // Fallback: dựa vào FEN transition nếu không hook được positionObject
+                if (currentKey == null) return;
+                String prevKey = null;
+                synchronized (fenHistory) {
+                    int idx = fenHistory.indexOf(currentKey);
+                    if (idx >= 1) {
+                        prevKey = fenHistory.get(idx - 1);
+                    }
+                }
+                if (prevKey == null) return;
+                final String transition = prevKey + "|" + currentKey;
+                if (classifiedMoves.contains(transition)) return;
+
+                whiteMoved = prevKey.endsWith(" w");
+                uciMove = deduceUciMove(prevKey, currentKey);
+                if (uciMove == null) {
+                    TorchEngine.log("[CLASSIFIER DEDUCE NULL] prev=" + prevKey + ", curr=" + currentKey);
+                    return;
+                }
+                moveIdentifier = transition;
+                moves = getPlayedMoves();
+                if (moves.isEmpty()) {
+                    moves.add(uciMove);
+                } else if (!moves.get(moves.size() - 1).equals(uciMove)) {
+                    moves.add(uciMove);
+                }
+            }
+
+            final Activity currentAct = activity;
+            TorchEngine.log("[CLASSIFIER TRIGGER] Move=" + uciMove + ", whiteMoved=" + whiteMoved + ", totalMoves=" + (moves != null ? moves.size() : 0) + ", torchReady=" + TorchEngine.getInstance(context).isReady());
 
             // ── 1. 100% Real Torch WebAssembly Engine Execution ──
             TorchEngine torch = TorchEngine.getInstance(context);
             if (torch.isReady()) {
                 String userColor = whiteMoved ? "white" : "black";
                 final String finalUci = uciMove;
-                final String transitionKey = transition;
-                classifiedMoves.add(transitionKey);
-
-                List<String> moves = getPlayedMoves();
-                if (moves.isEmpty()) {
-                    moves.add(uciMove);
-                } else if (!moves.get(moves.size() - 1).equals(uciMove)) {
-                    moves.add(uciMove);
-                }
+                classifiedMoves.add(moveIdentifier);
 
                 // Kiểm tra tính hợp lệ của chuỗi nước đi tính từ bàn cờ ban đầu (startpos)
                 String firstMove = moves.get(0);
                 if (!STARTPOS_LEGAL_FIRST_MOVES.contains(firstMove)) {
-                    TorchEngine.log("[TORCH CLASSIFIER BLOCKED] Nước đầu tiên '" + firstMove + "' không thể đi từ startpos (Vào lại giữa ván). Chặn gửi lệnh để bảo vệ WebAssembly khỏi Abort.");
+                    TorchEngine.log("[TORCH CLASSIFIER BLOCKED] Nước đầu tiên '" + firstMove + "' không thể đi từ startpos (Vào lại giữa ván và không có lịch sử). Chặn gửi lệnh để bảo vệ WebAssembly khỏi Abort.");
                     if (currentAct != null) {
                         boolean isVi = "vi".equalsIgnoreCase(StockfishSettings.getLanguage(currentAct));
                         final String blockedText = isVi ? "⚠️ [Torch Coach] Cần lịch sử nước đi từ đầu ván" : "⚠️ [Torch Coach] Missing moves from startpos";

@@ -1,6 +1,6 @@
 # NHẬT KÝ DỰ ÁN & BỘ GHI NHỚ DẶN DÒ (PROJECT MEMORY)
 *Dự án: Chess Mobile - ReVanced Extension Patches cho Chess.com Android*
-*Phiên bản hiện tại: v2.0.19*
+*Phiên bản hiện tại: v2.0.20*
 *Cập nhật lần cuối: 2026-10-08*
 
 ---
@@ -138,16 +138,26 @@
       - Bổ sung bộ lọc an toàn `STARTPOS_LEGAL_FIRST_MOVES` (20 nước đi mở màn hợp lệ của Trắng từ `startpos`).
       - Nếu chuỗi nước đi không bắt đầu từ một nước đi hợp lệ của `startpos`, lập tức chặn không gửi cho Torch WebAssembly và hiển thị hướng dẫn người dùng: `⚠️ [Torch Coach] Cần lịch sử nước đi từ đầu ván`.
       - Bảo vệ tuyệt đối WebAssembly Worker không bao giờ bị abort hay restart lặp đi lặp lại.
+- **v2.0.20**:
+  - **Hook Move History trực tiếp từ PositionObject của Chess.com App**:
+    - **Vấn đề**: Khi người dùng vào lại ván cờ giữa chừng, `fenHistory` không có các nước đi trước đó, dẫn đến bộ lọc chặn lệnh phân loại và hiển thị cảnh báo thiếu lịch sử.
+    - **Giải pháp triệt để**:
+      - Hook trực tiếp vào `positionObject` (`StandardPosition`) được truyền vào `onBoardChanged(stateImplObject, positionObject)`.
+      - Thông qua reflection gọi `positionObject.h()` để lấy toàn bộ danh sách `PositionAndMove` (`com.chess.chessboard.history.i`) từ Move 1 đến hiện tại.
+      - Chuyển đổi từng phần tử sang chuỗi UCI move bằng `com.chess.chessboard.compengine.MoveConverterKt.c(item)` (hoặc `b(move)`).
+      - Cung cấp chuỗi nước đi đầy đủ 100% từ `startpos` cho `torch.analyze(moves, userColor, ...)`.
+      - Giải quyết dứt điểm vấn đề vào giữa ván: Torch CEE phân loại chính xác mọi nước đi mà không bao giờ bị thiếu lịch sử hay crash WebAssembly.
 
 ---
 
 ## 3. TRẠNG THÁI HIỆN TẠI & KẾ HOẠCH TIẾP THEO
 
 ### 3.1. Trạng thái hiện tại
-- **Phiên bản mới nhất**: **v2.0.19** (`patches-2.0.19.mpp`).
-- **Kho lưu trữ GitHub**: Đã sẵn sàng phát hành Release v2.0.19.
+- **Phiên bản mới nhất**: **v2.0.20** (`patches-2.0.20.mpp`).
+- **Kho lưu trữ GitHub**: Đã sẵn sàng phát hành Release v2.0.20.
 - **Trạng thái Repo**: 100% sạch, không commit file `.py`.
 - **Tiến trình kỹ thuật**:
-  1. Đã bọc an toàn tuyệt đối cho Torch CEE WebAssembly.
-  2. Phân hệ Coach đảm bảo 100% độc lập, không liên quan đến Stockfish.
-  3. Cấu trúc 5 Tab chuẩn Extension.
+  1. Hook hoàn chỉnh lịch sử nước đi từ `positionObject` cho Torch CEE.
+  2. Bọc an toàn tuyệt đối chống Abort WebAssembly.
+  3. Phân hệ Coach 100% Torch độc lập, không dính dáng tới Stockfish.
+  4. Cấu trúc 5 Tab chuẩn Extension `[ LIVE | ENGINE | COACH | VISUAL | ARROWS ]`.
