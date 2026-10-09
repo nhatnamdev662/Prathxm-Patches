@@ -1,9 +1,9 @@
 {
-  "created_at": "2026-10-09T18:41:00",
-  "description": "## [2.0.50] (2026-10-09)\n\n### ⚡ NNVC v2.0.50 — Điều Chỉnh Độ Ưu Tiên Lớp Giao Diện: Không Đè Lên Eval Bar & Mũi Tên\n\n* **Đưa lớp phân loại nước đi xuống tầng nền:** Highlight ô cờ và huy hiệu phân loại được vẽ trước, làm nền cho bàn cờ.\n* **Mũi tên & Nhãn Eval luôn hiển thị rõ nét:** Mũi tên Stockfish và nhãn điểm eval vẽ đè lên trên ô highlight phân loại, không còn bị che lấp.\n* **Bảo vệ thanh Eval Bar:** Thiết lập Z-order và elevation cao hơn để thanh Eval Bar luôn ở lớp trên cùng, không bị ô highlight cột a đè lên.\n* **Author:** NNVC (@nncutett)",
-  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.50/patches-2.0.50.mpp",
+  "created_at": "2026-10-09T18:57:00",
+  "description": "## [2.0.51] (2026-10-09)\n\n### ⚡ NNVC v2.0.51 — Chuyển Mũi Tên Đe Dọa (Threat Arrow) Sang ArrowOverlayView Nổi Trên Lớp Phân Loại\n\n* **Đưa mũi tên hiểm họa (Threat Arrow) lên lớp Overlay Canvas:** Mũi tên đe dọa không còn bị tiêm vào bàn cờ gốc (vốn nằm dưới lớp phân loại nước đi).\n* **Hiển thị đè lên trên ô highlight phân loại:** Cả mũi tên gợi ý và mũi tên đe dọa (màu đỏ #EF4444) đều được vẽ trên Canvas nổi của `ArrowOverlayView`, không còn bị ô highlight hay huy hiệu che lấp.\n* **Author:** NNVC (@nncutett)",
+  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.51/patches-2.0.51.mpp",
   "signature_download_url": "",
-  "version": "2.0.50",
-  "versionCode": 20050,
-  "downloadUrl": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.50/patches-2.0.50.mpp"
+  "version": "2.0.51",
+  "versionCode": 20051,
+  "downloadUrl": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.51/patches-2.0.51.mpp"
 }

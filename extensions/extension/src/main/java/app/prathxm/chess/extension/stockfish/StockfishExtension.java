@@ -479,7 +479,7 @@ public class StockfishExtension {
             if (!sig.equals(lastArrowSignature)) {
                 lastArrowSignature = sig;
                 boolean whiteTurn = isWhiteTurnFromFen(fen);
-                OverlayManager.updateArrowOverlay(movesToInject, null, result.lineScores, result.hasMate, result.mateIn, whiteTurn, getStateImpl());
+                OverlayManager.updateArrowOverlay(movesToInject, threatToInject, result.lineScores, result.hasMate, result.mateIn, whiteTurn, getStateImpl());
             }
         } else if (isFinal) {
             lastArrowSignature = null;
