@@ -1,9 +1,9 @@
 {
-  "created_at": "2026-10-09T14:08:00",
-  "description": "## [2.0.40] (2026-10-09)\n\n### ⚡ NNVC v2.0.40 — Đồng Bộ 100% Giao Diện & Bảng Màu Phân Loại Nước Đi Chuẩn Extension\n\n* **Đồng bộ màu sắc phân loại:** Chuẩn hóa bảng màu phân loại theo Extension (Great `#749BBF`, Missed Win `#F7C631`, Mistake `#FFA459`, Miss `#FF7769`, Forced `#999999`).\n* **Highlight ô cờ 50% Opacity:** Cả ô xuất phát (`from`) và ô đích (`to`) đều phủ màu với độ mờ chuẩn 50% (alpha 128) giống hệt Extension; nước cờ Forced không phủ màu.\n* **Huy hiệu góc ô cờ & Fallback:** Đồng bộ kích thước, căn lề góc trên bên phải, bóng đổ mờ 30% và bộ ký hiệu glyph / emoji nguyên bản của Extension.\n* **Author:** NNVC (@nncutett)",
-  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.40/patches-2.0.40.mpp",
+  "created_at": "2026-10-09T14:58:00",
+  "description": "## [2.0.41] (2026-10-09)\n\n### ⚡ NNVC v2.0.41 — Khắc Phục Triệt Để Âm Thanh Lạ / Nước Đi Không Hợp Lệ (Illegal Move Sound)\n\n* **Vẽ Threat Arrow độc lập trên Canvas:** Đưa mũi tên hiểm họa (Threat Arrow) sang `ArrowOverlayView` render bằng Canvas độc lập thay vì tiêm phản xạ vào `CBViewModelStateImpl` của Chess.com.\n* **Triệt tiêu âm thanh illegal.mp3:** Loại bỏ hoàn toàn xung đột `setMoveArrows` và `invalidateAllBoards()` khi đi cờ, ngăn chặn Chess.com kích hoạt âm thanh nước đi không hợp lệ.\n* **Hoạt động siêu mượt:** Tối ưu hóa hiệu năng và loại trừ mọi can thiệp đè lên luồng animation/touch bàn cờ.\n* **Author:** NNVC (@nncutett)",
+  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.41/patches-2.0.41.mpp",
   "signature_download_url": "",
-  "version": "2.0.40",
-  "versionCode": 20040,
-  "downloadUrl": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.40/patches-2.0.40.mpp"
+  "version": "2.0.41",
+  "versionCode": 20041,
+  "downloadUrl": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.41/patches-2.0.41.mpp"
 }

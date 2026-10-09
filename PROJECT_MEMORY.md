@@ -1,7 +1,7 @@
 # NHẬT KÝ DỰ ÁN & BỘ GHI NHỚ DẶN DÒ (PROJECT MEMORY)
 *Dự án: Chess Mobile - ReVanced Extension Patches cho Chess.com Android*
-*Phiên bản hiện tại: v2.0.39*
-*Cập nhật lần cuối: 2026-10-08*
+*Phiên bản hiện tại: v2.0.41*
+*Cập nhật lần cuối: 2026-10-09*
 
 ---
 

@@ -112,13 +112,22 @@
     - **Highlight ô cờ 50% Opacity**: Cả ô xuất phát (`from`) và ô đích (`to`) đều phủ cùng màu phân loại với độ mờ chuẩn 50% (alpha 128) giống hệt Extension; nước cờ Forced không phủ màu.
     - **Huy hiệu góc ô cờ & Fallback**: Chuẩn hóa kích thước `0.35f sqSize`, bóng đổ mờ 30% (`0x4D000000`), và đồng bộ trọn bộ ký hiệu fallback glyph / emoji theo Extension.
 
+24. **Khắc Phục Triệt Để Âm Thanh Lạ / Nước Đi Không Hợp Lệ (v2.0.41)**:
+    - **Nguyên nhân**: `ArrowInjector.injectThreatArrow` tiêm `threatMove` (nước ponder dự đoán tương lai) phản xạ vào `CBViewModelStateImpl.setMoveArrows` của Chess.com kèm cờ `animated=true` và gọi `invalidateAllBoards()`. Chess.com nhận nước cờ không hợp lệ với lượt hiện tại trên bàn cờ nên kích hoạt phát âm thanh `illegal.mp3` sau mỗi nước đi.
+    - **Chuyển Threat Arrow sang Canvas Overlay**: Đưa mũi tên hiểm họa về `ArrowOverlayView` vẽ độc lập 100% bằng Canvas (màu đỏ neon nguy hiểm `#EF4444`, glow cyberpunk) thông qua `OverlayManager.updateArrowOverlay`.
+    - **Vô hiệu hóa toàn bộ can thiệp thô bạo vào Board State**:
+      - Gỡ bỏ hoàn toàn việc gọi `ArrowInjector.setMoveArrows` và `StockfishExtension.invalidateAllBoards()` trong `onArrowsChanged`, `onBoardChanged`, `displayLiveResult`, `toggleEverything`.
+      - Chuyển `ArrowInjector.clearEngineArrows`, `injectEngineArrows`, `injectThreatArrow` thành an toàn, không đụng chạm vào state nội bộ của Chess.com.
+    - **Kết quả**: Triệt tiêu dứt điểm 100% âm thanh `illegal.mp3`, bàn cờ mượt mà không bị gián đoạn hay phát âm thanh lỗi.
+
 ---
 
 ## 3. Trạng Thái Hiện Tại & Checklist Kiểm Thử
-- **Phiên bản mới nhất trên GitHub**: `v2.0.40` (tag `v2.0.40`).
-- **File tải bundle**: `https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.40/patches-2.0.40.mpp`
+- **Phiên bản mới nhất trên GitHub**: `v2.0.41` (tag `v2.0.41`).
+- **File tải bundle**: `https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.41/patches-2.0.41.mpp`
 - **Checklist Kiểm Thử**:
-  - [x] Đã biên dịch sạch 39 file Java và đóng gói thành công `patches-2.0.40.mpp`.
-  - [x] Kiểm tra highlight ô cờ: Đúng độ mờ 50% cho cả ô đi và ô đến, bảng màu chuẩn Extension.
-  - [x] Kiểm tra huy hiệu góc ô cờ và shadow tròn mờ 30%.
+  - [x] Đã biên dịch sạch 39 file Java và đóng gói thành công `patches-2.0.41.mpp`.
+  - [x] Mũi tên hiểm họa (Threat Arrow) chuyển sang vẽ canvas độc lập trên `ArrowOverlayView`.
+  - [x] Triệt tiêu triệt để việc tiêm HintArrow bất hợp lệ vào `moveArrows` và loại bỏ hoàn toàn âm thanh `illegal.mp3`.
+  - [x] Đã kiểm tra git status sạch sẽ, đưa bundle vào `mpp_archive/` và script vào `scripts_archive/`.
 
