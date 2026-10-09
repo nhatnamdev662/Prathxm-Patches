@@ -301,6 +301,7 @@ public class StockfishExtension {
             OverlayManager.hideAccuracyEloPills();
             ArrowInjector.clearEngineArrows(stateImplObject);
             TorchEngine.getInstance(getContext()).cancelPendingRequests();
+            resetUserWhiteCache();
         }
         MoveClassifier.updateHistory(fen, positionObject);
         if (activity != null) {
@@ -453,23 +454,34 @@ public class StockfishExtension {
         }
         boolean disableOverlays = isLive && !isReviewMode;
 
+        boolean isWhiteTurn = isWhiteTurnFromFen(fen);
+        Boolean userWhite = isUserWhite(getStateImpl());
+        boolean isMyTurn = (userWhite == null) || (isWhiteTurn == userWhite.booleanValue());
+
         boolean showArrows = !disableOverlays && StockfishSettings.isArrowsVisible(context);
-        if (showArrows && StockfishSettings.isMySideOnly(context)) {
-            Boolean userWhite = isUserWhite(getStateImpl());
-            if (userWhite != null) {
-                boolean isWhiteTurn = isWhiteTurnFromFen(fen);
-                if (isWhiteTurn != userWhite) {
-                    showArrows = false;
+        if (showArrows && StockfishSettings.isMySideOnly(context) && !isMyTurn) {
+            showArrows = false;
+        }
+
+        boolean threatEnabled = !disableOverlays && StockfishSettings.isThreatArrowsEnabled(context);
+        String threatToInject = null;
+        if (threatEnabled) {
+            if (isMyTurn) {
+                // On user's turn: Threat arrow is the opponent's counter-threat (ponder)
+                if (result.ponder != null && !result.ponder.isEmpty()) {
+                    threatToInject = result.ponder;
+                }
+            } else {
+                // On opponent's turn: Threat arrow is what opponent threatens to play right now
+                if (result.moves != null && !result.moves.isEmpty()) {
+                    threatToInject = result.moves.get(0);
                 }
             }
         }
-
-        boolean showThreat = !disableOverlays && StockfishSettings.isThreatArrowsEnabled(context)
-                && result.ponder != null && !result.ponder.isEmpty();
+        boolean showThreat = (threatToInject != null);
 
         if (showArrows || showThreat) {
             java.util.List<String> movesToInject = (showArrows && result.moves != null) ? result.moves : java.util.Collections.emptyList();
-            String threatToInject = showThreat ? result.ponder : null;
 
             if (showThreat && threatToInject != null) {
                 ArrowInjector.injectThreatArrow(context, getStateImpl(), threatToInject);
@@ -672,55 +684,41 @@ public class StockfishExtension {
         return ref != null ? ref.get() : null;
     }
 
+    private static volatile Boolean cachedUserIsWhite = null;
+
+    public static void resetUserWhiteCache() {
+        cachedUserIsWhite = null;
+    }
+
     public static Boolean isUserWhite(Object stateImplObject) {
-        if (stateImplObject == null) return Boolean.TRUE;
-        try {
-            Field field = null;
+        // Priority 1: Check live board orientation via stateImplObject getFlipBoard()
+        if (stateImplObject != null) {
             try {
-                field = stateImplObject.getClass().getDeclaredField("sideToPlaySelfEffects");
-            } catch (NoSuchFieldException e) {
-                for (Field f : stateImplObject.getClass().getDeclaredFields()) {
-                    if (f.getType().getName().equals("kotlin.jvm.functions.Function0")) {
-                        field = f;
-                        break;
+                for (Method m : stateImplObject.getClass().getMethods()) {
+                    String n = m.getName();
+                    if ((n.equals("getFlipBoard") || n.equals("isFlipped") || n.equals("getFlipped"))
+                            && m.getParameterCount() == 0 && m.getReturnType() == boolean.class) {
+                        boolean flipped = (boolean) m.invoke(stateImplObject);
+                        boolean userWhite = !flipped;
+                        cachedUserIsWhite = userWhite;
+                        return userWhite;
                     }
                 }
-            }
-            
-            if (field != null) {
-                field.setAccessible(true);
-                Object sideToPlaySelfEffects = field.get(stateImplObject);
-                if (sideToPlaySelfEffects != null) {
-                    Method invokeMethod = sideToPlaySelfEffects.getClass().getMethod("invoke");
-                    invokeMethod.setAccessible(true);
-                    Object side = invokeMethod.invoke(sideToPlaySelfEffects);
-                    if (side != null) {
-                        Boolean w = sideToWhite(side);
-                        if (w != null) return w;
-                    }
-                }
-            }
-        } catch (Throwable t) {
-            Log.e(TAG, "isUserWhite failed: " + t.getMessage(), t);
+            } catch (Throwable ignored) {}
         }
 
-        // Fallback 1: Infer player side from board orientation via stateImpl
-        try {
-            for (Method m : stateImplObject.getClass().getMethods()) {
-                String n = m.getName();
-                if ((n.equals("getFlipBoard") || n.equals("isFlipped") || n.equals("getFlipped"))
-                        && m.getParameterCount() == 0 && m.getReturnType() == boolean.class) {
-                    boolean flipped = (boolean) m.invoke(stateImplObject);
-                    return !flipped;
-                }
-            }
-        } catch (Throwable ignored) {}
-
-        // Fallback 2: Check live ChessBoardView orientation via OverlayManager
+        // Priority 2: Check live board orientation via OverlayManager (which checks ChessBoardView)
         try {
             boolean flipped = OverlayManager.isBoardFlipped(stateImplObject);
-            return !flipped;
+            boolean userWhite = !flipped;
+            cachedUserIsWhite = userWhite;
+            return userWhite;
         } catch (Throwable ignored) {}
+
+        // Priority 3: Fall back to previously cached game orientation
+        if (cachedUserIsWhite != null) {
+            return cachedUserIsWhite;
+        }
 
         // Move 0 default: Player starting a match is White
         return Boolean.TRUE;

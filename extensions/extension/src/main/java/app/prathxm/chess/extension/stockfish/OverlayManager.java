@@ -492,8 +492,10 @@ public class OverlayManager {
         return findAnyBoardLayout(root);
     }
 
+    private static volatile boolean lastKnownFlipped = false;
+
     private static View findInnerChessBoardView(View view) {
-        if (view == null || view.getVisibility() != View.VISIBLE) return null;
+        if (view == null) return null;
 
         String name = view.getClass().getName();
         boolean isLayoutOrContainer = name.contains("Layout")
@@ -501,16 +503,7 @@ public class OverlayManager {
                 || name.contains("Binding")
                 || name.contains("Manager");
 
-        // Depth-first search: check children first so we reach the innermost board view!
-        if (view instanceof ViewGroup) {
-            ViewGroup group = (ViewGroup) view;
-            for (int i = 0; i < group.getChildCount(); i++) {
-                View found = findInnerChessBoardView(group.getChildAt(i));
-                if (found != null) return found;
-            }
-        }
-
-        // Check if this view itself is the actual chessboard view
+        // If this view itself is already the exact ChessBoardView, return it immediately
         if (!isLayoutOrContainer) {
             if (name.equals("com.chess.chessboard.view.ChessBoardView")
                     || name.equals("com.chess.chessboard.v2.ChessBoardView")
@@ -521,11 +514,20 @@ public class OverlayManager {
             }
         }
 
+        // Depth-first search: check children
+        if (view instanceof ViewGroup) {
+            ViewGroup group = (ViewGroup) view;
+            for (int i = 0; i < group.getChildCount(); i++) {
+                View found = findInnerChessBoardView(group.getChildAt(i));
+                if (found != null) return found;
+            }
+        }
+
         return null;
     }
 
     private static View findFallbackBoardView(View view) {
-        if (view == null || view.getVisibility() != View.VISIBLE) return null;
+        if (view == null) return null;
 
         String name = view.getClass().getName();
         boolean isLayoutOrContainer = name.contains("Layout")
@@ -551,7 +553,7 @@ public class OverlayManager {
     }
 
     private static View findAnyBoardLayout(View view) {
-        if (view == null || view.getVisibility() != View.VISIBLE) return null;
+        if (view == null) return null;
         String name = view.getClass().getName();
         if (name.contains("ChessBoardLayout") || name.endsWith("ChessBoardView")) {
             return view;
@@ -582,15 +584,19 @@ public class OverlayManager {
                     String n = m.getName();
                     if ((n.equals("getFlipBoard") || n.equals("isFlipped") || n.equals("getFlipped"))
                             && m.getParameterCount() == 0 && m.getReturnType() == boolean.class) {
-                        return (boolean) m.invoke(boardView);
+                        boolean res = (boolean) m.invoke(boardView);
+                        lastKnownFlipped = res;
+                        return res;
                     }
                 }
                 for (Field f : boardView.getClass().getDeclaredFields()) {
                     String n = f.getName();
-                    if ((n.equals("flipBoard") || n.equals("flipped") || n.equals("isFlipped"))
+                    if ((n.equals("flipBoard") || n.equals("flipped") || n.equals("isFlipped") || n.equals("t"))
                             && f.getType() == boolean.class) {
                         f.setAccessible(true);
-                        return f.getBoolean(boardView);
+                        boolean res = f.getBoolean(boardView);
+                        lastKnownFlipped = res;
+                        return res;
                     }
                 }
             } catch (Throwable ignored) {}
@@ -602,21 +608,24 @@ public class OverlayManager {
                     String n = m.getName();
                     if ((n.equals("getFlipBoard") || n.equals("isFlipped") || n.equals("getFlipped"))
                             && m.getParameterCount() == 0 && m.getReturnType() == boolean.class) {
-                        return (boolean) m.invoke(stateImpl);
+                        boolean res = (boolean) m.invoke(stateImpl);
+                        lastKnownFlipped = res;
+                        return res;
                     }
                 }
                 for (Field f : stateImpl.getClass().getDeclaredFields()) {
                     String n = f.getName();
                     if ((n.equals("flipped") || n.equals("isFlipped")) && f.getType() == boolean.class) {
                         f.setAccessible(true);
-                        return f.getBoolean(stateImpl);
+                        boolean res = f.getBoolean(stateImpl);
+                        lastKnownFlipped = res;
+                        return res;
                     }
                 }
             } catch (Throwable ignored) {}
         }
 
-        Boolean isWhite = StockfishExtension.isUserWhite(stateImpl);
-        return isWhite != null && !isWhite;
+        return lastKnownFlipped;
     }
 
     public static void setClassificationBadge(final String square, final String classificationName, final boolean isWhite, final boolean isMyMove) {

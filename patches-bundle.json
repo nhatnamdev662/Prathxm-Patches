@@ -1,9 +1,9 @@
 {
-  "created_at": "2026-10-09T19:03:00",
-  "description": "## [2.0.52] (2026-10-09)\n\n### ⚡ NNVC v2.0.52 — Phân Biệt Mũi Tên Đe Dọa Chuẩn Style Gốc Chess.com\n\n* **Style mũi tên đe dọa riêng biệt chuẩn Chess.com:** Dùng màu đỏ phẳng (`#EF4444`, flat solid fill), không hiệu ứng Neon Glow hay dải gradient nổi 3D.\n* **Dễ dàng phân biệt trực quan:** Mũi tên phân tích của Stockfish dùng phong cách Neon Glow + Gradient + nhãn Eval, trong khi mũi tên đe dọa dùng phong cách đồ họa phẳng đặc trưng của Chess.com.\n* **Hiển thị nổi trên nền phân loại:** Vẫn được vẽ trên Canvas nổi của `ArrowOverlayView`, không bị ô highlight hay badge đè lên.\n* **Author:** NNVC (@nncutett)",
-  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.52/patches-2.0.52.mpp",
+  "created_at": "2026-10-09T19:50:00",
+  "description": "## [2.0.53] (2026-10-09)\n\n### ⚡ NNVC v2.0.53 — Sửa Triệt Để Lỗi Lệch Toạ Độ & Lật Ngược Bàn Cờ / Mũi Tên\n\n* **Sửa dứt điểm lỗi nhầm lẫn lượt đi (SideToPlay) với màu người chơi (UserColor):** Trước đây `isUserWhite` đọc nhầm `sideToPlaySelfEffects` (lượt đi hiện tại), dẫn đến mỗi khi Trắng vừa đi xong và chuyển sang lượt Đen thì hệ thống tự động suy luận người chơi là Đen và lật ngược bàn cờ (`isBoardFlipped = true`), khiến nước đi kế tiếp bị lệch toạ độ.\n* **Xác định hướng bàn cờ chính xác 100%:** Hook trực tiếp `getFlipBoard()` và trường `t` của `ChessBoardView` cũng như `CBViewModelStateImpl`, kèm bộ nhớ đệm hướng bàn cờ theo ván (`cachedUserIsWhite`, `lastKnownFlipped`) giúp bàn cờ luôn đồng bộ tuyệt đối không bị đảo lộn.\n* **Logic mũi tên đe dọa chuẩn xác theo lượt đi:** Ở lượt đối thủ, mũi tên đe dọa hiển thị chính xác nước đi nguy hiểm nhất của đối phương (`bestMove`) thay vì nhầm sang nước đáp trả `ponder`.\n* **Author:** NNVC (@nncutett)",
+  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.53/patches-2.0.53.mpp",
   "signature_download_url": "",
-  "version": "2.0.52",
-  "versionCode": 20052,
-  "downloadUrl": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.52/patches-2.0.52.mpp"
+  "version": "2.0.53",
+  "versionCode": 20053,
+  "downloadUrl": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.53/patches-2.0.53.mpp"
 }
