@@ -1,9 +1,9 @@
 {
-  "created_at": "2026-10-09T18:18:00",
-  "description": "## [2.0.48] (2026-10-09)\n\n### ⚡ NNVC v2.0.48 — Triệt Tiêu 100% Âm Thanh Lạ Khi Đi Cờ & Khai Cuộc\n\n* **Tắt triệt để toàn bộ các nguồn phát âm thanh lỗi/không hợp lệ (`illegal.mp3`):** Xử lý cả `StillInCheck` (`s.java`), `IllegalMove` (`k.java`), `OnboardingError` (`b0.java`), `ResultBad` (`s0.java`) và `PuzzleIncorrect` (`x$c$q`). Giữ nguyên các singleton instance để đảm bảo an toàn tuyệt đối 100% không crash.\n* **Quét động toàn diện:** Tự động phát hiện và vô hiệu hóa các trường âm thanh ILLEGAL trên toàn bộ package `com.chess.soundandhaptics.api` ngay khi khởi tạo app.\n* **Vô hiệu hóa Audio trong TorchEngine:** Thiết lập `setMediaPlaybackRequiresUserGesture(true)` và vô hiệu hóa WebAudio / Speech API trong WebView phân loại nước đi để đảm bảo không có âm thanh ngầm.\n* **Author:** NNVC (@nncutett)",
-  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.48/patches-2.0.48.mpp",
+  "created_at": "2026-10-09T18:24:00",
+  "description": "## [2.0.49] (2026-10-09)\n\n### ⚡ NNVC v2.0.49 — Mở Lại Âm Thanh Nước Đi Không Hợp Lệ Gốc (IllegalMove) & Chặn Triệt Để Âm Thanh Lỗi Khai Cuộc\n\n* **Mở lại âm thanh nước đi không hợp lệ gốc (`k.java` - `IllegalMove`):** Giữ nguyên âm thanh cảnh báo khi người chơi kéo quân đi sai nước cờ thực tế như nguyên bản Chess.com.\n* **Duy trì chặn triệt để âm thanh lỗi khai cuộc (`s.java` - `StillInCheck`):** Loại bỏ âm thanh bị phát nhầm khi chạm quân cờ hoặc đi cờ khai cuộc.\n* **Duy trì câm Audio TorchEngine:** Không phát sinh bất kỳ âm thanh nền nào từ engine phân loại.\n* **Author:** NNVC (@nncutett)",
+  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.49/patches-2.0.49.mpp",
   "signature_download_url": "",
-  "version": "2.0.48",
-  "versionCode": 20048,
-  "downloadUrl": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.48/patches-2.0.48.mpp"
+  "version": "2.0.49",
+  "versionCode": 20049,
+  "downloadUrl": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.49/patches-2.0.49.mpp"
 }
