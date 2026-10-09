@@ -34,6 +34,9 @@ public class WdlBarView extends View {
 
     public WdlBarView(Context context) {
         super(context);
+        try {
+            setElevation(10.0f);
+        } catch (Throwable ignored) {}
         paintWin.setColor(0xFF81B64C);  // Chess.com green
         paintDraw.setColor(0xFF7D8796); // Chess.com muted gray
         paintLoss.setColor(0xFFE15554); // Chess.com red

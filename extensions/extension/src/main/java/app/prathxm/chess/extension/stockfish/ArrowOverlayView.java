@@ -121,6 +121,9 @@ public class ArrowOverlayView extends View {
         super(context);
         setClickable(false);
         setFocusable(false);
+        try {
+            setElevation(2.0f);
+        } catch (Throwable ignored) {}
         // Software layer ensures BlurMaskFilter renders smoothly on all devices
         setLayerType(View.LAYER_TYPE_SOFTWARE, null);
 
@@ -246,7 +249,13 @@ public class ArrowOverlayView extends View {
 
         float sqSize = Math.min(w, h) / 8.0f;
 
-        // 1. Draw arrows in reverse order (Tier 5 first, Tier 1 last so Tier 1 is on top)
+        // 1. Draw Square Classification Badge FIRST (Lớp nền: Highlight ô cờ & Badge phân loại vẽ trước)
+        // Đảm bảo không đè lên mũi tên và nhãn eval của Stockfish.
+        if (currentBadge != null) {
+            drawSingleClassificationBadge(canvas, sqSize, currentBadge);
+        }
+
+        // 2. Draw arrows in reverse order (Tier 5 first, Tier 1 last so Tier 1 is on top)
         if (!arrows.isEmpty()) {
             for (int i = arrows.size() - 1; i >= 0; i--) {
                 ArrowData arrow = arrows.get(i);
@@ -255,13 +264,8 @@ public class ArrowOverlayView extends View {
                 drawSingleArrow(canvas, arrow, sqSize, perpOffset, targetOffset);
             }
 
-            // 2. Draw Eval Badges with Anti-collision avoidance synchronized with arrows
+            // 3. Draw Eval Badges with Anti-collision avoidance synchronized with arrows (Lớp trên cùng)
             drawEvalBadges(canvas, sqSize);
-        }
-
-        // 3. Draw Square Classification Badge (Chỉ hiển thị nước đi mới nhất hiện tại)
-        if (currentBadge != null) {
-            drawSingleClassificationBadge(canvas, sqSize, currentBadge);
         }
     }
 

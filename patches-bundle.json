@@ -1,9 +1,9 @@
 {
-  "created_at": "2026-10-09T18:24:00",
-  "description": "## [2.0.49] (2026-10-09)\n\n### ⚡ NNVC v2.0.49 — Mở Lại Âm Thanh Nước Đi Không Hợp Lệ Gốc (IllegalMove) & Chặn Triệt Để Âm Thanh Lỗi Khai Cuộc\n\n* **Mở lại âm thanh nước đi không hợp lệ gốc (`k.java` - `IllegalMove`):** Giữ nguyên âm thanh cảnh báo khi người chơi kéo quân đi sai nước cờ thực tế như nguyên bản Chess.com.\n* **Duy trì chặn triệt để âm thanh lỗi khai cuộc (`s.java` - `StillInCheck`):** Loại bỏ âm thanh bị phát nhầm khi chạm quân cờ hoặc đi cờ khai cuộc.\n* **Duy trì câm Audio TorchEngine:** Không phát sinh bất kỳ âm thanh nền nào từ engine phân loại.\n* **Author:** NNVC (@nncutett)",
-  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.49/patches-2.0.49.mpp",
+  "created_at": "2026-10-09T18:41:00",
+  "description": "## [2.0.50] (2026-10-09)\n\n### ⚡ NNVC v2.0.50 — Điều Chỉnh Độ Ưu Tiên Lớp Giao Diện: Không Đè Lên Eval Bar & Mũi Tên\n\n* **Đưa lớp phân loại nước đi xuống tầng nền:** Highlight ô cờ và huy hiệu phân loại được vẽ trước, làm nền cho bàn cờ.\n* **Mũi tên & Nhãn Eval luôn hiển thị rõ nét:** Mũi tên Stockfish và nhãn điểm eval vẽ đè lên trên ô highlight phân loại, không còn bị che lấp.\n* **Bảo vệ thanh Eval Bar:** Thiết lập Z-order và elevation cao hơn để thanh Eval Bar luôn ở lớp trên cùng, không bị ô highlight cột a đè lên.\n* **Author:** NNVC (@nncutett)",
+  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.50/patches-2.0.50.mpp",
   "signature_download_url": "",
-  "version": "2.0.49",
-  "versionCode": 20049,
-  "downloadUrl": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.49/patches-2.0.49.mpp"
+  "version": "2.0.50",
+  "versionCode": 20050,
+  "downloadUrl": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.50/patches-2.0.50.mpp"
 }

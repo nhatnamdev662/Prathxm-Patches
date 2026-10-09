@@ -30,6 +30,9 @@ public class EvalBarView extends View {
 
     public EvalBarView(Context context) {
         super(context);
+        try {
+            setElevation(10.0f);
+        } catch (Throwable ignored) {}
         paintWhite.setColor(0xF0E8E4E0); // off-white, premium feel
         paintBlack.setColor(0xF0252220); // dark charcoal, premium feel
 

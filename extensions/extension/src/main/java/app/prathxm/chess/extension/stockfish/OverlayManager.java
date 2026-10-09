@@ -27,6 +27,41 @@ import java.util.List;
 public class OverlayManager {
     private static final String TAG = "OverlayManager";
 
+    public static void ensureZOrder(ViewGroup decorView) {
+        if (decorView == null) return;
+        try {
+            View arrowView = decorView.findViewWithTag("nnvc_arrow_overlay");
+            if (arrowView != null) {
+                arrowView.setElevation(2f);
+            }
+            View evalBar = decorView.findViewWithTag("stockfish_eval_bar");
+            if (evalBar != null && evalBar.getVisibility() == View.VISIBLE) {
+                evalBar.setElevation(10f);
+                evalBar.bringToFront();
+            }
+            View wdlBar = decorView.findViewWithTag("stockfish_wdl_bar");
+            if (wdlBar != null && wdlBar.getVisibility() == View.VISIBLE) {
+                wdlBar.setElevation(10f);
+                wdlBar.bringToFront();
+            }
+            View info = decorView.findViewWithTag("stockfish_engine_info");
+            if (info != null && info.getVisibility() == View.VISIBLE) {
+                info.setElevation(10f);
+                info.bringToFront();
+            }
+            View topPill = decorView.findViewWithTag("nnvc_accuracy_top_pill");
+            if (topPill != null && topPill.getVisibility() == View.VISIBLE) {
+                topPill.setElevation(15f);
+                topPill.bringToFront();
+            }
+            View botPill = decorView.findViewWithTag("nnvc_accuracy_bot_pill");
+            if (botPill != null && botPill.getVisibility() == View.VISIBLE) {
+                botPill.setElevation(15f);
+                botPill.bringToFront();
+            }
+        } catch (Throwable ignored) {}
+    }
+
     public static void updateArrowOverlay(final List<String> moves, final Object stateImpl) {
         updateArrowOverlay(moves, null, null, false, 0, true, stateImpl);
     }
@@ -128,7 +163,7 @@ public class OverlayManager {
                     boolean flipped = isBoardFlipped(boardView, stateImpl);
                     arrowView.update(boardX, boardY, boardW, boardH, list, flipped);
                     arrowView.setVisibility(View.VISIBLE);
-                    arrowView.bringToFront();
+                    ensureZOrder(decorView);
 
                 } catch (Throwable t) {
                     Log.e(TAG, "updateArrowOverlay failed: " + t.getMessage(), t);
@@ -216,6 +251,7 @@ public class OverlayManager {
                     evalBarView.setVisibility(View.VISIBLE);
                     evalBarView.update(evalBarX, boardY, barWidth, boardH,
                                        score, hasMate, mateIn, isBoardFlipped(boardView, stateImpl));
+                    ensureZOrder(decorView);
                 } catch (Throwable t) {
                     Log.e(TAG, "updateEvalBar failed: " + t.getMessage());
                 }
@@ -290,6 +326,7 @@ public class OverlayManager {
                     }
                     wdlBarView.setVisibility(View.VISIBLE);
                     wdlBarView.update(boardX, barY, barW, barHeight, wdlWin, wdlDraw, wdlLoss);
+                    ensureZOrder(decorView);
                 } catch (Throwable t) {
                     Log.e(TAG, "updateWdlBar failed: " + t.getMessage());
                 }
@@ -381,7 +418,7 @@ public class OverlayManager {
                     info.setTranslationX(boardX + boardW - w);
                     info.setTranslationY(y);
                     info.setVisibility(View.VISIBLE);
-                    info.bringToFront();
+                    ensureZOrder(decorView);
                 } catch (Throwable t) {
                     Log.e(TAG, "updateEngineInfo failed: " + t.getMessage());
                 }
@@ -634,8 +671,8 @@ public class OverlayManager {
                     }
 
                     arrowView.setVisibility(View.VISIBLE);
-                    arrowView.bringToFront();
                     arrowView.setClassificationBadge(fromSquare, toSquare, classificationName, isWhite, isMyMove);
+                    ensureZOrder(decorView);
                 } catch (Throwable t) {
                     Log.w(TAG, "Failed to set classification badge: " + t.getMessage());
                 }
@@ -767,6 +804,7 @@ public class OverlayManager {
                     botPill.setTranslationY(botY);
                     botPill.setVisibility(View.VISIBLE);
                     botPill.bringToFront();
+                    ensureZOrder(decorView);
 
                 } catch (Throwable t) {
                     Log.w(TAG, "updateAccuracyEloPills failed: " + t.getMessage());
