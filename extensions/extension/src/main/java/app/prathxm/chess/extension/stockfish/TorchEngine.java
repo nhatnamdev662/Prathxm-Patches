@@ -164,6 +164,7 @@ public class TorchEngine {
             settings.setAllowFileAccess(true);
             settings.setAllowContentAccess(true);
             settings.setDomStorageEnabled(true);
+            settings.setMediaPlaybackRequiresUserGesture(true);
 
             webView.setWebChromeClient(new android.webkit.WebChromeClient() {
                 @Override
@@ -212,6 +213,10 @@ public class TorchEngine {
 
             String html = "<!DOCTYPE html><html><head><meta charset='utf-8'></head><body><script>\n" +
                     "(function() {\n" +
+                    "    window.AudioContext = undefined;\n" +
+                    "    window.webkitAudioContext = undefined;\n" +
+                    "    window.Audio = undefined;\n" +
+                    "    if (window.speechSynthesis) window.speechSynthesis.speak = function(){};\n" +
                     "    console.log('[Torch] Starting bootstrap...');\n" +
                     "    Promise.all([\n" +
                     "        fetch('https://torch-engine.local/torch.js').then(r => r.text()),\n" +

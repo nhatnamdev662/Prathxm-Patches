@@ -391,6 +391,7 @@ public class MoveClassifier {
 
     @android.annotation.SuppressLint("MissingPermission")
     public static void classifyMoveIfPossible(Context context, String currentFen, StockfishProcess.AnalysisResult currentResult) {
+        StockfishExtension.silenceIllegalMoveSound();
         if (context == null) return;
         
         Activity activity = StockfishExtension.getCurrentActivity();

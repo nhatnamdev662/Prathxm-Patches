@@ -162,12 +162,16 @@ public class StockfishExtension {
         return optionalPainters;
     }
 
-    public static void silenceIllegalMoveSound() {
+    static {
+        silenceIllegalMoveSound();
+    }
+
+    private static void muteSoundEventClass(String className) {
         try {
-            Class<?> kClass = Class.forName("com.chess.soundandhaptics.api.k");
-            for (Field f : kClass.getDeclaredFields()) {
+            Class<?> clazz = Class.forName(className);
+            for (Field f : clazz.getDeclaredFields()) {
                 // NEVER null out the instance field 'a', otherwise Kotlin Intrinsics checkNotNullParameter(<this>) throws NPE!
-                if (f.getType().equals(kClass) || f.getName().equals("a")) {
+                if (f.getType().equals(clazz) || f.getName().equals("a")) {
                     continue;
                 }
                 try {
@@ -184,6 +188,44 @@ public class StockfishExtension {
                         f.set(null, null);
                     }
                 } catch (Throwable ignoredField) {}
+            }
+        } catch (Throwable ignored) {}
+    }
+
+    public static void silenceIllegalMoveSound() {
+        try {
+            // 1. Mute triệt để toàn bộ các class âm thanh không hợp lệ và lỗi
+            muteSoundEventClass("com.chess.soundandhaptics.api.k"); // IllegalMove (Sound.Static.ILLEGAL)
+            muteSoundEventClass("com.chess.soundandhaptics.api.s"); // StillInCheck (Sound.Static.ILLEGAL)
+            muteSoundEventClass("com.chess.soundandhaptics.api.b0"); // Onboarding Error
+            muteSoundEventClass("com.chess.soundandhaptics.api.s0"); // ResultBad
+            muteSoundEventClass("com.chess.soundandhaptics.api.x$c$q"); // PuzzleIncorrect (fail-blip-hi.mp3)
+
+            // 2. Quét động toàn bộ các class từ a-z và a0-z0
+            for (char c = 'a'; c <= 'z'; c++) {
+                checkAndMuteIfIllegal("com.chess.soundandhaptics.api." + c);
+                checkAndMuteIfIllegal("com.chess.soundandhaptics.api." + c + "0");
+            }
+        } catch (Throwable ignored) {}
+    }
+
+    private static void checkAndMuteIfIllegal(String className) {
+        try {
+            Class<?> clazz = Class.forName(className);
+            boolean isIllegal = false;
+            for (Field f : clazz.getDeclaredFields()) {
+                if (f.getType().equals(clazz) || f.getName().equals("a")) continue;
+                try {
+                    f.setAccessible(true);
+                    Object val = f.get(null);
+                    if (val != null && val.toString().toUpperCase().contains("ILLEGAL")) {
+                        isIllegal = true;
+                        break;
+                    }
+                } catch (Throwable ignored) {}
+            }
+            if (isIllegal) {
+                muteSoundEventClass(className);
             }
         } catch (Throwable ignored) {}
     }
@@ -507,6 +549,7 @@ public class StockfishExtension {
         app.registerActivityLifecycleCallbacks(new Application.ActivityLifecycleCallbacks() {
             @Override
             public void onActivityCreated(Activity activity, android.os.Bundle savedInstanceState) {
+                silenceIllegalMoveSound();
                 String name = activity.getClass().getName();
                 if (name.startsWith("com.chess.features.puzzles.")) {
                     activity.finish();
@@ -524,6 +567,7 @@ public class StockfishExtension {
 
             @Override
             public void onActivityStarted(Activity activity) {
+                silenceIllegalMoveSound();
                 unlockScreenshots(activity);
             }
 
