@@ -28,20 +28,10 @@ public class OverlayManager {
     private static final String TAG = "OverlayManager";
 
     public static void updateArrowOverlay(final List<String> moves, final Object stateImpl) {
-        updateArrowOverlay(moves, null, null, false, 0, true, stateImpl);
+        updateArrowOverlay(moves, null, false, 0, true, stateImpl);
     }
 
     public static void updateArrowOverlay(final List<String> moves,
-                                          final float[] lineScores,
-                                          final boolean hasMate,
-                                          final int mateIn,
-                                          final boolean whiteToMove,
-                                          final Object stateImpl) {
-        updateArrowOverlay(moves, null, lineScores, hasMate, mateIn, whiteToMove, stateImpl);
-    }
-
-    public static void updateArrowOverlay(final List<String> moves,
-                                          final String threatMove,
                                           final float[] lineScores,
                                           final boolean hasMate,
                                           final int mateIn,
@@ -73,7 +63,7 @@ public class OverlayManager {
                         boardView.post(new Runnable() {
                             @Override
                             public void run() {
-                                updateArrowOverlay(moves, threatMove, lineScores, hasMate, mateIn, whiteToMove, stateImpl);
+                                updateArrowOverlay(moves, lineScores, hasMate, mateIn, whiteToMove, stateImpl);
                             }
                         });
                         return;
@@ -91,9 +81,6 @@ public class OverlayManager {
                     }
 
                     List<ArrowOverlayView.ArrowData> list = new ArrayList<>();
-                    if (threatMove != null && threatMove.matches("^[a-h][1-8][a-h][1-8][qrbn]?$")) {
-                        list.add(new ArrowOverlayView.ArrowData(threatMove, 1, true, null));
-                    }
                     if (moves != null) {
                         for (int i = 0; i < moves.size(); i++) {
                             String m = moves.get(i);
@@ -658,7 +645,7 @@ public class OverlayManager {
                     if (overlay instanceof ArrowOverlayView) {
                         ArrowOverlayView aov = (ArrowOverlayView) overlay;
                         aov.clearClassificationBadge();
-                        if (!aov.hasArrows()) {
+                        if (ArrowInjector.lastEngineArrows.isEmpty()) {
                             aov.setVisibility(View.GONE);
                         }
                     }

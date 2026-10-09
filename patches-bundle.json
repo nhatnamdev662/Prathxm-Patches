@@ -1,9 +1,9 @@
 {
-  "created_at": "2026-10-09T14:58:00",
-  "description": "## [2.0.41] (2026-10-09)\n\n### ⚡ NNVC v2.0.41 — Khắc Phục Triệt Để Âm Thanh Lạ / Nước Đi Không Hợp Lệ (Illegal Move Sound)\n\n* **Vẽ Threat Arrow độc lập trên Canvas:** Đưa mũi tên hiểm họa (Threat Arrow) sang `ArrowOverlayView` render bằng Canvas độc lập thay vì tiêm phản xạ vào `CBViewModelStateImpl` của Chess.com.\n* **Triệt tiêu âm thanh illegal.mp3:** Loại bỏ hoàn toàn xung đột `setMoveArrows` và `invalidateAllBoards()` khi đi cờ, ngăn chặn Chess.com kích hoạt âm thanh nước đi không hợp lệ.\n* **Hoạt động siêu mượt:** Tối ưu hóa hiệu năng và loại trừ mọi can thiệp đè lên luồng animation/touch bàn cờ.\n* **Author:** NNVC (@nncutett)",
-  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.41/patches-2.0.41.mpp",
+  "created_at": "2026-10-09T15:10:00",
+  "description": "## [2.0.42] (2026-10-09)\n\n### ⚡ NNVC v2.0.42 — Khôi Phục Mũi Tên Hiểm Họa Gốc Native Chess.com\n\n* **Khôi phục Threat Arrow gốc:** Sử dụng vector `HintArrow` gốc của Chess.com màu đỏ neon qua `ArrowInjector.injectThreatArrow` như cũ theo yêu cầu người dùng.\n* **Author:** NNVC (@nncutett)",
+  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.42/patches-2.0.42.mpp",
   "signature_download_url": "",
-  "version": "2.0.41",
-  "versionCode": 20041,
-  "downloadUrl": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.41/patches-2.0.41.mpp"
+  "version": "2.0.42",
+  "versionCode": 20042,
+  "downloadUrl": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.42/patches-2.0.42.mpp"
 }

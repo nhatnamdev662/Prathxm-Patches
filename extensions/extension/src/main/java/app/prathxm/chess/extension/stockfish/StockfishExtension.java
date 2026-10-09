@@ -235,6 +235,7 @@ public class StockfishExtension {
         Context ctx = getContext();
         if (ctx != null && !StockfishSettings.isEngineEnabled(ctx)) {
             Log.d(TAG, "Engine is disabled in settings.");
+            ArrowInjector.clearEngineArrows(stateImplObject);
             OverlayManager.hideArrowOverlay();
             OverlayManager.hideEvalBar();
             OverlayManager.hideWdlBar();
@@ -243,6 +244,7 @@ public class StockfishExtension {
             return;
         }
 
+        ArrowInjector.clearEngineArrows(stateImplObject);
         OverlayManager.hideArrowOverlay();
         OverlayManager.clearClassificationBadge();
         lastArrowSignature = null;
@@ -258,6 +260,7 @@ public class StockfishExtension {
             OverlayManager.clearClassificationBadge();
             OverlayManager.hideArrowOverlay();
             OverlayManager.hideAccuracyEloPills();
+            ArrowInjector.clearEngineArrows(stateImplObject);
             TorchEngine.getInstance(getContext()).cancelPendingRequests();
         }
         MoveClassifier.updateHistory(fen, positionObject);
@@ -295,6 +298,73 @@ public class StockfishExtension {
         // Auto-trigger analysis for move 0 / initial position if no job has been scheduled yet
         if (engineReady && currentJob == null) {
             triggerAnalysisForCurrentState();
+        }
+
+        if (ArrowInjector.isInjecting.get()) {
+            return;
+        }
+
+        Context context = getContext();
+        if (context == null) return;
+
+        boolean enabled = StockfishSettings.isEngineEnabled(context);
+        boolean visible = StockfishSettings.isArrowsVisible(context);
+
+        if (enabled && visible) {
+            boolean showArrows = true;
+            if (StockfishSettings.isMySideOnly(context)) {
+                Boolean userWhite = isUserWhite(stateImplObject);
+                if (userWhite != null) {
+                    try {
+                        Method getPositionMethod = stateImplObject.getClass().getMethod("getPosition");
+                        Object positionObject = getPositionMethod.invoke(stateImplObject);
+                        if (positionObject != null) {
+                            Method getSideToMove = positionObject.getClass().getMethod("getSideToMove");
+                            Object sideToMove = getSideToMove.invoke(positionObject);
+                            if (sideToMove != null) {
+                                Method isWhiteMethod = sideToMove.getClass().getMethod("isWhite");
+                                boolean isWhiteMove = (boolean) isWhiteMethod.invoke(sideToMove);
+                                if (isWhiteMove != userWhite) {
+                                    showArrows = false;
+                                }
+                            }
+                        }
+                    } catch (Throwable t) {
+                        Log.e(TAG, "Error checking side-aware turn in onArrowsChanged: " + t.getMessage());
+                    }
+                }
+            }
+
+            final List<Object> finalAppArrows = new ArrayList<>();
+            if (arrows != null) {
+                for (Object arrow : arrows) {
+                    if (arrow != null && !ArrowInjector.isEngineArrow(arrow)) {
+                        finalAppArrows.add(arrow);
+                    }
+                }
+            }
+
+            if (showArrows) {
+                synchronized (ArrowInjector.lastEngineArrows) {
+                    finalAppArrows.addAll(ArrowInjector.lastEngineArrows);
+                }
+            }
+
+            final Object finalStateImpl = stateImplObject;
+            new android.os.Handler(android.os.Looper.getMainLooper()).post(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        ArrowInjector.isInjecting.set(true);
+                        ArrowInjector.setMoveArrows(finalStateImpl, finalAppArrows);
+                        invalidateAllBoards();
+                    } catch (Throwable t) {
+                        Log.e(TAG, "Failed to inject merged arrows in onArrowsChanged: " + t.getMessage());
+                    } finally {
+                        ArrowInjector.isInjecting.set(false);
+                    }
+                }
+            });
         }
     }
 
@@ -432,11 +502,21 @@ public class StockfishExtension {
             String sig = fen + '|' + (showArrows ? result.moves : "") + '|' + (showThreat ? result.ponder : "");
             if (!sig.equals(lastArrowSignature)) {
                 lastArrowSignature = sig;
-                boolean whiteTurn = isWhiteTurnFromFen(fen);
-                OverlayManager.updateArrowOverlay(movesToInject, threatToInject, result.lineScores, result.hasMate, result.mateIn, whiteTurn, getStateImpl());
+                if (showThreat && threatToInject != null) {
+                    ArrowInjector.injectThreatArrow(context, getStateImpl(), threatToInject);
+                } else {
+                    ArrowInjector.clearEngineArrows(getStateImpl());
+                }
+                if (showArrows && !movesToInject.isEmpty()) {
+                    boolean whiteTurn = isWhiteTurnFromFen(fen);
+                    OverlayManager.updateArrowOverlay(movesToInject, result.lineScores, result.hasMate, result.mateIn, whiteTurn, getStateImpl());
+                } else {
+                    OverlayManager.hideArrowOverlay();
+                }
             }
         } else if (isFinal) {
             lastArrowSignature = null;
+            ArrowInjector.clearEngineArrows(getStateImpl());
             OverlayManager.hideArrowOverlay();
         }
 
@@ -557,6 +637,7 @@ public class StockfishExtension {
             }
             StockfishBridge.stopSearch();
             
+            ArrowInjector.clearEngineArrows(getStateImpl());
             OverlayManager.hideArrowOverlay();
             lastArrowSignature = null;
             OverlayManager.hideEvalBar();

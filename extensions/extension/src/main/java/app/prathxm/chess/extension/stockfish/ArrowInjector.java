@@ -180,22 +180,193 @@ public class ArrowInjector {
     }
 
     public static void clearEngineArrows(Object stateImpl) {
-        synchronized (lastEngineArrows) {
-            lastEngineArrows.clear();
+        if (stateImpl == null) return;
+
+        try {
+            List<?> currentArrows = getMoveArrows(stateImpl);
+
+            List<Object> cleanArrows = new ArrayList<>();
+            if (currentArrows != null) {
+                for (Object arrow : currentArrows) {
+                    if (arrow != null && !isEngineArrow(arrow)) {
+                        cleanArrows.add(arrow);
+                    }
+                }
+            }
+
+            final List<Object> finalCleanArrows = cleanArrows;
+            final Object finalStateImpl = stateImpl;
+            new Handler(Looper.getMainLooper()).post(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        isInjecting.set(true);
+                        setMoveArrows(finalStateImpl, finalCleanArrows);
+                        StockfishExtension.invalidateAllBoards();
+                    } catch (Throwable t) {
+                        Log.e(TAG, "clearEngineArrows invoke failed: " + t.getMessage(), t);
+                    } finally {
+                        isInjecting.set(false);
+                    }
+                }
+            });
+        } catch (Throwable t) {
+            Log.e(TAG, "clearEngineArrows failed: " + t.getMessage());
         }
     }
 
     public static void injectEngineArrows(Context context, Object stateImpl, List<String> uciMoves, String ponderMove) {
-        // All engine arrows are now safely rendered via ArrowOverlayView (Canvas Overlay)
-        synchronized (lastEngineArrows) {
-            lastEngineArrows.clear();
+        if (stateImpl == null || context == null) return;
+
+        try {
+            Class<?> uClass = Class.forName("com.chess.chessboard.u");
+            Object uInstance = uClass.getField("a").get(null); // u.a = INSTANCE
+            Method cMethod = uClass.getMethod("c", String.class);
+
+            resolveMembers(stateImpl.getClass());
+            final Class<?> hintArrowClass = cachedHintArrowClass;
+            if (hintArrowClass == null) throw new ClassNotFoundException("HintArrow");
+
+            List<Object> arrowList = new ArrayList<>();
+            float baseOpacity = 0.85f;
+            float opacityStep = 0.25f;
+
+            for (int i = 0; i < uciMoves.size(); i++) {
+                String uciMove = uciMoves.get(i);
+                if (uciMove == null || !uciMove.matches("^[a-h][1-8][a-h][1-8][qrbn]?$")) continue;
+
+                String fromStr = uciMove.substring(0, 2);
+                String toStr   = uciMove.substring(2, 4);
+
+                Object fromSquare = cMethod.invoke(uInstance, fromStr);
+                Object toSquare   = cMethod.invoke(uInstance, toStr);
+
+                if (fromSquare == null || toSquare == null) continue;
+
+                float opacity = Math.max(0.2f, baseOpacity - (i * opacityStep));
+
+                int moveColor = StockfishSettings.getArrowTierColor(context, i + 1);
+
+                Object arrow = newArrow(hintArrowClass, fromSquare, toSquare, moveColor, opacity);
+                arrowList.add(arrow);
+            }
+
+            // Injects Threat Arrow if enabled and ponderMove is valid
+            if (StockfishSettings.isThreatArrowsEnabled(context) && ponderMove != null && ponderMove.matches("^[a-h][1-8][a-h][1-8][qrbn]?$")) {
+                String fromStr = ponderMove.substring(0, 2);
+                String toStr   = ponderMove.substring(2, 4);
+
+                Object fromSquare = cMethod.invoke(uInstance, fromStr);
+                Object toSquare   = cMethod.invoke(uInstance, toStr);
+
+                if (fromSquare != null && toSquare != null) {
+                    Object threatArrow = newArrow(hintArrowClass, fromSquare, toSquare,
+                            0xFFEF4444 /* NNVC Red danger */, 0.92f);
+                    arrowList.add(threatArrow);
+                }
+            }
+
+            synchronized (lastEngineArrows) {
+                lastEngineArrows.clear();
+                lastEngineArrows.addAll(arrowList);
+            }
+
+            // Read the current arrows from stateImpl, merge, and call a2
+            List<?> currentArrows = getMoveArrows(stateImpl);
+
+            List<Object> merged = new ArrayList<>();
+            if (currentArrows != null) {
+                for (Object arrow : currentArrows) {
+                    if (arrow != null && !isEngineArrow(arrow)) {
+                        merged.add(arrow);
+                    }
+                }
+            }
+            merged.addAll(arrowList);
+
+            final List<Object> finalMerged = merged;
+            final Object finalStateImpl = stateImpl;
+            new Handler(Looper.getMainLooper()).post(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        isInjecting.set(true);
+                        setMoveArrows(finalStateImpl, finalMerged);
+                        StockfishExtension.invalidateAllBoards();
+                    } catch (Throwable t) {
+                        Log.e(TAG, "injectEngineArrows invoke failed: " + t.getMessage(), t);
+                    } finally {
+                        isInjecting.set(false);
+                    }
+                }
+            });
+
+        } catch (Throwable t) {
+            Log.e(TAG, "injectEngineArrows failed: " + t.getMessage(), t);
         }
     }
 
     public static void injectThreatArrow(Context context, Object stateImpl, String threatMove) {
-        // Threat arrows are now safely rendered via ArrowOverlayView (Canvas Overlay)
-        synchronized (lastEngineArrows) {
-            lastEngineArrows.clear();
+        if (stateImpl == null || context == null) return;
+
+        try {
+            List<Object> arrowList = new ArrayList<>();
+            if (threatMove != null && threatMove.matches("^[a-h][1-8][a-h][1-8][qrbn]?$")) {
+                Class<?> uClass = Class.forName("com.chess.chessboard.u");
+                Object uInstance = uClass.getField("a").get(null);
+                Method cMethod = uClass.getMethod("c", String.class);
+
+                resolveMembers(stateImpl.getClass());
+                final Class<?> hintArrowClass = cachedHintArrowClass;
+                if (hintArrowClass == null) return;
+
+                String fromStr = threatMove.substring(0, 2);
+                String toStr   = threatMove.substring(2, 4);
+
+                Object fromSquare = cMethod.invoke(uInstance, fromStr);
+                Object toSquare   = cMethod.invoke(uInstance, toStr);
+
+                if (fromSquare != null && toSquare != null) {
+                    // Mũi tên hiểm họa gốc của Chess.com (Màu đỏ neon #EF4444 / #D50000)
+                    Object threatArrow = newArrow(hintArrowClass, fromSquare, toSquare, 0xFFEF4444, 0.92f);
+                    arrowList.add(threatArrow);
+                }
+            }
+
+            synchronized (lastEngineArrows) {
+                lastEngineArrows.clear();
+                lastEngineArrows.addAll(arrowList);
+            }
+
+            List<?> currentArrows = getMoveArrows(stateImpl);
+            List<Object> merged = new ArrayList<>();
+            if (currentArrows != null) {
+                for (Object arrow : currentArrows) {
+                    if (arrow != null && !isEngineArrow(arrow)) {
+                        merged.add(arrow);
+                    }
+                }
+            }
+            merged.addAll(arrowList);
+
+            final List<Object> finalMerged = merged;
+            final Object finalStateImpl = stateImpl;
+            new Handler(Looper.getMainLooper()).post(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        isInjecting.set(true);
+                        setMoveArrows(finalStateImpl, finalMerged);
+                        StockfishExtension.invalidateAllBoards();
+                    } catch (Throwable t) {
+                        Log.e(TAG, "injectThreatArrow invoke failed: " + t.getMessage(), t);
+                    } finally {
+                        isInjecting.set(false);
+                    }
+                }
+            });
+        } catch (Throwable t) {
+            Log.e(TAG, "injectThreatArrow failed: " + t.getMessage(), t);
         }
     }
 }
