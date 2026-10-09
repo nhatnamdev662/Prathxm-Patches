@@ -370,9 +370,8 @@ public class StockfishSettingsDialog {
             dBg.setCornerRadius(999 * density);
             statusDot.setBackground(dBg);
             statusLabel.setText(isChecked ? "ENGINE READY" : "ENGINE OFF");
-            Object state = StockfishExtension.getStateImpl();
             if (!isChecked) {
-                ArrowInjector.clearEngineArrows(state);
+                OverlayManager.hideArrowOverlay();
                 OverlayManager.hideEvalBar();
                 OverlayManager.hideMateAnnouncement();
                 OverlayManager.hideEngineInfo();
@@ -713,9 +712,7 @@ public class StockfishSettingsDialog {
 
         arrowsSwitch.setOnCheckedChangeListener((view, isChecked) -> {
             StockfishSettings.setArrowsVisible(activity, isChecked);
-            Object state = StockfishExtension.getStateImpl();
             if (!isChecked) {
-                ArrowInjector.clearEngineArrows(state);
                 OverlayManager.hideArrowOverlay();
             } else {
                 StockfishExtension.triggerAnalysisForCurrentState();

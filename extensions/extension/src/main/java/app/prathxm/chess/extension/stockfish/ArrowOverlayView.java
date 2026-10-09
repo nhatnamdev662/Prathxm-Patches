@@ -167,6 +167,10 @@ public class ArrowOverlayView extends View {
         return currentBadge != null;
     }
 
+    public boolean hasArrows() {
+        return !arrows.isEmpty();
+    }
+
     public void clearArrowsOnly() {
         this.arrows.clear();
         invalidate();

@@ -1,6 +1,6 @@
 # NHẬT KÝ DỰ ÁN & BỘ GHI NHỚ DẶN DÒ (PROJECT MEMORY)
 *Dự án: Chess Mobile - ReVanced Extension Patches cho Chess.com Android*
-*Phiên bản hiện tại: v2.0.43*
+*Phiên bản hiện tại: v2.0.44*
 *Cập nhật lần cuối: 2026-10-09*
 
 ---
@@ -228,15 +228,20 @@
 - **v2.0.43 (Tối Giản Menu Cài Đặt)**:
   - Xóa nút đỏ "Đặt lại cài đặt mặc định" ở cuối Tab ENGINE.
   - Xóa nút "Xem & Copy Log" chẩn đoán Torch ở Tab COACH.
+- **v2.0.44 (Khắc Phục Triệt Để Âm Thanh Lạ / Illegal Move Sound)**:
+  - Loại bỏ hoàn toàn các lệnh gọi phản xạ `setMoveArrows` và `invalidateAllBoards()` khi đi cờ.
+  - Chuyển Threat Arrow sang render 100% bằng Canvas trên `ArrowOverlayView` với màu đỏ neon `#EF4444`.
+  - Triệt tiêu 100% tiếng kêu âm thanh nước đi không hợp lệ của Chess.com.
 
 ---
 
 ## 3. TRẠNG THÁI HIỆN TẠI & KẾ HOẠCH TIẾP THEO
 
 ### 3.1. Trạng thái hiện tại
-- **Phiên bản mới nhất**: **v2.0.43** (`patches-2.0.43.mpp`).
-- **Kho lưu trữ GitHub**: Sẵn sàng phát hành Release `v2.0.43`.
+- **Phiên bản mới nhất**: **v2.0.44** (`patches-2.0.44.mpp`).
+- **Kho lưu trữ GitHub**: Sẵn sàng phát hành Release `v2.0.44`.
 - **Trạng thái Repo**: 100% sạch, không commit file `.py`, root ngăn nắp.
 - **Tiến trình kỹ thuật**:
-  1. Giữ nguyên Threat Arrow gốc native Chess.com.
-  2. Giao diện menu cài đặt gọn gàng, loại bỏ các nút rườm rà không cần thiết.
+  1. Triệt tiêu hoàn toàn âm thanh illegal move khi đi cờ.
+  2. Mũi tên hiểm họa render Canvas mượt mà, đỏ neon đẹp mắt.
+  3. Menu cài đặt tinh gọn, không nút thừa.

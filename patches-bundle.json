@@ -1,9 +1,9 @@
 {
-  "created_at": "2026-10-09T15:16:00",
-  "description": "## [2.0.43] (2026-10-09)\n\n### ⚡ NNVC v2.0.43 — Tối Giản Menu Cài Đặt\n\n* **Xóa nút Đặt lại cài đặt mặc định:** Loại bỏ nút đỏ không cần thiết trong menu cài đặt để giao diện gọn gàng.\n* **Xóa nút Xem & Copy Log chẩn đoán Torch:** Loại bỏ nút log trong Tab Coach.\n* **Author:** NNVC (@nncutett)",
-  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.43/patches-2.0.43.mpp",
+  "created_at": "2026-10-09T15:47:00",
+  "description": "## [2.0.44] (2026-10-09)\n\n### ⚡ NNVC v2.0.44 — Khắc Phục Triệt Để Âm Thanh Lạ / Nước Đi Không Hợp Lệ (Illegal Move Sound)\n\n* **Loại bỏ 100% can thiệp vào ViewModel:** Vô hiệu hóa toàn bộ các lệnh gọi phản xạ `setMoveArrows` và `invalidateAllBoards()` khi đi cờ, triệt tiêu nguyên nhân khiến Chess.com phát âm thanh nước đi không hợp lệ (`illegal.mp3`).\n* **Vẽ Threat Arrow độc lập trên Canvas:** Mũi tên hiểm họa (Threat Arrow) màu đỏ rực rỡ `#EF4444` được vẽ 100% trên `ArrowOverlayView` bằng Canvas tách rời, không can thiệp vào luồng animation/bàn cờ của app.\n* **Author:** NNVC (@nncutett)",
+  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.44/patches-2.0.44.mpp",
   "signature_download_url": "",
-  "version": "2.0.43",
-  "versionCode": 20043,
-  "downloadUrl": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.43/patches-2.0.43.mpp"
+  "version": "2.0.44",
+  "versionCode": 20044,
+  "downloadUrl": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.44/patches-2.0.44.mpp"
 }

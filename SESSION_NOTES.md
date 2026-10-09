@@ -131,14 +131,25 @@
       - Gỡ bỏ hoàn toàn nút `coachLogBtn` ("📋 Xem & Copy Log") ở Tab COACH trong `StockfishSettingsDialog.java`.
       - Đóng gói bản vá sạch `v2.0.43` (`patches-2.0.43.mpp`).
 
+27. **Khắc Phục Triệt Để Âm Thanh Lạ / Illegal Move Sound (v2.0.44)**:
+    - **Yêu cầu người dùng**:
+      - "và lỗi âm thanh vẫn còn fix triệt để coi" (âm thanh nghe giống nước đi không hợp lệ kêu khi đi nước cờ, thỉnh thoảng lại kêu 1 nước).
+    - **Nguyên nhân cốt lõi**:
+      - `ArrowInjector` tiêm phản xạ `setMoveArrows` vào `CBViewModelStateImpl` và gọi `invalidateAllBoards()`. Khi người dùng thực hiện nước đi hoặc kéo thả quân cờ, việc sửa đổi trạng thái bàn cờ xung đột với luồng xử lý nước đi của Chess.com, khiến Chess.com phát âm thanh nước đi không hợp lệ (`illegal.mp3`).
+    - **Thực hiện**:
+      - Loại bỏ 100% các lệnh gọi `ArrowInjector.clearEngineArrows` và `ArrowInjector.injectThreatArrow` khỏi `StockfishExtension` và `StockfishSettingsDialog`.
+      - Vô hiệu hóa việc can thiệp `setMoveArrows` trong `onArrowsChanged`.
+      - Chuyển Threat Arrow sang render 100% bằng Canvas trên `ArrowOverlayView` với màu đỏ neon `#EF4444`.
+      - Đóng gói bản vá sạch `v2.0.44` (`patches-2.0.44.mpp`).
+
 ---
 
 ## 3. Trạng Thái Hiện Tại & Checklist Kiểm Thử
-- **Phiên bản mới nhất trên GitHub**: `v2.0.43` (tag `v2.0.43`).
-- **File tải bundle**: `https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.43/patches-2.0.43.mpp`
+- **Phiên bản mới nhất trên GitHub**: `v2.0.44` (tag `v2.0.44`).
+- **File tải bundle**: `https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.44/patches-2.0.44.mpp`
 - **Checklist Kiểm Thử**:
-  - [x] Đã biên dịch sạch 39 file Java và đóng gói thành công `patches-2.0.43.mpp`.
-  - [x] Xóa nút đỏ đặt lại mặc định và nút xem log chẩn đoán theo yêu cầu.
-  - [x] Mũi tên hiểm họa giữ nguyên theo native Chess.com.
+  - [x] Đã biên dịch sạch 39 file Java và đóng gói thành công `patches-2.0.44.mpp`.
+  - [x] Triệt tiêu hoàn toàn âm thanh illegal move khi đi cờ.
+  - [x] Threat Arrow render Canvas mượt mà, đỏ neon chuẩn Extension.
   - [x] Đã kiểm tra git status sạch sẽ, đưa bundle vào `mpp_archive/` và script vào `scripts_archive/`.
 
