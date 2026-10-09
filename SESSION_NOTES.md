@@ -167,16 +167,23 @@
       - Tạo các đối tượng điểm số `com.chess.entities.Score$Centipawns` và `com.chess.entities.Score$MateIn` nguyên bản, cập nhật điểm và trạng thái lật cờ thời gian thực.
       - Mang lại trải nghiệm thanh Eval Bar chuẩn 100% giống hệt chế độ Analysis của Chess.com.
 
+  24. **Bản Vá v2.0.56 — Chuẩn Hóa Hiển Thị Thanh Eval Bar Dọc (Native Vertical Orientation)**:
+      - Phân tích bytecode DEX `classes8.dex`: `EvaluationBarView` mặc định khởi tạo hướng là `HORIZONTAL` khi không có xml styleable.
+      - Can thiệp trực tiếp bằng Reflection gán trường enum `EvaluationBarView$Orientation` thành `Orientation.VERTICAL`.
+      - Đồng bộ TextPaint sang `Paint.Align.CENTER` để căn chỉnh nhãn điểm eval chuẩn tâm theo chiều dọc.
+      - Bật sẵn thanh Eval Bar mặc định (`isEvalBarEnabled = true`) trong SharedPreferences.
+      - Đảm bảo hiển thị dọc chuẩn 100% lên/xuống dọc theo cạnh bàn cờ.
+
 ---
 
 ## 3. Trạng Thái Hiện Tại & Checklist Kiểm Thử
-- **Phiên bản mới nhất trên GitHub**: `v2.0.55` (tag `v2.0.55`).
-- **File tải bundle**: `https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.55/patches-2.0.55.mpp`
+- **Phiên bản mới nhất trên GitHub**: `v2.0.56` (tag `v2.0.56`).
+- **File tải bundle**: `https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.56/patches-2.0.56.mpp`
 - **Checklist Kiểm Thử**:
-  - [x] Đã biên dịch sạch 39 file Java và đóng gói thành công `patches-2.0.55.mpp`.
-  - [x] Tích hợp thanh Eval Bar gốc nguyên bản của Chess.com (`EvaluationBarView`).
+  - [x] Đã biên dịch sạch 39 file Java và đóng gói thành công `patches-2.0.56.mpp`.
+  - [x] Thanh Eval Bar gốc của Chess.com hiển thị dọc chuẩn 100% (`Orientation.VERTICAL`).
   - [x] Nhãn điểm eval tự động né thanh Eval Bar khi trỏ vào cạnh trái.
-  - [x] Toạ độ và hướng bàn cờ ổn định tuyệt đối giữa các nước đi.
+  - [x] Bật sẵn thanh Eval Bar mặc định trong settings.
   - [x] Đã kiểm tra git status sạch sẽ, đưa bundle vào `mpp_archive/` và script vào `scripts_archive/`.
 
 

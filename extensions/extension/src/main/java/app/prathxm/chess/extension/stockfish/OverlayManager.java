@@ -253,6 +253,32 @@ public class OverlayManager {
                             java.lang.reflect.Constructor<?> ctor = nativeEvalBarClass.getConstructor(android.content.Context.class, android.util.AttributeSet.class);
                             evalBar = (View) ctor.newInstance(decorView.getContext(), (android.util.AttributeSet) null);
                             evalBar.setTag("stockfish_eval_bar");
+
+                            // Ép Orientation thành VERTICAL (mặc định constructor không có AttributeSet sẽ là HORIZONTAL)
+                            try {
+                                Class<?> orientClass = Class.forName("com.chess.internal.views.EvaluationBarView$Orientation");
+                                Object verticalVal = Enum.valueOf((Class<Enum>) orientClass, "VERTICAL");
+                                for (java.lang.reflect.Field f : nativeEvalBarClass.getDeclaredFields()) {
+                                    if (f.getType().equals(orientClass)) {
+                                        f.setAccessible(true);
+                                        f.set(evalBar, verticalVal);
+                                        break;
+                                    }
+                                }
+                                // Đồng bộ TextPaint align sang CENTER theo logic constructor khi orientation = VERTICAL
+                                for (java.lang.reflect.Field f : nativeEvalBarClass.getDeclaredFields()) {
+                                    if (android.text.TextPaint.class.isAssignableFrom(f.getType()) || android.graphics.Paint.class.isAssignableFrom(f.getType())) {
+                                        f.setAccessible(true);
+                                        Object p = f.get(evalBar);
+                                        if (p instanceof android.graphics.Paint) {
+                                            ((android.graphics.Paint) p).setTextAlign(android.graphics.Paint.Align.CENTER);
+                                        }
+                                    }
+                                }
+                            } catch (Throwable tOrient) {
+                                Log.w(TAG, "Failed to force vertical orientation on EvaluationBarView: " + tOrient.getMessage());
+                            }
+
                             decorView.addView(evalBar);
                         }
 
@@ -277,6 +303,19 @@ public class OverlayManager {
                         Method setFlippedMethod = nativeEvalBarClass.getMethod("setBoardFlipped", boolean.class);
                         setFlippedMethod.invoke(evalBar, flipped);
 
+                        // Đảm bảo trường orientation luôn là VERTICAL ngay cả khi tái sử dụng view
+                        try {
+                            Class<?> orientClass = Class.forName("com.chess.internal.views.EvaluationBarView$Orientation");
+                            Object verticalVal = Enum.valueOf((Class<Enum>) orientClass, "VERTICAL");
+                            for (java.lang.reflect.Field f : nativeEvalBarClass.getDeclaredFields()) {
+                                if (f.getType().equals(orientClass)) {
+                                    f.setAccessible(true);
+                                    f.set(evalBar, verticalVal);
+                                    break;
+                                }
+                            }
+                        } catch (Throwable ignored) {}
+
                         // Cập nhật LayoutParams và toạ độ
                         ViewGroup.LayoutParams lp = evalBar.getLayoutParams();
                         if (lp == null) {
@@ -291,6 +330,8 @@ public class OverlayManager {
                         evalBar.setLayoutParams(lp);
                         evalBar.setTranslationX(evalBarX);
                         evalBar.setTranslationY(boardY);
+                        evalBar.requestLayout();
+                        evalBar.invalidate();
 
                         usedNative = true;
                     } catch (Throwable tNative) {

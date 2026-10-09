@@ -253,7 +253,7 @@ public class StockfishSettings {
     private static final String KEY_SHOW_EVAL_BAR = "show_eval_bar";
 
     public static boolean isEvalBarEnabled(Context context) {
-        return getPrefs(context).getBoolean(KEY_SHOW_EVAL_BAR, false);
+        return getPrefs(context).getBoolean(KEY_SHOW_EVAL_BAR, true);
     }
 
     public static void setEvalBarEnabled(Context context, boolean enabled) {

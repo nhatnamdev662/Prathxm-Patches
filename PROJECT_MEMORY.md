@@ -247,16 +247,22 @@
 - **v2.0.55 (Tích Hợp Trực Tiếp Thanh Eval Bar Gốc Chess.com Native EvaluationBarView)**:
   - Hook và khởi tạo trực tiếp instance `com.chess.internal.views.EvaluationBarView` từ mã nguồn APK gốc của Chess.com.
   - Bơm trực tiếp đối tượng điểm `Score$Centipawns` và `Score$MateIn` nguyên bản, hiển thị animation và giao diện chuẩn gốc 100%.
+- **v2.0.56 (Chuẩn Hóa Hiển Thị Thanh Eval Bar Dọc Native Vertical Orientation)**:
+  - Phân tích bytecode DEX `classes8.dex`: `EvaluationBarView` mặc định khởi tạo hướng là `HORIZONTAL` khi không có xml styleable.
+  - Can thiệp trực tiếp bằng Reflection gán trường enum `EvaluationBarView$Orientation` thành `Orientation.VERTICAL`.
+  - Đồng bộ TextPaint sang `Paint.Align.CENTER` để căn chỉnh nhãn điểm eval chuẩn tâm theo chiều dọc.
+  - Bật sẵn thanh Eval Bar mặc định (`isEvalBarEnabled = true`) trong SharedPreferences.
+  - Đảm bảo hiển thị dọc chuẩn 100% lên/xuống dọc theo cạnh bàn cờ.
 
 ---
 
 ## 3. TRẠNG THÁI HIỆN TẠI & KẾ HOẠCH TIẾP THEO
 
 ### 3.1. Trạng thái hiện tại
-- **Phiên bản mới nhất**: **v2.0.55** (`patches-2.0.55.mpp`).
-- **Kho lưu trữ GitHub**: Đã phát hành Release `v2.0.55`.
+- **Phiên bản mới nhất**: **v2.0.56** (`patches-2.0.56.mpp`).
+- **Kho lưu trữ GitHub**: Đã phát hành Release `v2.0.56`.
 - **Trạng thái Repo**: 100% sạch, không commit file `.py`, root ngăn nắp.
 - **Tiến trình kỹ thuật**:
-  1. Đã tích hợp thành công thanh Eval Bar gốc nguyên bản của Chess.com (`EvaluationBarView`).
+  1. Đã chuẩn hóa hiển thị dọc chuẩn 100% cho thanh Eval Bar gốc của Chess.com (`EvaluationBarView`).
   2. Bơm điểm `Score$Centipawns` và `Score$MateIn` trực tiếp theo thời gian thực.
-  3. Duy trì fallback liền mạch sang `EvalBarView` nếu cần.
+  3. Bật mặc định thanh Eval Bar trong cài đặt.
