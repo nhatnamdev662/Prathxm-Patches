@@ -4,7 +4,7 @@
 - **Tác giả**: Nhat Nam (`@nncutett` trên Telegram)
 - **Repository độc lập**: `https://github.com/nhatnamdev662/Prathxm-Patches`
 - **Tài khoản Git/GitHub**: `nhatnamdev662` (`nhatnamdev662@users.noreply.github.com`)
-- **ADB kết nối không dây**: `192.168.100.41:39215` (Device ID: `adb-10AC4N1L0H000JK-37ZsAy (2)._adb-tls-connect._tcp`)
+
 - **Bản APK mục tiêu**: `Chess.com v4.10.20-googleplay` (versionCode: `280085`), lưu tại `E:\chess mobile\apk\chess_4.10.20.apk`
 - **Morphe Manager trên điện thoại**: Đã cài đặt sẵn `app.morphe.manager`
 
@@ -146,15 +146,31 @@
       - Loại bỏ rung phản hồi cảnh báo blunder (`vibrator.vibrate`) trong `MoveClassifier.java` để ngăn chặn tiếng rè cơ học.
       - Biên dịch sạch 39 file Java và đóng gói thành công `patches-2.0.45.mpp`.
 
+  19. **Bản Vá v2.0.46 - v2.0.50 — Xử Lý Âm Thanh Nước Đi Khai Cuộc & Z-Order Phân Loại**:
+      - Chặn triệt để âm thanh không hợp lệ phát ra trong giai đoạn khai cuộc khi Chess.com tải nước đi.
+      - Khôi phục âm thanh nước đi chuẩn thực tế của bàn cờ.
+      - Điều chỉnh thứ tự z-order và ưu tiên của giao diện phân loại nước đi (Move Classifier) để không đè lên mũi tên và thanh eval bar.
+
+  20. **Bản Vá v2.0.51 - v2.0.52 — Style Mũi Tên Đe Dọa Độc Lập**:
+      - Tạo style mũi tên đe dọa (Threat Arrow) độc lập với màu sắc và hoa văn riêng biệt, giúp người chơi dễ dàng nhận biết nguy cơ từ đối thủ mà không bị nhầm lẫn với các mũi tên gợi ý tốt nhất.
+
+  21. **Bản Vá v2.0.53 — Sửa Triệt Để Lỗi Lệch Toạ Độ Lượt Đi & Lật Bàn Cờ**:
+      - Sửa dứt điểm việc nhầm lẫn giữa `sideToPlaySelfEffects` (lượt đi hiện tại) và màu cờ của người chơi `isUserWhite`.
+      - Hook trực tiếp vào `getFlipBoard()` và trường `t` của `ChessBoardView` cũng như `CBViewModelStateImpl` để lấy trạng thái lật bàn cờ thời gian thực chính xác 100%.
+
+  22. **Bản Vá v2.0.54 — Tự Động Né Nhãn Điểm Eval Khỏi Thanh Eval Bar**:
+      - Tính toán độ chiếm chỗ của thanh Eval Bar ở cạnh trái bàn cờ trong `ArrowOverlayView.java`.
+      - Đăng ký vùng cấm đè vào thuật toán va chạm và kẹp toạ độ an toàn `minSafeX`, tự động né nhãn điểm sang các góc bên phải ô cờ đích.
+
 ---
 
 ## 3. Trạng Thái Hiện Tại & Checklist Kiểm Thử
-- **Phiên bản mới nhất trên GitHub**: `v2.0.45` (tag `v2.0.45`).
-- **File tải bundle**: `https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.45/patches-2.0.45.mpp`
+- **Phiên bản mới nhất trên GitHub**: `v2.0.54` (tag `v2.0.54`).
+- **File tải bundle**: `https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.54/patches-2.0.54.mpp`
 - **Checklist Kiểm Thử**:
-  - [x] Đã biên dịch sạch 39 file Java và đóng gói thành công `patches-2.0.45.mpp`.
-  - [x] Gỡ bỏ hoàn toàn `playBrilliantSound` và rung phản hồi trong `MoveClassifier.java`.
-  - [x] Triệt tiêu vĩnh viễn âm thanh bất thường xuất hiện sau nước đi.
+  - [x] Đã biên dịch sạch 39 file Java và đóng gói thành công `patches-2.0.54.mpp`.
+  - [x] Nhãn điểm eval tự động né thanh Eval Bar khi trỏ vào cạnh trái.
+  - [x] Toạ độ và hướng bàn cờ ổn định tuyệt đối giữa các nước đi.
   - [x] Đã kiểm tra git status sạch sẽ, đưa bundle vào `mpp_archive/` và script vào `scripts_archive/`.
 
 

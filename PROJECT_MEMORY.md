@@ -228,20 +228,32 @@
 - **v2.0.43 (Tối Giản Menu Cài Đặt)**:
   - Xóa nút đỏ "Đặt lại cài đặt mặc định" ở cuối Tab ENGINE.
   - Xóa nút "Xem & Copy Log" chẩn đoán Torch ở Tab COACH.
-- **v2.0.44 (Khắc Phục Triệt Để Âm Thanh Lạ / Illegal Move Sound)**:
+- **v2.0.44 - v2.0.45 (Khắc Phục Triệt Để Âm Thanh Lạ / Illegal Move Sound & Rung Động)**:
   - Loại bỏ hoàn toàn các lệnh gọi phản xạ `setMoveArrows` và `invalidateAllBoards()` khi đi cờ.
   - Chuyển Threat Arrow sang render 100% bằng Canvas trên `ArrowOverlayView` với màu đỏ neon `#EF4444`.
-  - Triệt tiêu 100% tiếng kêu âm thanh nước đi không hợp lệ của Chess.com.
+  - Triệt tiêu 100% tiếng kêu âm thanh nước đi không hợp lệ của Chess.com và loại bỏ rung phản hồi.
+- **v2.0.46 - v2.0.50 (Xử Lý Âm Thanh Nước Đi Khai Cuộc & Tách Lớp Phân Loại)**:
+  - Chặn triệt để âm thanh không hợp lệ phát ra trong giai đoạn khai cuộc.
+  - Khôi phục lại âm thanh nước cờ hợp lệ chuẩn của Chess.com.
+  - Hạ thứ tự ưu tiên hiển thị (Z-order) của giao diện phân loại nước đi để không đè lên mũi tên và thanh eval bar.
+- **v2.0.51 - v2.0.52 (Style Mũi Tên Đe Dọa Độc Lập Giống Chess.com)**:
+  - Thiết kế style mũi tên hiểm họa màu đỏ riêng biệt, dễ phân biệt hoàn toàn với các mũi tên gợi ý tốt nhất khác.
+- **v2.0.53 (Sửa Triệt Để Lỗi Đảo Lộn Toạ Độ Lượt Đi & Bàn Cờ Bị Lật)**:
+  - Sửa dứt điểm việc đọc nhầm `sideToPlaySelfEffects` thành màu quân người chơi.
+  - Bàn cờ xác định đúng hướng 100% thông qua hook sâu vào trường `t` và `getFlipBoard()`.
+- **v2.0.54 (Tự Động Né Nhãn Điểm Eval Khỏi Thanh Eval Bar)**:
+  - Tính toán độ chiếm chỗ của thanh Eval Bar ở cạnh trái bàn cờ.
+  - Đăng ký vùng cấm đè vào thuật toán va chạm và kẹp toạ độ an toàn `minSafeX`, tự động dạt nhãn điểm sang các góc bên phải ô đích.
 
 ---
 
 ## 3. TRẠNG THÁI HIỆN TẠI & KẾ HOẠCH TIẾP THEO
 
 ### 3.1. Trạng thái hiện tại
-- **Phiên bản mới nhất**: **v2.0.44** (`patches-2.0.44.mpp`).
-- **Kho lưu trữ GitHub**: Sẵn sàng phát hành Release `v2.0.44`.
+- **Phiên bản mới nhất**: **v2.0.54** (`patches-2.0.54.mpp`).
+- **Kho lưu trữ GitHub**: Đã phát hành Release `v2.0.54`.
 - **Trạng thái Repo**: 100% sạch, không commit file `.py`, root ngăn nắp.
 - **Tiến trình kỹ thuật**:
-  1. Triệt tiêu hoàn toàn âm thanh illegal move khi đi cờ.
-  2. Mũi tên hiểm họa render Canvas mượt mà, đỏ neon đẹp mắt.
-  3. Menu cài đặt tinh gọn, không nút thừa.
+  1. Đã hoàn thành né tránh điểm Eval Bar cho nhãn điểm trên mũi tên.
+  2. Bàn cờ và toạ độ ổn định tuyệt đối.
+  3. Đang nghiên cứu khả năng gắn trực tiếp Eval Bar nguyên bản như Chess.com.
