@@ -162,13 +162,19 @@
       - Tính toán độ chiếm chỗ của thanh Eval Bar ở cạnh trái bàn cờ trong `ArrowOverlayView.java`.
       - Đăng ký vùng cấm đè vào thuật toán va chạm và kẹp toạ độ an toàn `minSafeX`, tự động né nhãn điểm sang các góc bên phải ô cờ đích.
 
+  23. **Bản Vá v2.0.55 — Tích Hợp Trực Tiếp Thanh Eval Bar Gốc Chess.com (Native EvaluationBarView)**:
+      - Sử dụng trực tiếp class `com.chess.internal.views.EvaluationBarView` từ mã nguồn ứng dụng Chess.com.
+      - Tạo các đối tượng điểm số `com.chess.entities.Score$Centipawns` và `com.chess.entities.Score$MateIn` nguyên bản, cập nhật điểm và trạng thái lật cờ thời gian thực.
+      - Mang lại trải nghiệm thanh Eval Bar chuẩn 100% giống hệt chế độ Analysis của Chess.com.
+
 ---
 
 ## 3. Trạng Thái Hiện Tại & Checklist Kiểm Thử
-- **Phiên bản mới nhất trên GitHub**: `v2.0.54` (tag `v2.0.54`).
-- **File tải bundle**: `https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.54/patches-2.0.54.mpp`
+- **Phiên bản mới nhất trên GitHub**: `v2.0.55` (tag `v2.0.55`).
+- **File tải bundle**: `https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.55/patches-2.0.55.mpp`
 - **Checklist Kiểm Thử**:
-  - [x] Đã biên dịch sạch 39 file Java và đóng gói thành công `patches-2.0.54.mpp`.
+  - [x] Đã biên dịch sạch 39 file Java và đóng gói thành công `patches-2.0.55.mpp`.
+  - [x] Tích hợp thanh Eval Bar gốc nguyên bản của Chess.com (`EvaluationBarView`).
   - [x] Nhãn điểm eval tự động né thanh Eval Bar khi trỏ vào cạnh trái.
   - [x] Toạ độ và hướng bàn cờ ổn định tuyệt đối giữa các nước đi.
   - [x] Đã kiểm tra git status sạch sẽ, đưa bundle vào `mpp_archive/` và script vào `scripts_archive/`.

@@ -1,9 +1,9 @@
 {
-  "created_at": "2026-10-09T20:07:00",
-  "description": "## [2.0.54] (2026-10-09)\n\n### ⚡ NNVC v2.0.54 — Tự Động Né Tránh Điểm Eval Khỏi Thanh Eval Bar\n\n* **Tự động né nhãn điểm Eval ra khỏi Eval Bar:** Nhãn điểm eval (-0.4, -8.4...) trên các mũi tên chỉ vào mép trái bàn cờ (file a hoặc file h khi lật cờ) không còn bị thanh Eval Bar che khuất một phần.\n* **Thuật toán tránh va chạm thông minh:** Tự động phát hiện phạm vi Eval Bar, đăng ký rào chắn vùng cấm đè và ưu tiên chọn các góc bên phải ô cờ (Top-Right, Bottom-Right) hoặc kẹp toạ độ an toàn `minSafeX`.\n* **Author:** NNVC (@nncutett)",
-  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.54/patches-2.0.54.mpp",
+  "created_at": "2026-10-09T20:48:00",
+  "description": "## [2.0.55] (2026-10-09)\n\n### ⚡ NNVC v2.0.55 — Tích Hợp Trực Tiếp Thanh Eval Bar Gốc Chess.com (Native EvaluationBarView)\n\n* **Sử dụng trực tiếp component gốc của Chess.com:** Hook và khởi tạo trực tiếp instance `com.chess.internal.views.EvaluationBarView` từ mã nguồn APK gốc, bơm trực tiếp đối tượng điểm `Score$Centipawns` và `Score$MateIn` nguyên bản của Chess.com.\n* **Giao diện & Animation 100% nguyên bản:** Hiển thị mượt mà với hoạt họa và phong cách gốc y hệt Chess.com trong chế độ Analysis.\n* **Author:** NNVC (@nncutett)",
+  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.55/patches-2.0.55.mpp",
   "signature_download_url": "",
-  "version": "2.0.54",
-  "versionCode": 20054,
-  "downloadUrl": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.54/patches-2.0.54.mpp"
+  "version": "2.0.55",
+  "versionCode": 20055,
+  "downloadUrl": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.55/patches-2.0.55.mpp"
 }

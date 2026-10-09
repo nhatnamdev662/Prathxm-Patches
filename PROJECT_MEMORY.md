@@ -244,16 +244,19 @@
 - **v2.0.54 (Tự Động Né Nhãn Điểm Eval Khỏi Thanh Eval Bar)**:
   - Tính toán độ chiếm chỗ của thanh Eval Bar ở cạnh trái bàn cờ.
   - Đăng ký vùng cấm đè vào thuật toán va chạm và kẹp toạ độ an toàn `minSafeX`, tự động dạt nhãn điểm sang các góc bên phải ô đích.
+- **v2.0.55 (Tích Hợp Trực Tiếp Thanh Eval Bar Gốc Chess.com Native EvaluationBarView)**:
+  - Hook và khởi tạo trực tiếp instance `com.chess.internal.views.EvaluationBarView` từ mã nguồn APK gốc của Chess.com.
+  - Bơm trực tiếp đối tượng điểm `Score$Centipawns` và `Score$MateIn` nguyên bản, hiển thị animation và giao diện chuẩn gốc 100%.
 
 ---
 
 ## 3. TRẠNG THÁI HIỆN TẠI & KẾ HOẠCH TIẾP THEO
 
 ### 3.1. Trạng thái hiện tại
-- **Phiên bản mới nhất**: **v2.0.54** (`patches-2.0.54.mpp`).
-- **Kho lưu trữ GitHub**: Đã phát hành Release `v2.0.54`.
+- **Phiên bản mới nhất**: **v2.0.55** (`patches-2.0.55.mpp`).
+- **Kho lưu trữ GitHub**: Đã phát hành Release `v2.0.55`.
 - **Trạng thái Repo**: 100% sạch, không commit file `.py`, root ngăn nắp.
 - **Tiến trình kỹ thuật**:
-  1. Đã hoàn thành né tránh điểm Eval Bar cho nhãn điểm trên mũi tên.
-  2. Bàn cờ và toạ độ ổn định tuyệt đối.
-  3. Đang nghiên cứu khả năng gắn trực tiếp Eval Bar nguyên bản như Chess.com.
+  1. Đã tích hợp thành công thanh Eval Bar gốc nguyên bản của Chess.com (`EvaluationBarView`).
+  2. Bơm điểm `Score$Centipawns` và `Score$MateIn` trực tiếp theo thời gian thực.
+  3. Duy trì fallback liền mạch sang `EvalBarView` nếu cần.

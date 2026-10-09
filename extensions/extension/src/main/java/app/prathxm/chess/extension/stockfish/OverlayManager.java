@@ -239,18 +239,80 @@ public class OverlayManager {
                     int evalBarX = boardX >= barWidth ? (boardX - barWidth) : boardX;
 
                     View evalBar = decorView.findViewWithTag("stockfish_eval_bar");
-                    EvalBarView evalBarView;
-                    if (evalBar instanceof EvalBarView) {
-                        evalBarView = (EvalBarView) evalBar;
-                    } else {
-                        if (evalBar != null) decorView.removeView(evalBar);
-                        evalBarView = new EvalBarView(decorView.getContext());
-                        evalBarView.setTag("stockfish_eval_bar");
-                        decorView.addView(evalBarView);
+                    boolean flipped = isBoardFlipped(boardView, stateImpl);
+
+                    // Ưu tiên sử dụng component thanh Eval Bar gốc của Chess.com (Native EvaluationBarView)
+                    boolean usedNative = false;
+                    try {
+                        Class<?> nativeEvalBarClass = Class.forName("com.chess.internal.views.EvaluationBarView");
+                        if (evalBar != null && !nativeEvalBarClass.isInstance(evalBar)) {
+                            decorView.removeView(evalBar);
+                            evalBar = null;
+                        }
+                        if (evalBar == null) {
+                            java.lang.reflect.Constructor<?> ctor = nativeEvalBarClass.getConstructor(android.content.Context.class, android.util.AttributeSet.class);
+                            evalBar = (View) ctor.newInstance(decorView.getContext(), (android.util.AttributeSet) null);
+                            evalBar.setTag("stockfish_eval_bar");
+                            decorView.addView(evalBar);
+                        }
+
+                        // Tạo đối tượng Score gốc của Chess.com (Score$Centipawns hoặc Score$MateIn)
+                        Object nativeScore = null;
+                        if (hasMate && mateIn != 0) {
+                            Class<?> mateClass = Class.forName("com.chess.entities.Score$MateIn");
+                            Class<?> colorClass = Class.forName("com.chess.entities.Color");
+                            Object winner = Enum.valueOf((Class<Enum>) colorClass, mateIn > 0 ? "WHITE" : "BLACK");
+                            java.lang.reflect.Constructor<?> mCtor = mateClass.getConstructor(int.class, colorClass);
+                            nativeScore = mCtor.newInstance(Math.abs(mateIn), winner);
+                        } else {
+                            Class<?> cpClass = Class.forName("com.chess.entities.Score$Centipawns");
+                            int cpVal = Math.round(score * 100f);
+                            java.lang.reflect.Constructor<?> cpCtor = cpClass.getConstructor(int.class);
+                            nativeScore = cpCtor.newInstance(cpVal);
+                        }
+
+                        Method setScoreMethod = nativeEvalBarClass.getMethod("setScore", Class.forName("com.chess.entities.Score"));
+                        setScoreMethod.invoke(evalBar, nativeScore);
+
+                        Method setFlippedMethod = nativeEvalBarClass.getMethod("setBoardFlipped", boolean.class);
+                        setFlippedMethod.invoke(evalBar, flipped);
+
+                        // Cập nhật LayoutParams và toạ độ
+                        ViewGroup.LayoutParams lp = evalBar.getLayoutParams();
+                        if (lp == null) {
+                            lp = new FrameLayout.LayoutParams(barWidth, boardH);
+                        } else {
+                            lp.width = barWidth;
+                            lp.height = boardH;
+                        }
+                        if (lp instanceof FrameLayout.LayoutParams) {
+                            ((FrameLayout.LayoutParams) lp).gravity = Gravity.TOP | Gravity.START;
+                        }
+                        evalBar.setLayoutParams(lp);
+                        evalBar.setTranslationX(evalBarX);
+                        evalBar.setTranslationY(boardY);
+
+                        usedNative = true;
+                    } catch (Throwable tNative) {
+                        Log.d(TAG, "Native EvaluationBarView init/update skipped: " + tNative.getMessage());
                     }
-                    evalBarView.setVisibility(View.VISIBLE);
-                    evalBarView.update(evalBarX, boardY, barWidth, boardH,
-                                       score, hasMate, mateIn, isBoardFlipped(boardView, stateImpl));
+
+                    if (!usedNative) {
+                        EvalBarView evalBarView;
+                        if (evalBar instanceof EvalBarView) {
+                            evalBarView = (EvalBarView) evalBar;
+                        } else {
+                            if (evalBar != null) decorView.removeView(evalBar);
+                            evalBarView = new EvalBarView(decorView.getContext());
+                            evalBarView.setTag("stockfish_eval_bar");
+                            decorView.addView(evalBarView);
+                        }
+                        evalBarView.update(evalBarX, boardY, barWidth, boardH,
+                                           score, hasMate, mateIn, flipped);
+                        evalBar = evalBarView;
+                    }
+
+                    evalBar.setVisibility(View.VISIBLE);
                     ensureZOrder(decorView);
                 } catch (Throwable t) {
                     Log.e(TAG, "updateEvalBar failed: " + t.getMessage());
