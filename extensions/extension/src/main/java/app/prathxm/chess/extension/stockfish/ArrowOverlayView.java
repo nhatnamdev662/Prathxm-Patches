@@ -650,6 +650,21 @@ public class ArrowOverlayView extends View {
 
         List<RectBox> placedLabelBoxes = new ArrayList<>();
 
+        // Tránh bị Eval Bar che lấp: Nếu Eval Bar hiển thị ở mép trái bàn cờ
+        float density = getContext().getResources().getDisplayMetrics().density;
+        float barWidth = 12f * density;
+        float boardX = getTranslationX();
+        float evalBarOverlap = 0f;
+        if (StockfishSettings.isEvalBarEnabled(getContext())) {
+            if (boardX < barWidth) {
+                evalBarOverlap = (barWidth - boardX) + 5f * density;
+            }
+        }
+        final float minSafeX = Math.max(2f, evalBarOverlap);
+        if (evalBarOverlap > 0f) {
+            placedLabelBoxes.add(new RectBox(0f, 0f, evalBarOverlap, bHeight));
+        }
+
         for (int i = 0; i < arrows.size(); i++) {
             ArrowData arrow = arrows.get(i);
             if (arrow.evalText == null || arrow.evalText.trim().isEmpty()) continue;
@@ -735,6 +750,15 @@ public class ArrowOverlayView extends View {
             int prefIdx = tierVal == 1 ? 0 : (tierVal == 2 ? 1 : (tierVal == 3 ? 2 : (tierVal == 4 ? 3 : 0)));
             if (prefIdx >= candidates.size()) prefIdx = 0;
 
+            // Nếu ô đích ở sát mép trái (bị Eval Bar che lấp), ưu tiên các vị trí bên phải ô đích
+            if (sqLeft < minSafeX) {
+                if (passCorridor != null && passCorridor.axis == 'v') {
+                    prefIdx = 1; // Bên phải trên
+                } else if (passCorridor == null) {
+                    prefIdx = (tierVal == 1 || tierVal == 3) ? 1 : 3; // Top-Right hoặc Bottom-Right
+                }
+            }
+
             List<Integer> order = new ArrayList<>();
             order.add(prefIdx);
             for (int k = 0; k < candidates.size(); k++) {
@@ -744,7 +768,7 @@ public class ArrowOverlayView extends View {
             RectBox chosen = null;
             for (int candIdx : order) {
                 float[] cand = candidates.get(candIdx);
-                float clampedX = Math.max(2f, Math.min(bWidth - pillW - 2f, cand[0]));
+                float clampedX = Math.max(minSafeX, Math.min(bWidth - pillW - 2f, cand[0]));
                 float clampedY = Math.max(2f, Math.min(bHeight - pillH - 2f, cand[1]));
                 RectBox box = new RectBox(clampedX, clampedY, pillW, pillH);
 
@@ -764,7 +788,7 @@ public class ArrowOverlayView extends View {
             if (chosen == null) {
                 float[] fallbackCand = candidates.get(prefIdx);
                 chosen = new RectBox(
-                        Math.max(2f, Math.min(bWidth - pillW - 2f, fallbackCand[0])),
+                        Math.max(minSafeX, Math.min(bWidth - pillW - 2f, fallbackCand[0])),
                         Math.max(2f, Math.min(bHeight - pillH - 2f, fallbackCand[1])),
                         pillW, pillH
                 );
