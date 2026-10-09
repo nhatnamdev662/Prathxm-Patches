@@ -27,6 +27,50 @@ import java.util.List;
 public class OverlayManager {
     private static final String TAG = "OverlayManager";
 
+    public static class BoardMetrics {
+        public final int boardX;
+        public final int boardY;
+        public final int boardW;
+        public final int boardH;
+        public final View boardView;
+
+        public BoardMetrics(int boardX, int boardY, int boardW, int boardH, View boardView) {
+            this.boardX = boardX;
+            this.boardY = boardY;
+            this.boardW = boardW;
+            this.boardH = boardH;
+            this.boardView = boardView;
+        }
+    }
+
+    public static BoardMetrics getBoardMetrics(ViewGroup decorView) {
+        if (decorView == null) return null;
+        View boardView = findChessBoardView(decorView);
+        if (boardView == null) return null;
+
+        int[] boardLoc = new int[2];
+        boardView.getLocationInWindow(boardLoc);
+        int[] decorLoc = new int[2];
+        decorView.getLocationInWindow(decorLoc);
+        int rawX = (boardLoc[0] - decorLoc[0]) - decorView.getPaddingLeft();
+        int rawY = (boardLoc[1] - decorLoc[1]) - decorView.getPaddingTop();
+        int rawW = boardView.getWidth();
+        int rawH = boardView.getHeight();
+        if (rawW <= 0 || rawH <= 0) return null;
+
+        // Nếu Eval Bar đang hiển thị hoặc bật, và bàn cờ đã được dịch/scale
+        View evalBar = decorView.findViewWithTag("stockfish_eval_bar");
+        if (evalBar != null && evalBar.getVisibility() == View.VISIBLE && boardView.getTranslationX() > 0) {
+            float scale = boardView.getScaleX();
+            int adjX = (int) (rawX + boardView.getTranslationX());
+            int adjW = (int) (rawW * scale);
+            int adjH = (int) (rawH * scale);
+            return new BoardMetrics(adjX, rawY, adjW, adjH, boardView);
+        }
+
+        return new BoardMetrics(rawX, rawY, rawW, rawH, boardView);
+    }
+
     public static void ensureZOrder(ViewGroup decorView) {
         if (decorView == null) return;
         try {
@@ -93,26 +137,25 @@ public class OverlayManager {
                     ViewGroup decorView = (ViewGroup) window.getDecorView();
                     if (decorView == null) return;
 
-                    final View boardView = findChessBoardView(decorView);
-                    if (boardView == null) return;
-
-                    int[] boardLoc = new int[2];
-                    boardView.getLocationInWindow(boardLoc);
-                    int[] decorLoc = new int[2];
-                    decorView.getLocationInWindow(decorLoc);
-                    int boardX = (boardLoc[0] - decorLoc[0]) - decorView.getPaddingLeft();
-                    int boardY = (boardLoc[1] - decorLoc[1]) - decorView.getPaddingTop();
-                    int boardW = boardView.getWidth();
-                    int boardH = boardView.getHeight();
-                    if (boardW <= 0 || boardH <= 0) {
-                        boardView.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                updateArrowOverlay(moves, threatMove, lineScores, hasMate, mateIn, whiteToMove, stateImpl);
-                            }
-                        });
+                    final BoardMetrics bm = getBoardMetrics(decorView);
+                    if (bm == null) {
+                        final View bv = findChessBoardView(decorView);
+                        if (bv != null) {
+                            bv.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    updateArrowOverlay(moves, threatMove, lineScores, hasMate, mateIn, whiteToMove, stateImpl);
+                                }
+                            });
+                        }
                         return;
                     }
+
+                    int boardX = bm.boardX;
+                    int boardY = bm.boardY;
+                    int boardW = bm.boardW;
+                    int boardH = bm.boardH;
+                    View boardView = bm.boardView;
 
                     View overlay = decorView.findViewWithTag("nnvc_arrow_overlay");
                     ArrowOverlayView arrowView;
@@ -235,8 +278,29 @@ public class OverlayManager {
 
                     float density = decorView.getContext().getResources().getDisplayMetrics().density;
                     int barWidth = (int) (12 * density);
-                    // Đặt eval bar sát cạnh trái của bàn cờ (hoặc mép trong nếu màn hình tràn viền)
-                    int evalBarX = boardX >= barWidth ? (boardX - barWidth) : boardX;
+
+                    // Khi bàn cờ sát mép trái (boardX < barWidth), dịch nhẹ bàn cờ sang phải và co tỷ lệ
+                    // để chừa rãnh cho thanh Eval Bar, không bao giờ đè lên ô cờ hay quân cờ.
+                    int evalBarX;
+                    int adjustedBoardX = boardX;
+                    int adjustedBoardW = boardW;
+                    int adjustedBoardH = boardH;
+
+                    if (boardX < barWidth) {
+                        float scale = (float) (boardW - barWidth) / (float) boardW;
+                        boardView.setPivotX(0f);
+                        boardView.setPivotY(boardH / 2f);
+                        boardView.setTranslationX(barWidth);
+                        boardView.setScaleX(scale);
+                        boardView.setScaleY(scale);
+
+                        evalBarX = boardX;
+                        adjustedBoardX = boardX + barWidth;
+                        adjustedBoardW = (int) (boardW * scale);
+                        adjustedBoardH = (int) (boardH * scale);
+                    } else {
+                        evalBarX = boardX - barWidth;
+                    }
 
                     View evalBar = decorView.findViewWithTag("stockfish_eval_bar");
                     boolean flipped = isBoardFlipped(boardView, stateImpl);
@@ -319,10 +383,10 @@ public class OverlayManager {
                         // Cập nhật LayoutParams và toạ độ
                         ViewGroup.LayoutParams lp = evalBar.getLayoutParams();
                         if (lp == null) {
-                            lp = new FrameLayout.LayoutParams(barWidth, boardH);
+                            lp = new FrameLayout.LayoutParams(barWidth, adjustedBoardH);
                         } else {
                             lp.width = barWidth;
-                            lp.height = boardH;
+                            lp.height = adjustedBoardH;
                         }
                         if (lp instanceof FrameLayout.LayoutParams) {
                             ((FrameLayout.LayoutParams) lp).gravity = Gravity.TOP | Gravity.START;
@@ -348,7 +412,7 @@ public class OverlayManager {
                             evalBarView.setTag("stockfish_eval_bar");
                             decorView.addView(evalBarView);
                         }
-                        evalBarView.update(evalBarX, boardY, barWidth, boardH,
+                        evalBarView.update(evalBarX, boardY, barWidth, adjustedBoardH,
                                            score, hasMate, mateIn, flipped);
                         evalBar = evalBarView;
                     }
@@ -371,12 +435,20 @@ public class OverlayManager {
                     if (activity == null) return;
                     Window window = activity.getWindow();
                     if (window == null) return;
-                    View decorView = window.getDecorView();
+                    ViewGroup decorView = (ViewGroup) window.getDecorView();
                     if (decorView == null) return;
                     
                     View evalBar = decorView.findViewWithTag("stockfish_eval_bar");
                     if (evalBar != null) {
                         evalBar.setVisibility(View.GONE);
+                    }
+
+                    // Khôi phục vị trí và tỷ lệ gốc của bàn cờ
+                    View boardView = findChessBoardView(decorView);
+                    if (boardView != null) {
+                        boardView.setTranslationX(0f);
+                        boardView.setScaleX(1.0f);
+                        boardView.setScaleY(1.0f);
                     }
                 } catch (Throwable t) {
                     Log.e(TAG, "hideEvalBar failed: " + t.getMessage());
@@ -397,18 +469,12 @@ public class OverlayManager {
                     ViewGroup decorView = (ViewGroup) window.getDecorView();
                     if (decorView == null) return;
 
-                    View boardView = findChessBoardView(decorView);
-                    if (boardView == null) return;
-
-                    int[] boardLoc = new int[2];
-                    boardView.getLocationInWindow(boardLoc);
-                    int[] decorLoc = new int[2];
-                    decorView.getLocationInWindow(decorLoc);
-                    int boardX = (boardLoc[0] - decorLoc[0]) - decorView.getPaddingLeft();
-                    int boardY = (boardLoc[1] - decorLoc[1]) - decorView.getPaddingTop();
-                    int boardW = boardView.getWidth();
-                    int boardH = boardView.getHeight();
-                    if (boardW <= 0 || boardH <= 0) return;
+                    BoardMetrics bm = getBoardMetrics(decorView);
+                    if (bm == null) return;
+                    int boardX = bm.boardX;
+                    int boardY = bm.boardY;
+                    int boardW = bm.boardW;
+                    int boardH = bm.boardH;
 
                     float density = decorView.getContext().getResources().getDisplayMetrics().density;
                     int barHeight = (int) (14 * density);
@@ -472,16 +538,11 @@ public class OverlayManager {
                     Activity activity = StockfishExtension.getCurrentActivity();
                     if (activity == null || activity.getWindow() == null) return;
                     ViewGroup decorView = (ViewGroup) activity.getWindow().getDecorView();
-                    View boardView = findChessBoardView(decorView);
-                    if (boardView == null) return;
-                    int[] boardLoc = new int[2];
-                    boardView.getLocationInWindow(boardLoc);
-                    int[] decorLoc = new int[2];
-                    decorView.getLocationInWindow(decorLoc);
-                    int boardX = (boardLoc[0] - decorLoc[0]) - decorView.getPaddingLeft();
-                    int boardY = (boardLoc[1] - decorLoc[1]) - decorView.getPaddingTop();
-                    int boardW = boardView.getWidth();
-                    if (boardW <= 0) return;
+                    BoardMetrics bm = getBoardMetrics(decorView);
+                    if (bm == null) return;
+                    int boardX = bm.boardX;
+                    int boardY = bm.boardY;
+                    int boardW = bm.boardW;
                     float density = decorView.getContext().getResources().getDisplayMetrics().density;
                     int h = (int) (14 * density);
                     int w = (int) (INFO_SLOT_DP * density);
@@ -747,25 +808,25 @@ public class OverlayManager {
                     ViewGroup decorView = (ViewGroup) window.getDecorView();
                     if (decorView == null) return;
 
-                    final View boardView = findChessBoardView(decorView);
-                    if (boardView == null) return;
-                    int[] boardLoc = new int[2];
-                    boardView.getLocationInWindow(boardLoc);
-                    int[] decorLoc = new int[2];
-                    decorView.getLocationInWindow(decorLoc);
-                    int boardX = (boardLoc[0] - decorLoc[0]) - decorView.getPaddingLeft();
-                    int boardY = (boardLoc[1] - decorLoc[1]) - decorView.getPaddingTop();
-                    int boardW = boardView.getWidth();
-                    int boardH = boardView.getHeight();
-                    if (boardW <= 0 || boardH <= 0) {
-                        boardView.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                setClassificationBadge(fromSquare, toSquare, classificationName, isWhite, isMyMove);
-                            }
-                        });
+                    final BoardMetrics bm = getBoardMetrics(decorView);
+                    if (bm == null) {
+                        final View bv = findChessBoardView(decorView);
+                        if (bv != null) {
+                            bv.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    setClassificationBadge(fromSquare, toSquare, classificationName, isWhite, isMyMove);
+                                }
+                            });
+                        }
                         return;
                     }
+
+                    int boardX = bm.boardX;
+                    int boardY = bm.boardY;
+                    int boardW = bm.boardW;
+                    int boardH = bm.boardH;
+                    View boardView = bm.boardView;
 
                     boolean isFlipped = isBoardFlipped(boardView, StockfishExtension.getStateImpl());
 
@@ -835,18 +896,13 @@ public class OverlayManager {
                         return;
                     }
 
-                    View boardView = findChessBoardView(decorView);
-                    if (boardView == null) return;
-
-                    int[] boardLoc = new int[2];
-                    boardView.getLocationInWindow(boardLoc);
-                    int[] decorLoc = new int[2];
-                    decorView.getLocationInWindow(decorLoc);
-                    int boardX = (boardLoc[0] - decorLoc[0]) - decorView.getPaddingLeft();
-                    int boardY = (boardLoc[1] - decorLoc[1]) - decorView.getPaddingTop();
-                    int boardW = boardView.getWidth();
-                    int boardH = boardView.getHeight();
-                    if (boardW <= 0 || boardH <= 0) return;
+                    BoardMetrics bm = getBoardMetrics(decorView);
+                    if (bm == null) return;
+                    int boardX = bm.boardX;
+                    int boardY = bm.boardY;
+                    int boardW = bm.boardW;
+                    int boardH = bm.boardH;
+                    View boardView = bm.boardView;
 
                     float density = decorView.getContext().getResources().getDisplayMetrics().density;
                     int pillH = (int) (26 * density);
@@ -958,16 +1014,9 @@ public class OverlayManager {
                     ViewGroup decorView = (ViewGroup) window.getDecorView();
                     if (decorView == null) return;
 
-                    View boardView = findChessBoardView(decorView);
-                    int boardW = (boardView != null) ? boardView.getWidth() : 0;
-                    int boardX = 0;
-                    if (boardView != null) {
-                        int[] boardLoc = new int[2];
-                        boardView.getLocationInWindow(boardLoc);
-                        int[] decorLoc = new int[2];
-                        decorView.getLocationInWindow(decorLoc);
-                        boardX = (boardLoc[0] - decorLoc[0]) - decorView.getPaddingLeft();
-                    }
+                    BoardMetrics bm = getBoardMetrics(decorView);
+                    int boardW = (bm != null) ? bm.boardW : 0;
+                    int boardX = (bm != null) ? bm.boardX : 0;
 
                     float density = decorView.getContext().getResources().getDisplayMetrics().density;
                     int minPillW = (int) (232 * density);

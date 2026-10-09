@@ -1,9 +1,9 @@
 {
-  "created_at": "2026-10-09T21:32:00",
-  "description": "## [2.0.56] (2026-10-09)\n\n### ⚡ NNVC v2.0.56 — Chuẩn Hóa Hiển Thị Thanh Eval Bar Dọc (Native Vertical Orientation)\n\n* **Cố định hướng dọc chuẩn (Orientation.VERTICAL):** Sử dụng reflection can thiệp trực tiếp trường enum `EvaluationBarView$Orientation` trong component gốc `EvaluationBarView`, ép thanh luôn vẽ theo chiều dọc (trên/dưới bàn cờ) thay vì mặc định ngang (trái/phải).\n* **Đồng bộ TextPaint Alignment:** Căn chỉnh text điểm đánh giá chuẩn tâm (CENTER) theo cơ chế render dọc của Chess.com.\n* **Bật mặc định Eval Bar:** Cấu hình bật sẵn thanh Eval Bar trong cài đặt để sẵn sàng hiển thị ngay khi bắt đầu ván cờ.\n* **Author:** NNVC (@nncutett)",
-  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.56/patches-2.0.56.mpp",
+  "created_at": "2026-10-09T22:36:00",
+  "description": "## [2.0.57] (2026-10-09)\n\n### ⚡ NNVC v2.0.57 — Tối Ưu Bố Cục Bàn Cờ & Thanh Eval Bar Không Đè Lên Ô Cờ (Native Eval Bar Auto-Layout)\n\n* **Chừa rãnh độc lập cho Eval Bar:** Khi Eval Bar hiển thị sát mép trái, tự động dịch bàn cờ sang phải bề rộng thanh `barWidth` và co tỷ lệ bàn cờ vừa khít màn hình, đảm bảo thanh Eval Bar không bao giờ đè lên viền, ô cờ hay quân cờ.\n* **Khôi phục nguyên trạng khi ẩn:** Khi ẩn hoặc tắt Eval Bar, tự động reset bàn cờ về vị trí và tỷ lệ chuẩn 100% ban đầu.\n* **Đồng bộ toạ độ toàn bộ Overlays:** Tự động đồng bộ toạ độ và kích thước mới cho toàn bộ các lớp phủ: Mũi tên Stockfish (`ArrowOverlayView`), Huy hiệu phân loại (`MoveClassifier`), Thanh WDL (`WdlBarView`), Thông tin engine (`EngineInfo`) và Thẻ Elo/Accuracy (`PlayerAccuracyPillView`).\n* **Author:** NNVC (@nncutett)",
+  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.57/patches-2.0.57.mpp",
   "signature_download_url": "",
-  "version": "2.0.56",
-  "versionCode": 20056,
-  "downloadUrl": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.56/patches-2.0.56.mpp"
+  "version": "2.0.57",
+  "versionCode": 20057,
+  "downloadUrl": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.57/patches-2.0.57.mpp"
 }

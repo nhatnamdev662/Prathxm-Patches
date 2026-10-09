@@ -174,16 +174,24 @@
       - Bật sẵn thanh Eval Bar mặc định (`isEvalBarEnabled = true`) trong SharedPreferences.
       - Đảm bảo hiển thị dọc chuẩn 100% lên/xuống dọc theo cạnh bàn cờ.
 
+  25. **Bản Vá v2.0.57 — Tối Ưu Bố Cục Bàn Cờ & Thanh Eval Bar Không Đè Lên Ô Cờ**:
+      - Khắc phục triệt để lỗi Eval Bar nằm đè lên viền trái các ô cờ (cột a / cột h) khi màn hình chiều ngang vừa khít bàn cờ (`boardX = 0`).
+      - Tự động áp dụng `translationX = barWidth` và scale tỷ lệ bàn cờ `(boardW - barWidth) / boardW` khi Eval Bar hiển thị để chừa rãnh độc lập, thanh thoát 100% ngoài mép bàn cờ.
+      - Khi ẩn hoặc tắt Eval Bar, tự động khôi phục hoàn toàn bàn cờ về vị trí gốc (`translationX = 0`, `scale = 1.0`).
+      - Cung cấp module `BoardMetrics` tính toán toạ độ thực tế, đồng bộ hoá 1:1 cho toàn bộ các lớp phủ: `ArrowOverlayView`, `MoveClassifier` badges, `WdlBarView`, `EngineInfo` và `PlayerAccuracyPillView`.
+
 ---
 
 ## 3. Trạng Thái Hiện Tại & Checklist Kiểm Thử
-- **Phiên bản mới nhất trên GitHub**: `v2.0.56` (tag `v2.0.56`).
-- **File tải bundle**: `https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.56/patches-2.0.56.mpp`
+- **Phiên bản mới nhất trên GitHub**: `v2.0.57` (tag `v2.0.57`).
+- **File tải bundle**: `https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.57/patches-2.0.57.mpp`
 - **Checklist Kiểm Thử**:
-  - [x] Đã biên dịch sạch 39 file Java và đóng gói thành công `patches-2.0.56.mpp`.
+  - [x] Đã biên dịch sạch 39 file Java và đóng gói thành công `patches-2.0.57.mpp` (189,668,347 bytes).
   - [x] Thanh Eval Bar gốc của Chess.com hiển thị dọc chuẩn 100% (`Orientation.VERTICAL`).
-  - [x] Nhãn điểm eval tự động né thanh Eval Bar khi trỏ vào cạnh trái.
-  - [x] Bật sẵn thanh Eval Bar mặc định trong settings.
-  - [x] Đã kiểm tra git status sạch sẽ, đưa bundle vào `mpp_archive/` và script vào `scripts_archive/`.
+  - [x] Tự động dịch nhẹ bàn cờ và co tỷ lệ để chừa rãnh an toàn cho Eval Bar, không bao giờ đè lên ô cờ.
+  - [x] Khôi phục vị trí chuẩn của bàn cờ khi ẩn Eval Bar.
+  - [x] Đồng bộ toạ độ chính xác 100% cho toàn bộ các overlay (Mũi tên, Huy hiệu, WDL Bar, Engine Info, Accuracy Pills).
+  - [x] Đã cập nhật metadata `patches-bundle.json` và `patches-list.json`.
+  - [x] Đã kiểm tra git status sạch sẽ, lưu trữ script vào `scripts_archive/` và mpp vào `mpp_archive/`.
 
 
