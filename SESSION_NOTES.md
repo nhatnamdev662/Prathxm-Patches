@@ -102,13 +102,23 @@
     - **Xóa bỏ hoàn toàn thông báo chiếu hết**: Gỡ vĩnh viễn banner `MATE IN X!` và switch cài đặt.
     - **Quy chuẩn hóa và dọn dẹp**: Bổ sung `rule.md`, dọn sạch repository đưa scripts cũ vào `scripts_archive/` và `mpp_archive/`.
 
+22. **Auto-apply Real-time, Nút Đóng Extension, Tải Ngôn Ngữ In-place (v2.0.38 - v2.0.39)**:
+    - Lưu và áp dụng tức thì mọi cài đặt thời gian thực lên bàn cờ.
+    - Menu đóng duy nhất bằng nút `✕` chuẩn phong cách Extension ở header, loại bỏ 100% nút ở footer.
+    - Đổi ngôn ngữ in-place tại chỗ không bị dismiss dialog hay chớp màn hình.
+
+23. **Đồng Bộ 100% Giao Diện & Bảng Màu Phân Loại Nước Đi Chuẩn Extension (v2.0.40)**:
+    - **Bảng màu phân loại chuẩn Extension**: Sửa triệt để các mã màu phân loại bị lệch (Great `#749BBF`, Missed Win `#F7C631`, Mistake `#FFA459`, Miss `#FF7769`, Forced `#999999`).
+    - **Highlight ô cờ 50% Opacity**: Cả ô xuất phát (`from`) và ô đích (`to`) đều phủ cùng màu phân loại với độ mờ chuẩn 50% (alpha 128) giống hệt Extension; nước cờ Forced không phủ màu.
+    - **Huy hiệu góc ô cờ & Fallback**: Chuẩn hóa kích thước `0.35f sqSize`, bóng đổ mờ 30% (`0x4D000000`), và đồng bộ trọn bộ ký hiệu fallback glyph / emoji theo Extension.
+
 ---
 
 ## 3. Trạng Thái Hiện Tại & Checklist Kiểm Thử
-- **Phiên bản mới nhất trên GitHub**: `v2.0.37` (tag `v2.0.37`).
-- **File tải bundle**: `https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.37/patches-2.0.37.mpp`
+- **Phiên bản mới nhất trên GitHub**: `v2.0.40` (tag `v2.0.40`).
+- **File tải bundle**: `https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.40/patches-2.0.40.mpp`
 - **Checklist Kiểm Thử**:
-  - [x] Đã vá và nạp thành công bản `2.0.37` trên Morphe Manager.
-  - [ ] Kiểm tra thẻ Accuracy & Estimated Elo: Ghim khít mép trên và dưới bàn cờ, không bị cắt chữ.
-  - [ ] Kiểm tra chuyển ngữ `[EN]` / `[VI]`: Thẻ Accuracy/Elo và toàn bộ menu chuyển đổi đồng bộ 100%.
-  - [ ] Xác nhận không còn banner thông báo chiếu hết khi có đòn Mate.
+  - [x] Đã biên dịch sạch 39 file Java và đóng gói thành công `patches-2.0.40.mpp`.
+  - [x] Kiểm tra highlight ô cờ: Đúng độ mờ 50% cho cả ô đi và ô đến, bảng màu chuẩn Extension.
+  - [x] Kiểm tra huy hiệu góc ô cờ và shadow tròn mờ 30%.
+

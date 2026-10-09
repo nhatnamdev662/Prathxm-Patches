@@ -805,32 +805,33 @@ public class ArrowOverlayView extends View {
         String lower = classificationName.toLowerCase(java.util.Locale.US).replace(" ", "_");
         switch (lower) {
             case "brilliant":
-                return 0xFF26C2A3; // Chess.com APK color_classification_brilliant
+                return 0xFF26C2A3; // Extension: #26c2a3 (Brilliant Cyan)
             case "great":
             case "greatfind":
             case "great_find":
-                return 0xFF486688; // Chess.com APK color_classification_great_find
+                return 0xFF749BBF; // Extension: #749bbf (Great Blue)
             case "best":
+                return 0xFF81B64C; // Extension: #81b64c (Best Green)
             case "forced":
-                return 0xFF81B64C; // Chess.com APK color_classification_best (Brand Green)
+                return 0xFF999999; // Extension: #999999 (Forced Gray)
             case "excellent":
-                return 0xFF95B776; // Chess.com APK color_classification_excellent
+                return 0xFF81B64C; // Extension: #81b64c (Excellent Green)
             case "good":
-                return 0xFF95B776; // Chess.com APK color_classification_good
+                return 0xFF95B776; // Extension: #95b776 (Good Light Green)
             case "book":
-                return 0xFFD5A47D; // Chess.com APK color_classification_book
+                return 0xFFD5A47D; // Extension: #d5a47d (Book Tan)
             case "inaccuracy":
-                return 0xFFF7C631; // Chess.com APK color_classification_inaccuracy
+                return 0xFFF7C631; // Extension: #f7c631 (Inaccuracy Yellow)
             case "mistake":
-                return 0xFFFA742C; // Chess.com APK color_classification_mistake
+                return 0xFFFFA459; // Extension: #ffa459 (Mistake Orange)
             case "blunder":
-                return 0xFFFA412D; // Chess.com APK color_classification_blunder
+                return 0xFFFA412D; // Extension: #fa412d (Blunder Red)
             case "miss":
             case "missed":
-                return 0xFFFF6352; // Chess.com APK color_classification_miss
+                return 0xFFFF7769; // Extension: #ff7769 (Miss Coral)
             case "missedwin":
             case "missed_win":
-                return 0xFFFA412D; // Chess.com APK color_classification_missed_win
+                return 0xFFF7C631; // Extension: #f7c631 (Missed Win Gold)
             default:
                 return 0xFF81B64C;
         }
@@ -870,14 +871,19 @@ public class ArrowOverlayView extends View {
         float top = row * sqSize;
 
         int themeColor = getClassificationThemeColor(badge.classificationName);
+        String lower = badge.classificationName != null ? badge.classificationName.toLowerCase(java.util.Locale.US).replace(" ", "_") : "";
 
-        // 1. Tô màu ô cờ chuẩn Game Review (Square Highlights)
-        // Ô xuất phát (fromSquare): màu nhạt hơn (alpha ~ 20%)
-        if (badge.fromSquare != null && badge.fromSquare.length() >= 2) {
-            drawSquareHighlight(canvas, sqSize, badge.fromSquare, themeColor, 45);
+        // 1. Tô màu ô cờ chuẩn 100% Extension (Square Highlights)
+        // Extension: Nếu Forced (color: "") -> không tô highlight ô cờ.
+        // Ngược lại: Cả ô xuất phát (fromSquare) và ô đích (toSquare) đều phủ cùng màu với opacity 0.5 (alpha = 128 / 0x80)
+        boolean isForced = "forced".equals(lower);
+        if (!isForced) {
+            int highlightAlpha = 128; // 50% opacity chuẩn Extension (opacity: .5)
+            if (badge.fromSquare != null && badge.fromSquare.length() >= 2) {
+                drawSquareHighlight(canvas, sqSize, badge.fromSquare, themeColor, highlightAlpha);
+            }
+            drawSquareHighlight(canvas, sqSize, toSq, themeColor, highlightAlpha);
         }
-        // Ô đích (toSquare): màu đậm rõ nét (alpha ~ 35%)
-        drawSquareHighlight(canvas, sqSize, toSq, themeColor, 80);
 
         // 2. Tính toán Pop-in / Scale Animation (250ms)
         long elapsed = android.os.SystemClock.uptimeMillis() - badge.timestamp;
@@ -894,7 +900,6 @@ public class ArrowOverlayView extends View {
         }
 
         // 3. Hiệu ứng Glow phát sáng đặc biệt cho Brilliant & Great Move
-        String lower = badge.classificationName != null ? badge.classificationName.toLowerCase(java.util.Locale.US) : "";
         boolean isBrilliantOrGreat = lower.contains("brilliant") || lower.contains("great");
         if (isBrilliantOrGreat) {
             squareGlowPaint.setColor(themeColor);
@@ -905,12 +910,12 @@ public class ArrowOverlayView extends View {
         }
 
         // 4. Kích thước & Vị trí huy hiệu Chess.com (góc trên bên phải ô đích, căn chỉnh an toàn không tràn viền)
-        float baseBadgeSize = sqSize * 0.34f;
+        float baseBadgeSize = sqSize * 0.35f;
         float badgeSize = baseBadgeSize * scale;
 
         // Tâm của huy hiệu tại góc trên bên phải ô đích
-        float targetCenterX = left + sqSize - baseBadgeSize / 2f - sqSize * 0.05f;
-        float targetCenterY = top + baseBadgeSize / 2f + sqSize * 0.05f;
+        float targetCenterX = left + sqSize - baseBadgeSize / 2f - sqSize * 0.04f;
+        float targetCenterY = top + baseBadgeSize / 2f + sqSize * 0.04f;
 
         float badgeX = targetCenterX - badgeSize / 2f;
         float badgeY = targetCenterY - badgeSize / 2f;
@@ -927,10 +932,10 @@ public class ArrowOverlayView extends View {
         Drawable nativeDrawable = getClassificationDrawable(getContext(), badge.classificationName);
 
         if (nativeDrawable != null) {
-            // Bóng đổ tròn mờ
+            // Bóng đổ tròn mờ (Extension chuẩn opacity 0.3 = 0x4D000000)
             badgeCirclePaint.setStyle(Paint.Style.FILL);
-            badgeCirclePaint.setColor(0x66000000);
-            canvas.drawCircle(badgeX + badgeSize / 2f, badgeY + badgeSize / 2f + 2f * scale, badgeSize / 2f, badgeCirclePaint);
+            badgeCirclePaint.setColor(0x4D000000);
+            canvas.drawCircle(badgeX + badgeSize / 2f, badgeY + badgeSize / 2f + 1.5f * scale, badgeSize / 2f, badgeCirclePaint);
 
             nativeDrawable.setBounds((int) badgeX, (int) badgeY, (int) (badgeX + badgeSize), (int) (badgeY + badgeSize));
             nativeDrawable.draw(canvas);
@@ -1010,25 +1015,25 @@ public class ArrowOverlayView extends View {
         String lower = classificationName != null ? classificationName.toLowerCase(java.util.Locale.US).replace(" ", "_") : "";
         switch (lower) {
             case "brilliant":
-                bgColor = 0xFF1BACA6; // Cyan Teal
+                bgColor = 0xFF26C2A3; // Cyan Teal
                 glyph = "!!";
                 break;
             case "great":
             case "greatfind":
             case "great_find":
-                bgColor = 0xFF5C8BB0; // Blue Teal
+                bgColor = 0xFF749BBF; // Blue Teal
                 glyph = "!";
                 break;
             case "best":
-                bgColor = 0xFF96BC4B; // Chess.com Green
+                bgColor = 0xFF81B64C; // Chess.com Green
                 glyph = "★";
                 break;
             case "excellent":
-                bgColor = 0xFF96BC4B;
-                glyph = "✓";
+                bgColor = 0xFF81B64C;
+                glyph = "👍";
                 break;
             case "good":
-                bgColor = 0xFFA88865;
+                bgColor = 0xFF95B776;
                 glyph = "✓";
                 break;
             case "book":
@@ -1036,30 +1041,33 @@ public class ArrowOverlayView extends View {
                 glyph = "📖";
                 break;
             case "inaccuracy":
-                bgColor = 0xFFF0C15C;
+                bgColor = 0xFFF7C631;
                 glyph = "?!";
                 break;
             case "mistake":
-                bgColor = 0xFFE6912C;
+                bgColor = 0xFFFFA459;
                 glyph = "?";
                 break;
             case "blunder":
-                bgColor = 0xFFCA3431;
+                bgColor = 0xFFFA412D;
                 glyph = "??";
                 break;
             case "miss":
             case "missed":
+                bgColor = 0xFFFF7769;
+                glyph = "✕";
+                break;
             case "missedwin":
             case "missed_win":
-                bgColor = 0xFFEA5753;
+                bgColor = 0xFFF7C631;
                 glyph = "✕";
                 break;
             case "forced":
-                bgColor = 0xFF9B9B9B;
+                bgColor = 0xFF999999;
                 glyph = "➔";
                 break;
             default:
-                bgColor = 0xFF96BC4B;
+                bgColor = 0xFF81B64C;
                 glyph = "✓";
                 break;
         }

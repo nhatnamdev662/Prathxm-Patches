@@ -1,9 +1,9 @@
 {
-  "created_at": "2026-10-08T21:54:00",
-  "description": "## [2.0.39] (2026-10-08)\n\n### ⚡ NNVC v2.0.39 — Tải Ngôn Ngữ In-Place & Loại Bỏ 100% Nút Footer Menu\n\n* **Chuyển đổi ngôn ngữ In-Place không chớp giật:** Nút chuyển đổi [VI]/[EN] thay thế nội dung menu ngay tại chỗ (in-place), giữ nguyên tab đang chọn, không bị dismiss dialog hay nhấp nháy màn hình.\n* **Loại bỏ hoàn toàn các nút ở Footer:** Gỡ sạch toàn bộ các nút ở footer (không Lưu, không Hủy, không Xong). Menu đóng duy nhất bằng nút `✕` chuẩn phong cách Extension ở góc trên bên phải header.\n* **Tự động áp dụng & lưu cấu hình thời gian thực (Auto-apply Real-time):** Mọi thiết lập trong menu đều tự động lưu và có hiệu lực tức thì lên bàn cờ.\n* **Author:** NNVC (@nncutett)",
-  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.39/patches-2.0.39.mpp",
+  "created_at": "2026-10-09T14:08:00",
+  "description": "## [2.0.40] (2026-10-09)\n\n### ⚡ NNVC v2.0.40 — Đồng Bộ 100% Giao Diện & Bảng Màu Phân Loại Nước Đi Chuẩn Extension\n\n* **Đồng bộ màu sắc phân loại:** Chuẩn hóa bảng màu phân loại theo Extension (Great `#749BBF`, Missed Win `#F7C631`, Mistake `#FFA459`, Miss `#FF7769`, Forced `#999999`).\n* **Highlight ô cờ 50% Opacity:** Cả ô xuất phát (`from`) và ô đích (`to`) đều phủ màu với độ mờ chuẩn 50% (alpha 128) giống hệt Extension; nước cờ Forced không phủ màu.\n* **Huy hiệu góc ô cờ & Fallback:** Đồng bộ kích thước, căn lề góc trên bên phải, bóng đổ mờ 30% và bộ ký hiệu glyph / emoji nguyên bản của Extension.\n* **Author:** NNVC (@nncutett)",
+  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.40/patches-2.0.40.mpp",
   "signature_download_url": "",
-  "version": "2.0.39",
-  "versionCode": 20039,
-  "downloadUrl": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.39/patches-2.0.39.mpp"
+  "version": "2.0.40",
+  "versionCode": 20040,
+  "downloadUrl": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.40/patches-2.0.40.mpp"
 }
