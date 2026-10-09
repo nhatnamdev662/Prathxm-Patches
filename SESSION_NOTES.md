@@ -141,15 +141,20 @@
       - Vô hiệu hóa việc can thiệp `setMoveArrows` trong `onArrowsChanged`.
       - Chuyển Threat Arrow sang render 100% bằng Canvas trên `ArrowOverlayView` với màu đỏ neon `#EF4444`.
       - Đóng gói bản vá sạch `v2.0.44` (`patches-2.0.44.mpp`).
+  18. **Bản Vá v2.0.45 — Triệt Tiêu 100% Âm Thanh & Rung Động Trong MoveClassifier**:
+      - Gỡ bỏ hoàn toàn lệnh gọi `playBrilliantSound(activity)` và hàm phát file `sounds/brilliant.mp3` qua `MediaPlayer` trong `MoveClassifier.java`.
+      - Loại bỏ rung phản hồi cảnh báo blunder (`vibrator.vibrate`) trong `MoveClassifier.java` để ngăn chặn tiếng rè cơ học.
+      - Biên dịch sạch 39 file Java và đóng gói thành công `patches-2.0.45.mpp`.
 
 ---
 
 ## 3. Trạng Thái Hiện Tại & Checklist Kiểm Thử
-- **Phiên bản mới nhất trên GitHub**: `v2.0.44` (tag `v2.0.44`).
-- **File tải bundle**: `https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.44/patches-2.0.44.mpp`
+- **Phiên bản mới nhất trên GitHub**: `v2.0.45` (tag `v2.0.45`).
+- **File tải bundle**: `https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.45/patches-2.0.45.mpp`
 - **Checklist Kiểm Thử**:
-  - [x] Đã biên dịch sạch 39 file Java và đóng gói thành công `patches-2.0.44.mpp`.
-  - [x] Triệt tiêu hoàn toàn âm thanh illegal move khi đi cờ.
-  - [x] Threat Arrow render Canvas mượt mà, đỏ neon chuẩn Extension.
+  - [x] Đã biên dịch sạch 39 file Java và đóng gói thành công `patches-2.0.45.mpp`.
+  - [x] Gỡ bỏ hoàn toàn `playBrilliantSound` và rung phản hồi trong `MoveClassifier.java`.
+  - [x] Triệt tiêu vĩnh viễn âm thanh bất thường xuất hiện sau nước đi.
   - [x] Đã kiểm tra git status sạch sẽ, đưa bundle vào `mpp_archive/` và script vào `scripts_archive/`.
+
 

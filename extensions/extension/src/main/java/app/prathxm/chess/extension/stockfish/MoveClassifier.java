@@ -7,8 +7,6 @@ package app.prathxm.chess.extension.stockfish;
 
 import android.app.Activity;
 import android.content.Context;
-import android.os.Vibrator;
-import android.os.VibrationEffect;
 import android.os.Build;
 import android.util.Log;
 import android.widget.Toast;
@@ -640,39 +638,8 @@ public class MoveClassifier {
             fromSquare = uciMove.substring(0, 2);
             targetSquare = uciMove.substring(2, 4);
             OverlayManager.setClassificationBadge(fromSquare, targetSquare, torchName, isWhite, isMyMove);
-            TorchEngine.log("[BOARD BADGE] Đã vẽ huy hiệu & hiệu ứng Chess.com '" + torchName + "' tại ô " + fromSquare + "->" + targetSquare);
-        }
-
-        // 2. Phát âm thanh Brilliant chính hãng khi có nước cờ thiên tài
-        if ("brilliant".equalsIgnoreCase(torchName)) {
-            playBrilliantSound(activity);
-        }
-
-        // 3. Rung cảnh báo Blunder / Mistake nếu người dùng bật
-        if (isBlunderOrMistake && StockfishSettings.isBlunderAlertsEnabled(activity)) {
-            Vibrator vibrator = (Vibrator) activity.getSystemService(Context.VIBRATOR_SERVICE);
-            if (vibrator != null && vibrator.hasVibrator()) {
-                if (Build.VERSION.SDK_INT >= 26) {
-                    vibrator.vibrate(VibrationEffect.createOneShot(150, VibrationEffect.DEFAULT_AMPLITUDE));
-                } else {
-                    vibrator.vibrate(150);
-                }
-            }
-        }
-    }
-
-    private static void playBrilliantSound(Context context) {
-        if (context == null) return;
-        try {
-            android.content.res.AssetFileDescriptor afd = context.getAssets().openFd("sounds/brilliant.mp3");
-            android.media.MediaPlayer mp = new android.media.MediaPlayer();
-            mp.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
-            afd.close();
-            mp.prepare();
-            mp.setOnCompletionListener(android.media.MediaPlayer::release);
-            mp.start();
-        } catch (Throwable t) {
-            TorchEngine.log("[BRILLIANT SOUND] " + t.getMessage());
         }
     }
 }
+
+
