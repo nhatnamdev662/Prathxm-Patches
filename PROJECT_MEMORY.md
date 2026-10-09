@@ -1,6 +1,6 @@
 # NHẬT KÝ DỰ ÁN & BỘ GHI NHỚ DẶN DÒ (PROJECT MEMORY)
 *Dự án: Chess Mobile - ReVanced Extension Patches cho Chess.com Android*
-*Phiên bản hiện tại: v2.0.42*
+*Phiên bản hiện tại: v2.0.43*
 *Cập nhật lần cuối: 2026-10-09*
 
 ---
@@ -221,25 +221,22 @@
   - **Tải lại ngôn ngữ In-Place không chớp giật**: Nút [VI]/[EN] thay thế nội dung menu ngay tại chỗ (`dialog.setContentView`), lưu giữ nguyên Tab đang chọn, không bị dismiss dialog hay nhấp nháy màn hình.
   - **Loại bỏ hoàn toàn các nút ở Footer**: Gỡ sạch toàn bộ các nút ở footer (không Lưu, không Hủy, không Xong). Menu đóng duy nhất bằng nút `✕` chuẩn phong cách Extension ở góc trên bên phải header.
 
-- **v2.0.40 (Đồng Bộ 100% Giao Diện & Bảng Màu Phân Loại Nước Đi Chuẩn Extension)**:
-  - **Bảng màu phân loại chuẩn Extension**: Sửa triệt để các mã màu phân loại bị lệch (Great `#749BBF`, Missed Win `#F7C631`, Mistake `#FFA459`, Miss `#FF7769`, Forced `#999999`).
-  - **Tô màu Highlight ô cờ Opacity 0.5**: Đồng bộ cả ô xuất phát (`from`) và ô đích (`to`) phủ cùng màu phân loại với độ mờ chuẩn 50% (alpha 128) giống hệt Extension. Riêng nước cờ Forced không phủ màu.
-  - **Huy hiệu góc ô cờ & Fallback**: Chuẩn hóa kích thước `0.35f sqSize`, bóng đổ mờ 30% (`0x4D000000`), và đồng bộ trọn bộ ký hiệu fallback glyph / emoji theo Extension.
+- **v2.0.41 (Tối Ưu & Dọn Dẹp Phân Loại)**:
+  - Khôi phục cấu hình phân loại nước đi ổn định.
+- **v2.0.42 (Khôi Phục Mũi Tên Hiểm Họa Gốc Native Chess.com)**:
+  - Khôi phục vẽ Threat Arrow qua `ArrowInjector` sử dụng vector `HintArrow` gốc màu đỏ neon.
+- **v2.0.43 (Tối Giản Menu Cài Đặt)**:
+  - Xóa nút đỏ "Đặt lại cài đặt mặc định" ở cuối Tab ENGINE.
+  - Xóa nút "Xem & Copy Log" chẩn đoán Torch ở Tab COACH.
 
 ---
 
 ## 3. TRẠNG THÁI HIỆN TẠI & KẾ HOẠCH TIẾP THEO
 
 ### 3.1. Trạng thái hiện tại
-- **Phiên bản mới nhất**: **v2.0.40** (`patches-2.0.40.mpp`).
-- **Kho lưu trữ GitHub**: Sẵn sàng phát hành Release `v2.0.40`.
+- **Phiên bản mới nhất**: **v2.0.43** (`patches-2.0.43.mpp`).
+- **Kho lưu trữ GitHub**: Sẵn sàng phát hành Release `v2.0.43`.
 - **Trạng thái Repo**: 100% sạch, không commit file `.py`, root ngăn nắp.
 - **Tiến trình kỹ thuật**:
-  1. Đã đưa Torch Depth về mặc định = 2.
-  2. Đã giải quyết triệt để vấn đề "hàng chờ dồn lệnh" nhờ cơ chế `reqId` token cancellation.
-  3. Đã xử lý xóa nhãn phân loại ngay lập tức khi vừa có nước cờ mới.
-  4. Đã hoàn thiện Cách C: ghim khít mép bàn cờ, tự đo kích thước, 100% song ngữ.
-  5. Đã xóa vĩnh viễn thông báo chiếu hết và tour overlay tối màn hình.
-  6. Đã bổ sung `rule.md` và dọn dẹp sạch sẽ repository.
-  7. Đã hoàn thiện Auto-apply Real-time, nút đóng `✕` Extension, loại bỏ 100% nút footer, và tải ngôn ngữ in-place.
-  8. Đã đồng bộ 100% giao diện phân loại nước đi chuẩn Extension (màu sắc, opacity 50% ô cờ, căn chỉnh huy hiệu) v2.0.40.
+  1. Giữ nguyên Threat Arrow gốc native Chess.com.
+  2. Giao diện menu cài đặt gọn gàng, loại bỏ các nút rườm rà không cần thiết.

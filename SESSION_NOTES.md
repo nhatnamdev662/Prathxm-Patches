@@ -122,13 +122,23 @@
       - Mũi tên hiểm họa (Threat Arrow) tiếp tục sử dụng vector `HintArrow` màu đỏ gốc của Chess.com tiêm qua `ArrowInjector.injectThreatArrow`.
       - Mũi tên gợi ý Stockfish (Tier 1..5) và huy hiệu phân loại tiếp tục hiển thị trên `ArrowOverlayView` bằng Canvas cyberpunk như cũ.
 
+26. **Tối Giản Menu Cài Đặt (v2.0.43)**:
+    - **Yêu cầu người dùng**:
+      - Xóa nút đỏ "Đặt lại cài đặt mặc định" trong menu (không cần thiết).
+      - Xóa nút xem nhật ký chẩn đoán Torch WASM trong Tab COACH.
+    - **Thực hiện**:
+      - Gỡ bỏ hoàn toàn nút đỏ "Đặt lại cài đặt mặc định" ở cuối Tab ENGINE trong `StockfishSettingsDialog.java`.
+      - Gỡ bỏ hoàn toàn nút `coachLogBtn` ("📋 Xem & Copy Log") ở Tab COACH trong `StockfishSettingsDialog.java`.
+      - Đóng gói bản vá sạch `v2.0.43` (`patches-2.0.43.mpp`).
+
 ---
 
 ## 3. Trạng Thái Hiện Tại & Checklist Kiểm Thử
-- **Phiên bản mới nhất trên GitHub**: `v2.0.42` (tag `v2.0.42`).
-- **File tải bundle**: `https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.42/patches-2.0.42.mpp`
+- **Phiên bản mới nhất trên GitHub**: `v2.0.43` (tag `v2.0.43`).
+- **File tải bundle**: `https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.43/patches-2.0.43.mpp`
 - **Checklist Kiểm Thử**:
-  - [x] Đã biên dịch sạch 39 file Java và đóng gói thành công `patches-2.0.42.mpp`.
-  - [x] Khôi phục 100% mũi tên hiểm họa gốc Chess.com native qua `ArrowInjector`.
+  - [x] Đã biên dịch sạch 39 file Java và đóng gói thành công `patches-2.0.43.mpp`.
+  - [x] Xóa nút đỏ đặt lại mặc định và nút xem log chẩn đoán theo yêu cầu.
+  - [x] Mũi tên hiểm họa giữ nguyên theo native Chess.com.
   - [x] Đã kiểm tra git status sạch sẽ, đưa bundle vào `mpp_archive/` và script vào `scripts_archive/`.
 

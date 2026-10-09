@@ -594,37 +594,6 @@ public class StockfishSettingsDialog {
             }
         });
 
-        addCardSeparator(engineCard, density);
-
-        // Reset Settings button
-        TextView resetBtn = new TextView(activity);
-        resetBtn.setText(I18n.get(activity, "reset_defaults"));
-        resetBtn.setTextColor(COLOR_DANGER_RED);
-        resetBtn.setTextSize(12.5f);
-        resetBtn.setGravity(Gravity.CENTER);
-        resetBtn.setPadding(0, (int) (8 * density), 0, (int) (8 * density));
-        resetBtn.setOnClickListener(v -> {
-            HapticHelper.pop(activity, v);
-            new android.app.AlertDialog.Builder(activity)
-                    .setTitle(I18n.get(activity, "reset_title"))
-                    .setMessage(I18n.get(activity, "reset_message"))
-                    .setNegativeButton(I18n.get(activity, "cancel"), null)
-                    .setPositiveButton(I18n.get(activity, "reset"), (d, w) -> {
-                        StockfishSettings.resetToDefaults(activity);
-                        Object st = StockfishExtension.getStateImpl();
-                        ArrowInjector.clearEngineArrows(st);
-                        OverlayManager.hideEvalBar();
-                        OverlayManager.hideWdlBar();
-                        OverlayManager.hideMateAnnouncement();
-                        OverlayManager.hideEngineInfo();
-                        StockfishExtension.triggerAnalysisForCurrentState();
-                        Toast.makeText(activity, I18n.get(activity, "reset_toast"), Toast.LENGTH_SHORT).show();
-                        dialog.dismiss();
-                    })
-                    .show();
-        });
-        engineCard.addView(resetBtn);
-
         // ─── TAB 3: COACH (Torch WebAssembly Coach Engine) ───
         final LinearLayout panelCoach = new LinearLayout(activity);
         panelCoach.setOrientation(LinearLayout.VERTICAL);
@@ -700,25 +669,6 @@ public class StockfishSettingsDialog {
             StockfishSettings.setBlunderAlertsEnabled(activity, isChecked);
         });
 
-        addCardSeparator(coachCard, density);
-
-        LinearLayout coachLogBtn = new LinearLayout(activity);
-        coachLogBtn.setOrientation(LinearLayout.HORIZONTAL);
-        coachLogBtn.setGravity(Gravity.CENTER);
-        coachLogBtn.setPadding(0, (int) (6 * density), 0, (int) (6 * density));
-        coachLogBtn.setClickable(true);
-        coachLogBtn.setOnClickListener(v -> {
-            HapticHelper.pop(activity, v);
-            showDiagnosticLogDialog(activity);
-        });
-
-        TextView coachLogTv = new TextView(activity);
-        coachLogTv.setText(I18n.get(activity, "coach_log"));
-        coachLogTv.setTextColor(COLOR_ACCENT_CYAN);
-        coachLogTv.setTextSize(12f);
-        coachLogTv.setTypeface(Typeface.create("sans-serif-medium", Typeface.BOLD));
-        coachLogBtn.addView(coachLogTv);
-        coachCard.addView(coachLogBtn);
 
         // ─── TAB 4: VISUAL (Giao Diện & Lớp Phủ) ───
         final LinearLayout panelVisual = new LinearLayout(activity);
