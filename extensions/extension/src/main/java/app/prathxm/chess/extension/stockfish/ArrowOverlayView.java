@@ -327,9 +327,9 @@ public class ArrowOverlayView extends View {
         boolean isKnight = (fileDelta == 1 && rankDelta == 2) || (fileDelta == 2 && rankDelta == 1);
 
         float thicknessScale = 1.0f - 0.06f * (arrow.tier - 1);
-        float baseShaftHalf = 0.042f;
-        float baseHeadHalf = 0.17f;
-        float baseHeadLen = 0.24f;
+        float baseShaftHalf = arrow.isThreat ? 0.048f : 0.042f;
+        float baseHeadHalf = arrow.isThreat ? 0.18f : 0.17f;
+        float baseHeadLen = arrow.isThreat ? 0.22f : 0.24f;
 
         float shaftHalf = sqSize * baseShaftHalf * thicknessScale;
         float neckHalf = shaftHalf;
@@ -350,6 +350,24 @@ public class ArrowOverlayView extends View {
                     startOffset, shaftHalf, neckHalf, headHalf, headLen, perpOffset, targetOffset);
         }
         if (arrowPath == null) return;
+
+        if (arrow.isThreat) {
+            // Style chuẩn Chess.com gốc cho Mũi tên đe dọa (Threat Arrow):
+            // 1. Màu đỏ phẳng đặc trưng Chess.com (#EF4444)
+            // 2. Không hiệu ứng Neon Drop Shadow / Glow
+            // 3. Không dải Gradient nổi 3D (phẳng hoàn toàn)
+            // 4. Viền tối mảnh 1px nhẹ nhàng tách nền
+            int threatColor = 0xFFEF4444; // Chess.com Threat Red
+            fillPaint.setShader(null);
+            fillPaint.setColor(Color.argb((int)(0.88f * 255), (threatColor >> 16) & 0xFF, (threatColor >> 8) & 0xFF, threatColor & 0xFF));
+            canvas.drawPath(arrowPath, fillPaint);
+
+            edgePaint.setShader(null);
+            edgePaint.setColor(0x33000000); // 20% black subtle flat border
+            edgePaint.setStrokeWidth(Math.max(1.0f, sqSize * 0.012f));
+            canvas.drawPath(arrowPath, edgePaint);
+            return;
+        }
 
         // Color computation matching NNVC extension with custom tier palette
         int[] rawRgb = getBaseRgb(getContext(), arrow.tier, arrow.isThreat);

@@ -1,9 +1,9 @@
 {
-  "created_at": "2026-10-09T18:57:00",
-  "description": "## [2.0.51] (2026-10-09)\n\n### ⚡ NNVC v2.0.51 — Chuyển Mũi Tên Đe Dọa (Threat Arrow) Sang ArrowOverlayView Nổi Trên Lớp Phân Loại\n\n* **Đưa mũi tên hiểm họa (Threat Arrow) lên lớp Overlay Canvas:** Mũi tên đe dọa không còn bị tiêm vào bàn cờ gốc (vốn nằm dưới lớp phân loại nước đi).\n* **Hiển thị đè lên trên ô highlight phân loại:** Cả mũi tên gợi ý và mũi tên đe dọa (màu đỏ #EF4444) đều được vẽ trên Canvas nổi của `ArrowOverlayView`, không còn bị ô highlight hay huy hiệu che lấp.\n* **Author:** NNVC (@nncutett)",
-  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.51/patches-2.0.51.mpp",
+  "created_at": "2026-10-09T19:03:00",
+  "description": "## [2.0.52] (2026-10-09)\n\n### ⚡ NNVC v2.0.52 — Phân Biệt Mũi Tên Đe Dọa Chuẩn Style Gốc Chess.com\n\n* **Style mũi tên đe dọa riêng biệt chuẩn Chess.com:** Dùng màu đỏ phẳng (`#EF4444`, flat solid fill), không hiệu ứng Neon Glow hay dải gradient nổi 3D.\n* **Dễ dàng phân biệt trực quan:** Mũi tên phân tích của Stockfish dùng phong cách Neon Glow + Gradient + nhãn Eval, trong khi mũi tên đe dọa dùng phong cách đồ họa phẳng đặc trưng của Chess.com.\n* **Hiển thị nổi trên nền phân loại:** Vẫn được vẽ trên Canvas nổi của `ArrowOverlayView`, không bị ô highlight hay badge đè lên.\n* **Author:** NNVC (@nncutett)",
+  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.52/patches-2.0.52.mpp",
   "signature_download_url": "",
-  "version": "2.0.51",
-  "versionCode": 20051,
-  "downloadUrl": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.51/patches-2.0.51.mpp"
+  "version": "2.0.52",
+  "versionCode": 20052,
+  "downloadUrl": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.52/patches-2.0.52.mpp"
 }
