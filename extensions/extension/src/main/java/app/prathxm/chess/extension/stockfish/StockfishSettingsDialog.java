@@ -818,7 +818,7 @@ public class StockfishSettingsDialog {
         footerLayout.setOrientation(LinearLayout.VERTICAL);
         footerLayout.setPadding((int) (14 * density), (int) (8 * density), (int) (14 * density), (int) (12 * density));
 
-        // Row: Telegram & Diagnostic Log Buttons
+        // Row: Telegram Button (Centered)
         LinearLayout socialRow = new LinearLayout(activity);
         socialRow.setOrientation(LinearLayout.HORIZONTAL);
         socialRow.setGravity(Gravity.CENTER);
@@ -827,11 +827,10 @@ public class StockfishSettingsDialog {
         LinearLayout telegramBtn = new LinearLayout(activity);
         telegramBtn.setOrientation(LinearLayout.HORIZONTAL);
         telegramBtn.setGravity(Gravity.CENTER);
-        int tgPadH = (int) (12 * density);
-        int tgPadV = (int) (7 * density);
+        int tgPadH = (int) (18 * density);
+        int tgPadV = (int) (8 * density);
         telegramBtn.setPadding(tgPadH, tgPadV, tgPadH, tgPadV);
-        LinearLayout.LayoutParams tgParams = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1.0f);
-        tgParams.rightMargin = (int) (6 * density);
+        LinearLayout.LayoutParams tgParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         telegramBtn.setLayoutParams(tgParams);
 
         GradientDrawable tgBg = new GradientDrawable();
@@ -867,33 +866,6 @@ public class StockfishSettingsDialog {
             }
         });
         socialRow.addView(telegramBtn);
-
-        // Diagnostic Log Button (📋 Log)
-        LinearLayout logBtn = new LinearLayout(activity);
-        logBtn.setOrientation(LinearLayout.HORIZONTAL);
-        logBtn.setGravity(Gravity.CENTER);
-        logBtn.setPadding(tgPadH, tgPadV, tgPadH, tgPadV);
-        LinearLayout.LayoutParams logParams = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1.0f);
-        logBtn.setLayoutParams(logParams);
-
-        GradientDrawable logBg = new GradientDrawable();
-        logBg.setColor(0x3364D2FF);
-        logBg.setCornerRadius(14 * density);
-        logBg.setStroke((int) (1.2f * density), COLOR_ACCENT_CYAN);
-        logBtn.setBackground(logBg);
-
-        TextView logText = new TextView(activity);
-        logText.setText(I18n.get(activity, "view_copy_log"));
-        logText.setTextColor(COLOR_ACCENT_CYAN);
-        logText.setTextSize(11.5f);
-        logText.setTypeface(Typeface.create("sans-serif-medium", Typeface.BOLD));
-        logBtn.addView(logText);
-
-        logBtn.setOnClickListener(v -> {
-            HapticHelper.pop(activity, v);
-            showDiagnosticLogDialog(activity);
-        });
-        socialRow.addView(logBtn);
 
         footerLayout.addView(socialRow);
 

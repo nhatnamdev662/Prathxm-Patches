@@ -162,7 +162,23 @@ public class StockfishExtension {
         return optionalPainters;
     }
 
+    public static void silenceIllegalMoveSound() {
+        try {
+            Class<?> kClass = Class.forName("com.chess.soundandhaptics.api.k");
+            for (Field f : kClass.getDeclaredFields()) {
+                f.setAccessible(true);
+                if (f.getType().getName().contains("Sound") || f.getName().equals("b")) {
+                    f.set(null, null);
+                }
+                if (f.getType().getName().contains("haptics") || f.getName().equals("c")) {
+                    f.set(null, null);
+                }
+            }
+        } catch (Throwable ignored) {}
+    }
+
     public static void ensureEngineReady() {
+        silenceIllegalMoveSound();
         if (engineReady || isInitializing) return;
         try {
             Class<?> activityThreadClass = Class.forName("android.app.ActivityThread");
@@ -218,6 +234,8 @@ public class StockfishExtension {
     public static void onBoardChanged(Object stateImplObject, Object positionObject) {
         if (stateImplObject == null || positionObject == null) return;
         
+        silenceIllegalMoveSound();
+        ArrowInjector.clearEngineArrows(stateImplObject);
         stateImplRef.set(new WeakReference<>(stateImplObject));
 
         final Activity activity = getCurrentActivity();
@@ -430,15 +448,20 @@ public class StockfishExtension {
             java.util.List<String> movesToInject = (showArrows && result.moves != null) ? result.moves : java.util.Collections.emptyList();
             String threatToInject = showThreat ? result.ponder : null;
 
+            if (showThreat && threatToInject != null) {
+                ArrowInjector.injectThreatArrow(context, getStateImpl(), threatToInject);
+            }
+
             String sig = fen + '|' + (showArrows ? result.moves : "") + '|' + (showThreat ? result.ponder : "");
             if (!sig.equals(lastArrowSignature)) {
                 lastArrowSignature = sig;
                 boolean whiteTurn = isWhiteTurnFromFen(fen);
-                OverlayManager.updateArrowOverlay(movesToInject, threatToInject, result.lineScores, result.hasMate, result.mateIn, whiteTurn, getStateImpl());
+                OverlayManager.updateArrowOverlay(movesToInject, null, result.lineScores, result.hasMate, result.mateIn, whiteTurn, getStateImpl());
             }
         } else if (isFinal) {
             lastArrowSignature = null;
             OverlayManager.hideArrowOverlay();
+            ArrowInjector.clearEngineArrows(getStateImpl());
         }
 
         if (!disableOverlays && StockfishSettings.isEvalBarEnabled(context)) {
@@ -496,6 +519,7 @@ public class StockfishExtension {
             @Override
             public void onActivityResumed(Activity activity) {
                 resumedActivity = new WeakReference<>(activity);
+                silenceIllegalMoveSound();
                 unlockScreenshots(activity);
                 GestureInterceptor.registerGestureInterceptor(activity);
                 lastArrowSignature = null;

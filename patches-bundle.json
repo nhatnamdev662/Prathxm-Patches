@@ -1,9 +1,9 @@
 {
-  "created_at": "2026-10-09T16:07:00",
-  "description": "## [2.0.45] (2026-10-09)\n\n### ⚡ NNVC v2.0.45 — Triệt Tiêu 100% Phát Âm Thanh & Rung Động Trong MoveClassifier\n\n* **Gỡ bỏ hoàn toàn `playBrilliantSound`:** Xóa sạch lệnh gọi phát file âm thanh `sounds/brilliant.mp3` qua `MediaPlayer` trong bộ phân loại nước đi `MoveClassifier`, chấm dứt triệt để mọi tiếng kêu bất thường xuất hiện sau các nước đi.\n* **Loại bỏ rung phản hồi (Vibrator):** Triệt tiêu rung cảnh báo 150ms tại `MoveClassifier` để tránh tạo tiếng rè cơ học trên thiết bị.\n* **Author:** NNVC (@nncutett)",
-  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.45/patches-2.0.45.mpp",
+  "created_at": "2026-10-09T16:51:00",
+  "description": "## [2.0.46] (2026-10-09)\n\n### ⚡ NNVC v2.0.46 — Triệt Tiêu Vĩnh Viễn Âm Thanh Nước Đi Không Hợp Lệ (Illegal Move) & Khôi Phục Mũi Tên Hiểm Họa Native\n\n* **Triệt tiêu tận gốc âm thanh Illegal Move (`illegal.mp3`):** Vô hiệu hóa trực tiếp static event `IllegalMove` (`com.chess.soundandhaptics.api.k`) tại runtime, ngăn chặn triệt để âm thanh nước đi không hợp lệ phát ra khi người dùng thực hiện nước đi trên bàn cờ Chess.com.\n* **Khôi phục mũi tên hiểm họa Native:** Hiển thị mũi tên hiểm họa màu đỏ gốc của Chess.com qua `ArrowInjector` (`HintArrow`) đúng chuẩn như phiên bản v2.0.42.\n* **Tinh gọn giao diện cài đặt:** Loại bỏ hoàn toàn nút xem nhật ký chẩn đoán Torch WASM trong tab Coach, căn giữa nút Telegram thanh thoát.\n* **Author:** NNVC (@nncutett)",
+  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.46/patches-2.0.46.mpp",
   "signature_download_url": "",
-  "version": "2.0.45",
-  "versionCode": 20045,
-  "downloadUrl": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.45/patches-2.0.45.mpp"
+  "version": "2.0.46",
+  "versionCode": 20046,
+  "downloadUrl": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.46/patches-2.0.46.mpp"
 }
