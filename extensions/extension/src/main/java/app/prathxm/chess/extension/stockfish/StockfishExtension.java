@@ -166,13 +166,24 @@ public class StockfishExtension {
         try {
             Class<?> kClass = Class.forName("com.chess.soundandhaptics.api.k");
             for (Field f : kClass.getDeclaredFields()) {
-                f.setAccessible(true);
-                if (f.getType().getName().contains("Sound") || f.getName().equals("b")) {
-                    f.set(null, null);
+                // NEVER null out the instance field 'a', otherwise Kotlin Intrinsics checkNotNullParameter(<this>) throws NPE!
+                if (f.getType().equals(kClass) || f.getName().equals("a")) {
+                    continue;
                 }
-                if (f.getType().getName().contains("haptics") || f.getName().equals("c")) {
-                    f.set(null, null);
-                }
+                try {
+                    f.setAccessible(true);
+                    try {
+                        Field modifiersField = Field.class.getDeclaredField("accessFlags");
+                        modifiersField.setAccessible(true);
+                        modifiersField.setInt(f, f.getModifiers() & ~java.lang.reflect.Modifier.FINAL);
+                    } catch (Throwable ignoredModifiers) {}
+
+                    if (f.getType().getName().contains("Sound") || f.getName().equals("b") || f.getName().equals("sound")) {
+                        f.set(null, null);
+                    } else if (f.getType().getName().contains("s0") || f.getName().equals("c") || f.getName().equals("haptics")) {
+                        f.set(null, null);
+                    }
+                } catch (Throwable ignoredField) {}
             }
         } catch (Throwable ignored) {}
     }
