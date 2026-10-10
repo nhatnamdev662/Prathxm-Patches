@@ -799,43 +799,49 @@ public class OverlayManager {
 
                     View widgetView = decorView.findViewWithTag("nnvc_accuracy_elo_widget");
                     AccuracyEloWidgetView widget;
+                    boolean isNew = false;
                     if (widgetView instanceof AccuracyEloWidgetView) {
                         widget = (AccuracyEloWidgetView) widgetView;
                     } else {
                         if (widgetView != null) decorView.removeView(widgetView);
                         widget = new AccuracyEloWidgetView(decorView.getContext());
                         widget.setTag("nnvc_accuracy_elo_widget");
-                        decorView.addView(widget);
+                        float density = decorView.getContext().getResources().getDisplayMetrics().density;
+                        int widgetW = widget.calculateDesiredWidth();
+                        int widgetH = widget.isCollapsed() ? widget.calculateCollapsedHeight() : widget.calculateExpandedHeight();
+                        FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(widgetW, widgetH);
+                        lp.gravity = Gravity.TOP | Gravity.START;
+                        decorView.addView(widget, lp);
+                        isNew = true;
                     }
 
                     widget.updateData(whiteAcc, blackAcc, whiteElo, blackElo, userIsWhite);
 
-                    float density = decorView.getContext().getResources().getDisplayMetrics().density;
-                    int widgetW = widget.calculateDesiredWidth();
-                    int widgetH = widget.isCollapsed() ? widget.calculateCollapsedHeight() : widget.calculateExpandedHeight();
+                    // Chỉ khởi tạo vị trí lần đầu hoặc khi chưa được định vị, không giật vị trí khi người dùng đang kéo thả
+                    if (isNew || !widget.isPositioned()) {
+                        float savedX = StockfishSettings.getAccuracyWidgetX(activity, -1f);
+                        float savedY = StockfishSettings.getAccuracyWidgetY(activity, -1f);
 
-                    FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(widgetW, widgetH);
-                    lp.gravity = Gravity.TOP | Gravity.START;
-                    widget.setLayoutParams(lp);
-
-                    float savedX = StockfishSettings.getAccuracyWidgetX(activity, -1f);
-                    float savedY = StockfishSettings.getAccuracyWidgetY(activity, -1f);
-
-                    if (savedX >= 0 && savedY >= 0) {
-                        widget.clampAndSetPosition(savedX, savedY);
-                    } else {
-                        BoardMetrics bm = getBoardMetrics(decorView);
-                        int decorW = decorView.getWidth();
-                        if (decorW <= 0) decorW = (int) (360f * density);
-                        float defX = decorW - widgetW - (10f * density);
-                        float defY = (bm != null && bm.boardY > widgetH + (20f * density))
-                                ? bm.boardY - widgetH - (6f * density)
-                                : 74f * density;
-                        widget.clampAndSetPosition(defX, defY);
+                        if (savedX >= 0 && savedY >= 0) {
+                            widget.clampAndSetPosition(savedX, savedY);
+                        } else {
+                            float density = decorView.getContext().getResources().getDisplayMetrics().density;
+                            int widgetW = widget.calculateDesiredWidth();
+                            int widgetH = widget.isCollapsed() ? widget.calculateCollapsedHeight() : widget.calculateExpandedHeight();
+                            BoardMetrics bm = getBoardMetrics(decorView);
+                            int decorW = decorView.getWidth();
+                            if (decorW <= 0) decorW = (int) (360f * density);
+                            float defX = decorW - widgetW - (10f * density);
+                            float defY = (bm != null && bm.boardY > widgetH + (20f * density))
+                                    ? bm.boardY - widgetH - (6f * density)
+                                    : 74f * density;
+                            widget.clampAndSetPosition(defX, defY);
+                        }
                     }
 
-                    widget.setVisibility(View.VISIBLE);
-                    widget.bringToFront();
+                    if (widget.getVisibility() != View.VISIBLE) {
+                        widget.setVisibility(View.VISIBLE);
+                    }
                     ensureZOrder(decorView);
 
                 } catch (Throwable t) {

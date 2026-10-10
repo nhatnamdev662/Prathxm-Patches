@@ -43,6 +43,10 @@ public class AccuracyEloWidgetView extends View {
     private final Paint labelPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint pieceCirclePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint roleBadgePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint headerIconPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint headerDotPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint stripPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint metricBoxBgPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 
     private final RectF bounds = new RectF();
     private final RectF cardBounds = new RectF();
@@ -57,6 +61,7 @@ public class AccuracyEloWidgetView extends View {
     private int blackElo = -1;
     private boolean userIsWhite = true;
     private boolean isCollapsed = false;
+    private boolean isPositioned = false;
 
     // Kéo thả (Touch & Drag)
     private final int touchSlop;
@@ -65,6 +70,16 @@ public class AccuracyEloWidgetView extends View {
     private float startTransX = 0f;
     private float startTransY = 0f;
     private boolean isDragging = false;
+
+    private final OnLayoutChangeListener parentLayoutListener = new OnLayoutChangeListener() {
+        @Override
+        public void onLayoutChange(View v, int left, int top, int right, int bottom,
+                                   int oldLeft, int oldTop, int oldRight, int oldBottom) {
+            if ((right - left != oldRight - oldLeft || bottom - top != oldBottom - oldTop) && !isDragging) {
+                clampAndSetPosition(getTranslationX(), getTranslationY());
+            }
+        }
+    };
 
     public AccuracyEloWidgetView(Context context) {
         super(context);
@@ -75,6 +90,7 @@ public class AccuracyEloWidgetView extends View {
         strokePaint.setStyle(Paint.Style.STROKE);
         pieceCirclePaint.setStyle(Paint.Style.FILL);
         roleBadgePaint.setStyle(Paint.Style.FILL);
+        metricBoxBgPaint.setStyle(Paint.Style.FILL);
 
         textPaint.setTypeface(Typeface.create("sans-serif", Typeface.BOLD));
         valPaint.setTypeface(Typeface.create("monospace", Typeface.BOLD));
@@ -82,6 +98,30 @@ public class AccuracyEloWidgetView extends View {
 
         setClickable(true);
         setFocusable(false);
+    }
+
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        if (getParent() instanceof View) {
+            ((View) getParent()).addOnLayoutChangeListener(parentLayoutListener);
+        }
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        if (getParent() instanceof View) {
+            ((View) getParent()).removeOnLayoutChangeListener(parentLayoutListener);
+        }
+    }
+
+    public boolean isDragging() {
+        return isDragging;
+    }
+
+    public boolean isPositioned() {
+        return isPositioned;
     }
 
     public void updateData(float whiteAcc, float blackAcc, int whiteElo, int blackElo, boolean userIsWhite) {
@@ -132,28 +172,38 @@ public class AccuracyEloWidgetView extends View {
         if (parent == null) {
             setTranslationX(x);
             setTranslationY(y);
+            isPositioned = true;
             return;
         }
         float density = getResources().getDisplayMetrics().density;
         float margin = 6f * density;
         int parentW = parent.getWidth();
         int parentH = parent.getHeight();
-        int w = getWidth() > 0 ? getWidth() : calculateDesiredWidth();
-        int h = getHeight() > 0 ? getHeight() : (isCollapsed ? calculateCollapsedHeight() : calculateExpandedHeight());
+        int w = calculateDesiredWidth();
+        int h = isCollapsed ? calculateCollapsedHeight() : calculateExpandedHeight();
 
         if (parentW <= 0) parentW = (int) (360f * density);
         if (parentH <= 0) parentH = (int) (640f * density);
 
+        int topInset = parent.getPaddingTop();
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            android.view.WindowInsets insets = parent.getRootWindowInsets();
+            if (insets != null) {
+                topInset = Math.max(topInset, insets.getSystemWindowInsetTop());
+            }
+        }
+
         float minX = margin;
         float maxX = Math.max(margin, parentW - w - margin);
-        float minY = margin;
-        float maxY = Math.max(margin, parentH - h - margin);
+        float minY = Math.max(margin, topInset + margin);
+        float maxY = Math.max(minY, parentH - h - margin);
 
         float clampedX = Math.max(minX, Math.min(maxX, x));
         float clampedY = Math.max(minY, Math.min(maxY, y));
 
         setTranslationX(clampedX);
         setTranslationY(clampedY);
+        isPositioned = true;
     }
 
     public void toggleCollapsed() {
@@ -171,8 +221,8 @@ public class AccuracyEloWidgetView extends View {
             lp.height = h;
             setLayoutParams(lp);
         }
-        requestLayout();
         clampAndSetPosition(getTranslationX(), getTranslationY());
+        requestLayout();
         invalidate();
     }
 
@@ -181,6 +231,7 @@ public class AccuracyEloWidgetView extends View {
         int action = event.getActionMasked();
         switch (action) {
             case MotionEvent.ACTION_DOWN:
+                animate().cancel();
                 downRawX = event.getRawX();
                 downRawY = event.getRawY();
                 startTransX = getTranslationX();
@@ -214,8 +265,8 @@ public class AccuracyEloWidgetView extends View {
                 } else if (action == MotionEvent.ACTION_UP) {
                     float touchY = event.getY();
                     float density = getResources().getDisplayMetrics().density;
-                    // Chạm vào thanh header -> chuyển đổi thu gọn / mở rộng
-                    if (touchY <= 36f * density) {
+                    // Chạm vào thanh header hoặc khi đang thu gọn -> chuyển đổi thu gọn / mở rộng
+                    if (isCollapsed || touchY <= 36f * density) {
                         toggleCollapsed();
                     }
                 }
@@ -254,11 +305,10 @@ public class AccuracyEloWidgetView extends View {
         RectF iconBounds = new RectF(iconLeft, iconTop, iconLeft + iconSize, iconTop + iconSize);
 
         // Khung icon vuông bo góc chia đôi màu trắng/đen chuẩn Extension
-        Paint iconPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        iconPaint.setShader(new LinearGradient(iconLeft, iconTop, iconLeft + iconSize, iconTop + iconSize,
+        headerIconPaint.setShader(new LinearGradient(iconLeft, iconTop, iconLeft + iconSize, iconTop + iconSize,
                 new int[]{0xFFFFFFFF, 0xFFFFFFFF, 0xFF121720, 0xFF121720},
                 new float[]{0f, 0.5f, 0.5f, 1f}, Shader.TileMode.CLAMP));
-        canvas.drawRoundRect(iconBounds, 6f * density, 6f * density, iconPaint);
+        canvas.drawRoundRect(iconBounds, 6f * density, 6f * density, headerIconPaint);
 
         strokePaint.setColor(0x33FFFFFF);
         strokePaint.setStrokeWidth(0.8f * density);
@@ -266,12 +316,11 @@ public class AccuracyEloWidgetView extends View {
 
         // Chấm tròn âm dương ngược lại ở tâm icon
         float dotR = 4.2f * density;
-        Paint dotPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        dotPaint.setShader(new LinearGradient(iconBounds.centerX() - dotR, iconBounds.centerY() - dotR,
+        headerDotPaint.setShader(new LinearGradient(iconBounds.centerX() - dotR, iconBounds.centerY() - dotR,
                 iconBounds.centerX() + dotR, iconBounds.centerY() + dotR,
                 new int[]{0xFF121720, 0xFF121720, 0xFFFFFFFF, 0xFFFFFFFF},
                 new float[]{0f, 0.5f, 0.5f, 1f}, Shader.TileMode.CLAMP));
-        canvas.drawCircle(iconBounds.centerX(), iconBounds.centerY(), dotR, dotPaint);
+        canvas.drawCircle(iconBounds.centerX(), iconBounds.centerY(), dotR, headerDotPaint);
 
         // Tiêu đề "Accuracy / Elo"
         textPaint.setTextAlign(Paint.Align.LEFT);
@@ -340,7 +389,6 @@ public class AccuracyEloWidgetView extends View {
         // 3. Vạch dải màu nhấn ở mép trái (Accent Strip)
         float stripW = 3.5f * density;
         stripBounds.set(cLeft, cTop, cLeft + stripW, cBottom);
-        Paint stripPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         if (isWhiteSide) {
             stripPaint.setShader(new LinearGradient(0, cTop, 0, cBottom, 0xFFFFFFFF, 0xFFB0BAC7, Shader.TileMode.CLAMP));
         } else {
@@ -439,10 +487,8 @@ public class AccuracyEloWidgetView extends View {
                                String label, String value,
                                boolean isAccuracy, float numVal) {
         // Nền ô số liệu
-        Paint boxBg = new Paint(Paint.ANTI_ALIAS_FLAG);
-        boxBg.setStyle(Paint.Style.FILL);
-        boxBg.setColor(isWhiteSide ? 0x0D0F141C : 0x14FFFFFF);
-        canvas.drawRoundRect(boxRect, 7f * density, 7f * density, boxBg);
+        metricBoxBgPaint.setColor(isWhiteSide ? 0x0D0F141C : 0x14FFFFFF);
+        canvas.drawRoundRect(boxRect, 7f * density, 7f * density, metricBoxBgPaint);
 
         strokePaint.setColor(isWhiteSide ? 0x0F000000 : 0x1AFFFFFF);
         strokePaint.setStrokeWidth(0.8f * density);
