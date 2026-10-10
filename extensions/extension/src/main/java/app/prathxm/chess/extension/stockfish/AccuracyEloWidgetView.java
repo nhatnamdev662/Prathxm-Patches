@@ -147,17 +147,17 @@ public class AccuracyEloWidgetView extends View {
 
     public int calculateDesiredWidth() {
         float density = getResources().getDisplayMetrics().density;
-        return (int) Math.ceil(186f * density);
+        return (int) Math.ceil(164f * density);
     }
 
     public int calculateExpandedHeight() {
         float density = getResources().getDisplayMetrics().density;
-        return (int) Math.ceil(194f * density);
+        return (int) Math.ceil(172f * density);
     }
 
     public int calculateCollapsedHeight() {
         float density = getResources().getDisplayMetrics().density;
-        return (int) Math.ceil(36f * density);
+        return (int) Math.ceil(32f * density);
     }
 
     @Override
@@ -266,7 +266,7 @@ public class AccuracyEloWidgetView extends View {
                     float touchY = event.getY();
                     float density = getResources().getDisplayMetrics().density;
                     // Chạm vào thanh header hoặc khi đang thu gọn -> chuyển đổi thu gọn / mở rộng
-                    if (isCollapsed || touchY <= 36f * density) {
+                    if (isCollapsed || touchY <= 32f * density) {
                         toggleCollapsed();
                     }
                 }
@@ -298,24 +298,24 @@ public class AccuracyEloWidgetView extends View {
         canvas.drawRoundRect(bounds, radius, radius, strokePaint);
 
         // 2. Thanh tiêu đề (Header): Biểu tượng âm dương cờ vua + "Accuracy / Elo" + Nút thu gọn
-        float headerY = 18f * density;
-        float iconLeft = 9f * density;
-        float iconTop = headerY - (10f * density);
-        float iconSize = 20f * density;
+        float headerY = 16f * density;
+        float iconLeft = 8f * density;
+        float iconTop = headerY - (9f * density);
+        float iconSize = 18f * density;
         RectF iconBounds = new RectF(iconLeft, iconTop, iconLeft + iconSize, iconTop + iconSize);
 
         // Khung icon vuông bo góc chia đôi màu trắng/đen chuẩn Extension
         headerIconPaint.setShader(new LinearGradient(iconLeft, iconTop, iconLeft + iconSize, iconTop + iconSize,
                 new int[]{0xFFFFFFFF, 0xFFFFFFFF, 0xFF121720, 0xFF121720},
                 new float[]{0f, 0.5f, 0.5f, 1f}, Shader.TileMode.CLAMP));
-        canvas.drawRoundRect(iconBounds, 6f * density, 6f * density, headerIconPaint);
+        canvas.drawRoundRect(iconBounds, 5f * density, 5f * density, headerIconPaint);
 
         strokePaint.setColor(0x33FFFFFF);
         strokePaint.setStrokeWidth(0.8f * density);
-        canvas.drawRoundRect(iconBounds, 6f * density, 6f * density, strokePaint);
+        canvas.drawRoundRect(iconBounds, 5f * density, 5f * density, strokePaint);
 
         // Chấm tròn âm dương ngược lại ở tâm icon
-        float dotR = 4.2f * density;
+        float dotR = 3.8f * density;
         headerDotPaint.setShader(new LinearGradient(iconBounds.centerX() - dotR, iconBounds.centerY() - dotR,
                 iconBounds.centerX() + dotR, iconBounds.centerY() + dotR,
                 new int[]{0xFF121720, 0xFF121720, 0xFFFFFFFF, 0xFFFFFFFF},
@@ -324,17 +324,17 @@ public class AccuracyEloWidgetView extends View {
 
         // Tiêu đề "Accuracy / Elo"
         textPaint.setTextAlign(Paint.Align.LEFT);
-        textPaint.setTextSize(11.5f * density);
+        textPaint.setTextSize(10.5f * density);
         textPaint.setColor(0xFFFFFFFF);
         Paint.FontMetrics fm = textPaint.getFontMetrics();
         float titleBase = headerY - (fm.ascent + fm.descent) / 2f;
-        canvas.drawText("Accuracy / Elo", iconLeft + iconSize + (7f * density), titleBase, textPaint);
+        canvas.drawText("Accuracy / Elo", iconLeft + iconSize + (6f * density), titleBase, textPaint);
 
         // Nút thu gọn / mở rộng (Chevron)
         textPaint.setTextAlign(Paint.Align.CENTER);
-        textPaint.setTextSize(9.5f * density);
+        textPaint.setTextSize(9f * density);
         textPaint.setColor(0x99FFFFFF);
-        float chevronX = w - (14f * density);
+        float chevronX = w - (12f * density);
         canvas.drawText(isCollapsed ? "▼" : "▲", chevronX, titleBase, textPaint);
 
         if (isCollapsed) {
@@ -342,18 +342,18 @@ public class AccuracyEloWidgetView extends View {
         }
 
         // 3. Hai thẻ hiển thị người chơi (White Card & Black Card)
-        float cardLeft = 8f * density;
-        float cardRight = w - (8f * density);
-        float cardH = 72f * density;
-        float cardRadius = 12f * density;
+        float cardLeft = 7f * density;
+        float cardRight = w - (7f * density);
+        float cardH = 64f * density;
+        float cardRadius = 10f * density;
 
         // --- A. THẺ QUÂN TRẮNG ---
-        float whiteTop = 34f * density;
+        float whiteTop = 31f * density;
         drawPlayerCard(canvas, ctx, density, true, userIsWhite, whiteAccuracy, whiteElo,
                 cardLeft, whiteTop, cardRight, whiteTop + cardH, cardRadius);
 
         // --- B. THẺ QUÂN ĐEN ---
-        float blackTop = whiteTop + cardH + (5f * density);
+        float blackTop = whiteTop + cardH + (4.5f * density);
         drawPlayerCard(canvas, ctx, density, false, !userIsWhite, blackAccuracy, blackElo,
                 cardLeft, blackTop, cardRight, blackTop + cardH, cardRadius);
     }
@@ -387,7 +387,7 @@ public class AccuracyEloWidgetView extends View {
         canvas.drawRoundRect(cardBounds, radius, radius, strokePaint);
 
         // 3. Vạch dải màu nhấn ở mép trái (Accent Strip)
-        float stripW = 3.5f * density;
+        float stripW = 3f * density;
         stripBounds.set(cLeft, cTop, cLeft + stripW, cBottom);
         if (isWhiteSide) {
             stripPaint.setShader(new LinearGradient(0, cTop, 0, cBottom, 0xFFFFFFFF, 0xFFB0BAC7, Shader.TileMode.CLAMP));
@@ -402,9 +402,9 @@ public class AccuracyEloWidgetView extends View {
         canvas.restore();
 
         // 4. Hàng đầu: Quân cờ tròn + Tên màu quân + Huy hiệu [BẠN] / [ĐỐI THỦ]
-        float headY = cTop + (13f * density);
-        float pieceR = 6.5f * density;
-        float pieceCx = cLeft + (17f * density);
+        float headY = cTop + (11.5f * density);
+        float pieceR = 5.8f * density;
+        float pieceCx = cLeft + (15f * density);
 
         // Icon quân tròn
         if (isWhiteSide) {
@@ -426,45 +426,59 @@ public class AccuracyEloWidgetView extends View {
         // Tên màu quân ("White" / "Trắng" hoặc "Black" / "Đen")
         String sideName = isWhiteSide ? I18n.get(ctx, "white") : I18n.get(ctx, "black");
         textPaint.setTextAlign(Paint.Align.LEFT);
-        textPaint.setTextSize(11.5f * density);
+        textPaint.setTextSize(10.5f * density);
         textPaint.setColor(isWhiteSide ? 0xFF090C10 : 0xFFFFFFFF);
         Paint.FontMetrics fm = textPaint.getFontMetrics();
         float nameBase = headY - (fm.ascent + fm.descent) / 2f;
-        canvas.drawText(sideName, pieceCx + pieceR + (6f * density), nameBase, textPaint);
+        canvas.drawText(sideName, pieceCx + pieceR + (5f * density), nameBase, textPaint);
 
-        // Huy hiệu Role Badge: [BẠN] / [YOU] (Cyber Blue) hoặc [ĐỐI THỦ] / [OPPONENT]
+        // Huy hiệu Role Badge: [BẠN] / [YOU] (Cyber Blue đậm sắc nét) hoặc [ĐỐI THỦ] / [OPPONENT]
         String roleText = isYou ? I18n.get(ctx, "role_you") : I18n.get(ctx, "role_opponent");
         labelPaint.setTextAlign(Paint.Align.CENTER);
         labelPaint.setTextSize(7.5f * density);
+        labelPaint.setTypeface(Typeface.create("sans-serif", Typeface.BOLD));
         float badgeTextW = labelPaint.measureText(roleText);
-        float badgeW = badgeTextW + (12f * density);
+        float badgeW = badgeTextW + (11f * density);
         float badgeH = 13.5f * density;
-        float badgeRight = cRight - (8f * density);
+        float badgeRight = cRight - (7f * density);
         float badgeLeft = badgeRight - badgeW;
         badgeBounds.set(badgeLeft, headY - (badgeH / 2f), badgeRight, headY + (badgeH / 2f));
 
         if (isYou) {
-            roleBadgePaint.setShader(new LinearGradient(badgeLeft, 0, badgeRight, 0, 0xFF0A84FF, 0xFF0066CC, Shader.TileMode.CLAMP));
+            // Nền xanh Cyber Blue rực rỡ, đậm đà, không mờ nhạt
+            roleBadgePaint.setShader(new LinearGradient(badgeLeft, 0, badgeRight, 0, 0xFF0070F3, 0xFF0051C6, Shader.TileMode.CLAMP));
             canvas.drawRoundRect(badgeBounds, 999f, 999f, roleBadgePaint);
+
+            // Viền sắc nét cho badge
+            strokePaint.setColor(0xFF409CFF);
+            strokePaint.setStrokeWidth(0.8f * density);
+            canvas.drawRoundRect(badgeBounds, 999f, 999f, strokePaint);
+
+            // Chữ BẠN / YOU màu trắng tinh, đậm nét, cực kỳ rõ ràng
             labelPaint.setColor(0xFFFFFFFF);
         } else {
             roleBadgePaint.setShader(null);
-            roleBadgePaint.setColor(isWhiteSide ? 0xFF0F141C : 0x26FFFFFF);
+            roleBadgePaint.setColor(isWhiteSide ? 0xFF161C26 : 0x2EFFFFFF);
             canvas.drawRoundRect(badgeBounds, 999f, 999f, roleBadgePaint);
-            labelPaint.setColor(isWhiteSide ? 0xFFFFFFFF : 0xEBFFFFFF);
+
+            strokePaint.setColor(isWhiteSide ? 0x26000000 : 0x2EFFFFFF);
+            strokePaint.setStrokeWidth(0.8f * density);
+            canvas.drawRoundRect(badgeBounds, 999f, 999f, strokePaint);
+
+            labelPaint.setColor(isWhiteSide ? 0xFFFFFFFF : 0xF0FFFFFF);
         }
         Paint.FontMetrics bFm = labelPaint.getFontMetrics();
         float badgeBase = badgeBounds.centerY() - (bFm.ascent + bFm.descent) / 2f;
         canvas.drawText(roleText, badgeBounds.centerX(), badgeBase, labelPaint);
 
         // 5. Hai ô số liệu (Metrics Grid): Ô Độ Chính Xác (%) & Ô Estimated Elo
-        float gridTop = cTop + (25.5f * density);
-        float gridH = 39f * density;
-        float gap = 5f * density;
-        float boxW = (cW - (16f * density) - gap) / 2f;
+        float gridTop = cTop + (22.5f * density);
+        float gridH = 35f * density;
+        float gap = 4.5f * density;
+        float boxW = (cW - (14f * density) - gap) / 2f;
 
         // Ô 1: ACCURACY
-        float b1Left = cLeft + (8f * density);
+        float b1Left = cLeft + (7f * density);
         float b1Right = b1Left + boxW;
         metricBoxBounds.set(b1Left, gridTop, b1Right, gridTop + gridH);
         drawMetricBox(canvas, ctx, density, isWhiteSide, metricBoxBounds,
@@ -483,30 +497,30 @@ public class AccuracyEloWidgetView extends View {
     }
 
     private void drawMetricBox(Canvas canvas, Context ctx, float density,
-                               boolean isWhiteSide, RectF boxRect,
-                               String label, String value,
-                               boolean isAccuracy, float numVal) {
+                                boolean isWhiteSide, RectF boxRect,
+                                String label, String value,
+                                boolean isAccuracy, float numVal) {
         // Nền ô số liệu
         metricBoxBgPaint.setColor(isWhiteSide ? 0x0D0F141C : 0x14FFFFFF);
-        canvas.drawRoundRect(boxRect, 7f * density, 7f * density, metricBoxBgPaint);
+        canvas.drawRoundRect(boxRect, 6f * density, 6f * density, metricBoxBgPaint);
 
         strokePaint.setColor(isWhiteSide ? 0x0F000000 : 0x1AFFFFFF);
         strokePaint.setStrokeWidth(0.8f * density);
-        canvas.drawRoundRect(boxRect, 7f * density, 7f * density, strokePaint);
+        canvas.drawRoundRect(boxRect, 6f * density, 6f * density, strokePaint);
 
         float centerX = boxRect.centerX();
 
         // Nhãn chỉ số nhỏ ("CHÍNH XÁC" / "ACCURACY" hoặc "ELO ĐÁNH GIÁ" / "EST. ELO")
         labelPaint.setTextAlign(Paint.Align.CENTER);
-        labelPaint.setTextSize(7f * density);
+        labelPaint.setTextSize(6.5f * density);
         labelPaint.setColor(isWhiteSide ? 0x8A090C10 : 0x99FFFFFF);
         Paint.FontMetrics lFm = labelPaint.getFontMetrics();
-        float labelBase = boxRect.top + (11f * density) - (lFm.ascent + lFm.descent) / 2f;
+        float labelBase = boxRect.top + (10f * density) - (lFm.ascent + lFm.descent) / 2f;
         canvas.drawText(label, centerX, labelBase, labelPaint);
 
         // Giá trị số lớn nổi bật
         valPaint.setTextAlign(Paint.Align.CENTER);
-        valPaint.setTextSize(13.5f * density);
+        valPaint.setTextSize(12f * density);
 
         if (isAccuracy) {
             if (numVal >= 85f) {
@@ -528,7 +542,7 @@ public class AccuracyEloWidgetView extends View {
         }
 
         Paint.FontMetrics vFm = valPaint.getFontMetrics();
-        float valBase = boxRect.top + (27.5f * density) - (vFm.ascent + vFm.descent) / 2f;
+        float valBase = boxRect.top + (24.5f * density) - (vFm.ascent + vFm.descent) / 2f;
         canvas.drawText(value, centerX, valBase, valPaint);
     }
 }
