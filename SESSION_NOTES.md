@@ -221,15 +221,15 @@
         - Biên dịch sạch 40 file Java, đóng gói thành công `patches-2.0.60.mpp` (189,674,046 bytes).
         - Tạo GitHub Release `v2.0.60` với file `.mpp` đính kèm.
 
-  29. **Bản Vá v2.0.61 — Tinh Chỉnh Widget Accuracy / Elo: Nhỏ Gọn & Sắc Nét**:
+  29. **Bản Vá v2.0.61 — Tinh Chỉnh Widget Accuracy / Elo: Nhỏ Gọn & Sắc Nét Tuyệt Đối**:
       - **Yêu cầu người dùng**: Thu nhỏ widget thêm một chút cho đỡ che bàn cờ và sửa chữ `[BẠN]` bị mờ trong ảnh chụp màn hình.
       - **Giải pháp**:
         - Tinh chỉnh kích thước widget thu nhỏ ~12-15%: chiều rộng giảm từ 186dp xuống 164dp, chiều cao mở rộng giảm từ 194dp xuống 172dp, chiều cao thu gọn giảm từ 36dp xuống 32dp. Căn chỉnh tỷ lệ card (64dp), icon (18dp), font chữ, lề và khoảng cách padding cân đối hài hoà.
-        - Khắc phục triệt để lỗi mờ chữ huy hiệu `[BẠN]` / `[YOU]`: Thay gradient nền sang Cyber Blue rực rỡ (`#0070F3` đến `#0051C6`), bổ sung stroke viền `#409CFF` tương phản cao, chữ màu trắng tinh in đậm (`#FFFFFF`, bold) nổi bật và sắc nét tuyệt đối trên nền thẻ quân trắng.
+        - Khắc phục triệt để lỗi mờ chữ huy hiệu `[BẠN]` / `[YOU]`: Phát hiện và sửa tận gốc lỗi rò rỉ trạng thái alpha (alpha leak từ `0x2EFFFFFF` của thẻ đối thủ làm shader bị nhân giảm còn 18% độ mờ). Chuyển `roleBadgePaint` sang nền Cyber Blue nguyên khối `#0A84FF` đặc 100% opaque, viền vi hạt `#64D2FF` tương phản cao, chữ màu trắng tinh in đậm (`#FFFFFF`, bold) và áp dụng `setFakeBoldText(true)` giúp các dấu thanh tiếng Việt (như dấu nặng trong chữ `Ạ`) nổi bật và sắc nét tuyệt đối trên nền thẻ quân trắng.
         - Cập nhật ngưỡng chạm mở rộng / thu gọn `touchY <= 32dp` trong `onTouchEvent`.
         - Bump phiên bản lên `v2.0.61` trong `patches-bundle.json` và `patches-list.json`.
-        - Biên dịch sạch 40 file Java, đóng gói thành công `patches-2.0.61.mpp` (189,673,982 bytes).
-        - Tạo GitHub Release `v2.0.61` chính thức đính kèm tệp bundle.
+        - Biên dịch sạch 40 file Java, đóng gói thành công `patches-2.0.61.mpp` (189,673,974 bytes).
+        - Cập nhật GitHub Release `v2.0.61` chính thức đính kèm tệp bundle mới.
 
 ---
 
@@ -237,9 +237,9 @@
 - **Phiên bản mới nhất trên GitHub**: `v2.0.61` (tag `v2.0.61`).
 - **File tải bundle**: `https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.61/patches-2.0.61.mpp`
 - **Checklist Kiểm Thử**:
-  - [x] Đã biên dịch sạch 40 file Java và đóng gói thành công `patches-2.0.61.mpp` (189,673,982 bytes).
+  - [x] Đã biên dịch sạch 40 file Java và đóng gói thành công `patches-2.0.61.mpp` (189,673,974 bytes).
   - [x] Widget Accuracy / Elo nhỏ gọn hơn 12-15%, không che tầm nhìn bàn cờ.
-  - [x] Huy hiệu [BẠN] / [YOU] sắc nét tuyệt đối, chữ trắng tinh trên nền Cyber Blue nổi bật.
+  - [x] Huy hiệu [BẠN] / [YOU] sắc nét tuyệt đối, loại bỏ hoàn toàn lỗi alpha leak, chữ trắng tinh trên nền Cyber Blue nổi bật.
   - [x] Cập nhật đồng bộ `patches-bundle.json` và `patches-list.json` sang version 2.0.61.
   - [x] Cập nhật đầy đủ tài liệu: `GEMINI.md`, `PROJECT_MEMORY.md`, `SESSION_NOTES.md`.
 

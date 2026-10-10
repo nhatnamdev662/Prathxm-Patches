@@ -435,22 +435,24 @@ public class AccuracyEloWidgetView extends View {
         // Huy hiệu Role Badge: [BẠN] / [YOU] (Cyber Blue đậm sắc nét) hoặc [ĐỐI THỦ] / [OPPONENT]
         String roleText = isYou ? I18n.get(ctx, "role_you") : I18n.get(ctx, "role_opponent");
         labelPaint.setTextAlign(Paint.Align.CENTER);
-        labelPaint.setTextSize(7.5f * density);
+        labelPaint.setTextSize(8f * density);
         labelPaint.setTypeface(Typeface.create("sans-serif", Typeface.BOLD));
+        labelPaint.setFakeBoldText(true);
         float badgeTextW = labelPaint.measureText(roleText);
         float badgeW = badgeTextW + (11f * density);
-        float badgeH = 13.5f * density;
+        float badgeH = 14f * density;
         float badgeRight = cRight - (7f * density);
         float badgeLeft = badgeRight - badgeW;
         badgeBounds.set(badgeLeft, headY - (badgeH / 2f), badgeRight, headY + (badgeH / 2f));
 
         if (isYou) {
-            // Nền xanh Cyber Blue rực rỡ, đậm đà, không mờ nhạt
-            roleBadgePaint.setShader(new LinearGradient(badgeLeft, 0, badgeRight, 0, 0xFF0070F3, 0xFF0051C6, Shader.TileMode.CLAMP));
+            // Nền xanh Cyber Blue rực rỡ, đậm đà, 100% OPAQUE - không bao giờ bị dính alpha từ thẻ khác
+            roleBadgePaint.setShader(null);
+            roleBadgePaint.setColor(0xFF0A84FF);
             canvas.drawRoundRect(badgeBounds, 999f, 999f, roleBadgePaint);
 
-            // Viền sắc nét cho badge
-            strokePaint.setColor(0xFF409CFF);
+            // Viền sắc nét cho badge Cyber Blue
+            strokePaint.setColor(0xFF64D2FF);
             strokePaint.setStrokeWidth(0.8f * density);
             canvas.drawRoundRect(badgeBounds, 999f, 999f, strokePaint);
 
@@ -458,7 +460,7 @@ public class AccuracyEloWidgetView extends View {
             labelPaint.setColor(0xFFFFFFFF);
         } else {
             roleBadgePaint.setShader(null);
-            roleBadgePaint.setColor(isWhiteSide ? 0xFF161C26 : 0x2EFFFFFF);
+            roleBadgePaint.setColor(isWhiteSide ? 0xFF161C26 : 0x33FFFFFF);
             canvas.drawRoundRect(badgeBounds, 999f, 999f, roleBadgePaint);
 
             strokePaint.setColor(isWhiteSide ? 0x26000000 : 0x2EFFFFFF);
@@ -470,6 +472,7 @@ public class AccuracyEloWidgetView extends View {
         Paint.FontMetrics bFm = labelPaint.getFontMetrics();
         float badgeBase = badgeBounds.centerY() - (bFm.ascent + bFm.descent) / 2f;
         canvas.drawText(roleText, badgeBounds.centerX(), badgeBase, labelPaint);
+        labelPaint.setFakeBoldText(false);
 
         // 5. Hai ô số liệu (Metrics Grid): Ô Độ Chính Xác (%) & Ô Estimated Elo
         float gridTop = cTop + (22.5f * density);

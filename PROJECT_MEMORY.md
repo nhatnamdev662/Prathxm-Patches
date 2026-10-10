@@ -275,18 +275,23 @@
   - **Chuẩn hoá schema JSON 100%**: Chỉ giữ đúng 5 trường chuẩn schema của Morphe Manager (`created_at`, `description`, `download_url`, `signature_download_url`, `version`).
   - **Bump phiên bản lên v2.0.60**: Tuân thủ quy tắc sống còn trong `rule.md` để tự động dọn dẹp cache Morphe Manager và reset ledger gián đoạn của `PatchBundleLoadGuard`.
   - **Đồng bộ toàn bộ metadata**: Cập nhật đồng bộ `patches-list.json` và `patches-bundle.json`.
-  - **Biên dịch sạch & Phát hành**: Biên dịch thành công 40 file Java thành `extension.mpe`, tạo `patches-2.0.60.mpp` (189,674,046 bytes) và tạo GitHub Release `v2.0.60`.
+- **v2.0.61 (Tinh Chỉnh Widget Accuracy / Elo: Nhỏ Gọn & Sắc Nét Tuyệt Đối)**:
+  - **Thu nhỏ kích thước widget ~12-15%**: Tinh chỉnh kích thước tối ưu 164x172dp (so với 186x194dp ban đầu), thanh header mini 32dp khi thu gọn, mở rộng tối đa tầm quan sát bàn cờ mà không che khuất các quân hay mũi tên nước đi.
+  - **Sửa triệt để lỗi mờ chữ huy hiệu [BẠN] / [YOU]**: Khắc phục tận gốc lỗi rò rỉ trạng thái alpha (`0x2EFFFFFF` từ thẻ đối thủ rò rỉ sang paint thẻ người chơi khiến độ mờ bị giảm còn 18%). Chuyển sang nền Cyber Blue nguyên khối `#0A84FF` đặc 100% opaque, bổ sung viền Cyber Cyan tương phản cao `#64D2FF`, chữ màu trắng tinh in đậm (`#FFFFFF`, bold) và áp dụng `setFakeBoldText(true)` giúp các dấu thanh tiếng Việt (như dấu nặng trong chữ `Ạ`) nổi bật và sắc nét tuyệt đối trên nền thẻ quân trắng.
+  - **Cập nhật ngưỡng chạm mở rộng / thu gọn**: Điều chỉnh `touchY <= 32dp` khớp chính xác với chiều cao header mới.
+  - **Bump phiên bản lên v2.0.61**: Cập nhật đồng bộ `patches-bundle.json` và `patches-list.json`.
+  - **Biên dịch sạch & Phát hành**: Biên dịch thành công 40 file Java thành `extension.mpe`, tạo `patches-2.0.61.mpp` (189,673,974 bytes) và cập nhật GitHub Release `v2.0.61`.
 
 ---
 
 ## 3. TRẠNG THÁI HIỆN TẠI & KẾ HOẠCH TIẾP THEO
 
 ### 3.1. Trạng thái hiện tại
-- **Phiên bản mới nhất**: **v2.0.60** (`patches-2.0.60.mpp`).
-- **Kho lưu trữ GitHub**: Đã phát hành Release `v2.0.60`.
+- **Phiên bản mới nhất**: **v2.0.61** (`patches-2.0.61.mpp`).
+- **Kho lưu trữ GitHub**: Đã phát hành Release `v2.0.61`.
 - **Trạng thái Repo**: 100% sạch, không commit file `.py`, root ngăn nắp.
 - **Tiến trình kỹ thuật**:
   1. Nguồn Morphe Manager đã được chuẩn hoá triệt để, nạp thành công 8 bản vá không còn lỗi `(!)`.
-  2. Widget Accuracy/Elo Cyber Glass kéo thả tự do hoạt động mượt mà, lưu toạ độ ổn định.
+  2. Widget Accuracy/Elo Cyber Glass nhỏ gọn hơn 12-15%, huy hiệu `[BẠN]` sắc nét tuyệt đối, kéo thả tự do hoạt động mượt mà, lưu toạ độ ổn định.
   3. Bàn cờ và thanh Eval Bar giữ nguyên trạng thái hoàn hảo 1:1.
 
