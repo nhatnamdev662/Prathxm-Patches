@@ -265,10 +265,11 @@
 - **v2.0.59 (Widget Độ Chính Xác (%) & Elo Trực Tiếp Chuẩn 100% Extension)**:
   - **Widget nổi kéo thả độc lập (`AccuracyEloWidgetView`)**: Chuyển đổi toàn diện tính năng Độ Chính Xác (%) và Estimated Elo thành Widget Cyber Glass floating cao cấp giống hệt Chrome Extension NNVC.
   - **Phân chia 2 thẻ người chơi Trắng & Đen riêng biệt**: Nhận diện thông minh bên người chơi `[BẠN]` / `[YOU]` với viền phát sáng Cyber Blue `#0A84FF` và bên `[ĐỐI THỦ]` / `[OPPONENT]`.
-  - **Kéo thả tự do & Ghi nhớ vị trí**: Hỗ trợ cảm ứng kéo thả linh hoạt, hiệu ứng scale 1.02x và alpha 0.95x, tự động kẹp an toàn mép màn hình và ghi nhớ toạ độ `(x, y)` vào SharedPreferences qua `StockfishSettings`.
-  - **Nút thu gọn / mở rộng tiện ích**: Header tích hợp chevron thu gọn thành mini pill 36dp giúp tiết kiệm không gian màn hình tối đa khi cần.
+  - **Kéo thả tự do & Ghi nhớ vị trí**: Hỗ trợ cảm ứng kéo thả linh hoạt, hiệu ứng scale 1.02x và alpha 0.95x, tự động kẹp an toàn mép màn hình và ghi nhớ toạ độ `(x, y)` vào SharedPreferences qua `StockfishSettings`. Loại bỏ hoàn toàn hiện tượng giật vị trí khi engine stream kết quả liên tục.
+  - **Nút thu gọn / mở rộng tiện ích**: Header tích hợp chevron thu gọn thành mini pill 36dp giúp tiết kiệm không gian màn hình tối đa khi cần, tự động re-clamp chống tràn đáy màn hình khi mở rộng.
+  - **Tối ưu bộ nhớ & Safe Area**: Tái sử dụng pre-allocated Paint fields trong `onDraw()`, tôn trọng WindowInsets top safe area, tự động re-clamp khi xoay màn hình (orientation change).
   - **Đồng bộ song ngữ Anh / Việt**: Khớp 100% với `I18n.java`.
-  - **Biên dịch & Đóng gói**: Hoàn thành sạch 40 file Java, đóng gói thành công `patches-2.0.59.mpp` (189,673,273 bytes).
+  - **Biên dịch & Đóng gói**: Hoàn thành sạch 40 file Java, đóng gói thành công `patches-2.0.59.mpp` (189,674,047 bytes).
 
 ---
 

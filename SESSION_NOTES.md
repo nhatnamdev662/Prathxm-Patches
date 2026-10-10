@@ -202,10 +202,12 @@
       - **Hiện thực trên Android Mobile**:
         - Tạo `AccuracyEloWidgetView.java` render 100% bằng Canvas tự do không phụ thuộc XML, tối ưu hiệu năng tuyệt đối.
         - Xử lý cảm ứng kéo thả mượt mà trong `onTouchEvent`: tự động theo dõi toạ độ ngón tay, scale 1.02x / alpha 0.95x khi kéo, kẹp biên an toàn không bao giờ văng khỏi màn hình, lưu vị trí `(x, y)` vào SharedPreferences (`accuracy_widget_x`, `accuracy_widget_y`) qua `StockfishSettings`.
-        - Nút thu gọn / mở rộng: Bấm vào thanh header tự động thu gọn widget thành mini pill cao chỉ 36dp hoặc mở rộng đầy đủ 194dp, lưu trạng thái vào `accuracy_widget_collapsed`.
-        - Cập nhật `OverlayManager.java`: Tích hợp `updateAccuracyEloWidget`, `hideAccuracyEloWidget`, `resetAccuracyEloWidget`, tự động dọn dẹp các pill cũ còn sót lại và nâng elevation lên 25f.
+        - Nút thu gọn / mở rộng: Bấm vào thanh header tự động thu gọn widget thành mini pill cao chỉ 36dp hoặc mở rộng đầy đủ 194dp, lưu trạng thái vào `accuracy_widget_collapsed`. Đã sửa lỗi tính toán `maxY` kẹp biên chính xác theo chiều cao mở rộng thực tế và safe area `topInset`.
+        - Tối ưu bộ nhớ Canvas: Tái sử dụng pre-allocated `headerIconPaint`, `headerDotPaint`, `stripPaint`, `metricBoxBgPaint`, triệt tiêu 100% object allocations trong `onDraw()`.
+        - Cập nhật `OverlayManager.java`: Tích hợp `updateAccuracyEloWidget`, `hideAccuracyEloWidget`, `resetAccuracyEloWidget`, giữ nguyên vị trí khi đang kéo thả (loại bỏ hiện tượng giật vị trí khi engine stream eval), tự động dọn dẹp các pill cũ còn sót lại và nâng elevation lên 25f.
+        - Tự động kẹp biên an toàn khi xoay màn hình (orientation change) qua `parentLayoutListener`.
         - Cập nhật `StockfishExtension.java` & `StockfishSettingsDialog.java`: Đồng bộ bật/tắt tức thì, tự reset khi ván mới, tự cập nhật số liệu thời gian thực từ Torch WASM CEE.
-      - **Biên dịch & Đóng gói**: Biên dịch sạch 40 file Java, đóng gói thành công `patches-2.0.59.mpp` (189,673,273 bytes).
+      - **Biên dịch & Đóng gói**: Biên dịch sạch 40 file Java, đóng gói thành công `patches-2.0.59.mpp` (189,674,047 bytes).
 
 ---
 
@@ -213,7 +215,7 @@
 - **Phiên bản mới nhất trên GitHub**: `v2.0.59` (tag `v2.0.59`).
 - **File tải bundle**: `https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.59/patches-2.0.59.mpp`
 - **Checklist Kiểm Thử**:
-  - [x] Đã biên dịch sạch 40 file Java và đóng gói thành công `patches-2.0.59.mpp` (189,673,273 bytes).
+  - [x] Đã biên dịch sạch 40 file Java và đóng gói thành công `patches-2.0.59.mpp` (189,674,047 bytes).
   - [x] Giao diện Widget Độ chính xác (%) và Estimated Elo chuẩn 100% Extension (`AccuracyEloWidgetView`).
   - [x] Thẻ Trắng và Thẻ Đen phân biệt rõ rệt, viền Cyber Blue phát sáng cho bên người chơi `[BẠN]`.
   - [x] Cảm ứng kéo thả tự do khắp màn hình, tự động ghi nhớ vị trí và kẹp biên an toàn.
