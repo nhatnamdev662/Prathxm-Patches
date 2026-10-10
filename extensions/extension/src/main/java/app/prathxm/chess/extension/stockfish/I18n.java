@@ -114,11 +114,21 @@ public class I18n {
             case "engine_choice":
                 return isVi ? "Chọn Engine" : "Engine";
             case "engine_choice_hint":
-                return isVi ? "Chọn động cơ phân tích (Komodo 3.3 hoặc Stockfish 18)." : "Select engine (Komodo 3.3 or Stockfish 18).";
+                return isVi ? "Chọn động cơ phân tích (Stockfish Native, Komodo 3.3 hoặc Stockfish 18)." : "Select engine (Stockfish Native, Komodo 3.3 or Stockfish 18).";
+            case "engine_stockfish_native":
+                return isVi ? "Stockfish Native (Ổn Định)" : "Stockfish Native (Stable)";
             case "engine_komodo":
                 return "Komodo 3.3";
             case "engine_stockfish":
                 return "Stockfish 18";
+            case "debug_log":
+                return isVi ? "Nhật Ký Hoạt Động (Debug Log)" : "Activity Log (Debug Log)";
+            case "debug_log_hint":
+                return isVi ? "Xem, sao chép log tại /sdcard/Android/data/com.chess/files/nnvc_debug.log" : "View and copy logs at /sdcard/Android/data/com.chess/files/nnvc_debug.log";
+            case "floating_log_pill":
+                return isVi ? "Nút Log Nổi Trên Bàn Cờ" : "Floating Log Pill on Board";
+            case "floating_log_pill_hint":
+                return isVi ? "Hiện nút tròn nhỏ trên màn hình để mở log nhanh khi đang đấu." : "Show small floating pill on screen for instant log view during match.";
             case "auto_depth":
                 return isVi ? "Tự Động Độ Sâu Theo Elo" : "Auto Depth by Elo";
             case "auto_depth_hint":

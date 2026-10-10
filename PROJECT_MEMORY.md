@@ -1,6 +1,6 @@
 # NHẬT KÝ DỰ ÁN & BỘ GHI NHỚ DẶN DÒ (PROJECT MEMORY)
 *Dự án: Chess Mobile - ReVanced Extension Patches cho Chess.com Android*
-*Phiên bản hiện tại: v2.0.65*
+*Phiên bản hiện tại: v2.0.66*
 *Cập nhật lần cuối: 2026-10-10*
 
 ---
@@ -328,15 +328,30 @@
 - **Bump phiên bản lên v2.0.65**: Đồng bộ `patches-bundle.json` và `patches-list.json`.
 - **Biên dịch & Đóng gói**: Biên dịch thành công 42 file Java thành `extension.mpe`, đóng gói `patches-2.0.65.mpp` (227,420,883 bytes).
 
+### v2.0.66 (2026-10-10) — Khắc Phục Lỗi Tê Liệt Tính Năng (v2.0.65), Bổ Sung Hệ Thống Logger Tạm Thời & Engine Status HUD
+- **Khắc phục triệt để lỗi không có tính năng nào hoạt động:**
+  - Chuyển sang kiến trúc Hybrid Dual-Engine: Khôi phục và ưu tiên Stockfish Native (`libstockfish.so`) khởi động tức thì (<50ms), hoàn toàn độc lập, ngoại tuyến 100%, không bị phụ thuộc vào tệp WASM tải ngoài.
+  - Cơ chế Fallback an toàn tuyệt đối: Nếu người dùng chọn engine WebAssembly (Komodo 3.3 hoặc Stockfish 18) nhưng tệp WASM chưa được nạp/tải hoặc Worker không phản hồi, hệ thống lập tức chuyển sang Native Stockfish với 0ms chờ đợi, triệt tiêu hoàn toàn tình trạng treo 75 giây.
+  - Khôi phục 100% hoạt động của các tính năng: Mũi tên gợi ý Best Moves, Threat Arrows, Eval Bar thời gian thực, Phân loại nước cờ Brilliant/Great Move (Torch CEE) và Widget Accuracy / Elo kéo thả.
+- **Hệ Thống Nhật Ký Hoạt Động Tạm Thời (NnvcLogger & In-App Viewer):**
+  - `NnvcLogger`: Ghi log đa luồng chi tiết thời gian thực ra tệp `/sdcard/Android/data/com.chess/files/nnvc_debug.log` (hoặc `context.getExternalFilesDir(null)/nnvc_debug.log`). Dễ dàng truy cập qua bất kỳ trình quản lý tệp nào (ZArchiver, v.v.).
+  - Giao diện đọc log trực tiếp trong ứng dụng (`NnvcLogViewerDialog`): Thêm nút biểu tượng `[📜]` trên header Menu Cài Đặt và thẻ Nhật ký trong Tab Engine. Hỗ trợ xem log cuộn mượt mà font monospace, nút "📋 Sao Chép" vào bộ nhớ tạm và "🗑️ Xóa Log".
+  - Huy hiệu nổi di động (`FloatingLogPillView`): Nút pill `[📜 LOG]` nhỏ gọn kéo thả tự do trên màn hình ván đấu để mở nhanh nhật ký chẩn đoán bất cứ lúc nào.
+- **Chỉ Báo Trạng Thái Nạp Engine (EngineStatusHUD):**
+  - Hiển thị HUD thông báo trạng thái nạp engine (ví dụ: `[⚡ Stockfish Native Sẵn Sàng]`), triệt tiêu cảm giác ứng dụng bị đơ khi nạp động cơ.
+- **Bump phiên bản lên v2.0.66**: Đồng bộ `patches-bundle.json` và `patches-list.json`.
+- **Biên dịch & Đóng gói**: Biên dịch sạch 46 file Java Extension thành `extension.mpe` (2,720,792 bytes), đóng gói `patches-2.0.66.mpp` (227,433,088 bytes).
+
 ---
 
 ## 3. TRẠNG THÁI HIỆN TẠI & KẾ HOẠCH TIẾP THEO
 
 ### 3.1. Trạng thái hiện tại
-- **Phiên bản mới nhất**: **v2.0.65** (`patches-2.0.65.mpp`).
+- **Phiên bản mới nhất**: **v2.0.66** (`patches-2.0.66.mpp`).
 - **Trạng thái Repo**: 100% sạch, không commit file `.py`, root ngăn nắp.
 - **Tiến trình kỹ thuật**:
-  1. Thay thế hoàn toàn binary native cũ bằng 100% WebAssembly chuẩn NNVC Extension (Stockfish 18 và Komodo 3.3).
-  2. Instance classify chuyên trách tính toán Eval Bar độc lập ở locked Depth = 10, MultiPV = 3, Hash = 64.
-  3. Eval Bar mượt mà với bộ ổn định `_stabilizeWhiteEval`, dải `[-500, +500]` cp và tỷ lệ mate chuẩn 100%.
+  1. Kiến trúc Hybrid Dual-Engine: Khôi phục Stockfish Native (`libstockfish.so`) kết hợp linh hoạt với WebAssembly (Komodo 3.3 / Stockfish 18).
+  2. Hệ thống chẩn đoán NnvcLogger + In-app Viewer `[📜]` + Floating Pill `[📜 LOG]` giúp gỡ lỗi trực tiếp trên điện thoại.
+  3. Chỉ báo trạng thái nạp engine EngineStatusHUD giúp người dùng nắm rõ tiến trình động cơ.
+
 

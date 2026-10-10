@@ -5,7 +5,7 @@ import android.content.SharedPreferences;
 
 public class StockfishSettings {
 
-    private static final String PREFS_NAME = "stockfish_settings";
+    public static final String PREFS_NAME = "stockfish_settings";
     
     // Preference Keys
     private static final String KEY_ENGINE_ENABLED = "engine_enabled";
@@ -132,10 +132,29 @@ public class StockfishSettings {
     public static final int DEFAULT_ELO = 2200;
     public static final int ELO_STEP = 10;
 
-    // Engine Choices matching Extension NNVC (_ENGINE_SPECS)
-    public static final String ENGINE_KOMODO = "komodo"; // Komodo 3.3 (default)
-    public static final String ENGINE_STOCKFISH18 = "stockfish18"; // Stockfish 18 / 19
+    // Engine Choices matching Extension NNVC & Native Hybrid
+    public static final String ENGINE_STOCKFISH_NATIVE = "stockfish_native"; // Native Stockfish (instant, offline, zero battery drain)
+    public static final String ENGINE_KOMODO = "komodo"; // Komodo 3.3 WASM
+    public static final String ENGINE_STOCKFISH18 = "stockfish18"; // Stockfish 18 / 19 WASM
     private static final String KEY_ENGINE_CHOICE = "engine_choice";
+
+    public static String getEngineChoice(Context context) {
+        return getPrefs(context).getString(KEY_ENGINE_CHOICE, ENGINE_STOCKFISH_NATIVE);
+    }
+
+    public static void setEngineChoice(Context context, String choice) {
+        getPrefs(context).edit().putString(KEY_ENGINE_CHOICE, choice).apply();
+    }
+
+    private static final String KEY_FLOATING_LOG_PILL = "floating_log_pill_enabled";
+
+    public static boolean isFloatingLogPillEnabled(Context context) {
+        return getPrefs(context).getBoolean(KEY_FLOATING_LOG_PILL, false);
+    }
+
+    public static void setFloatingLogPillEnabled(Context context, boolean enabled) {
+        getPrefs(context).edit().putBoolean(KEY_FLOATING_LOG_PILL, enabled).apply();
+    }
 
     // Komodo Styles matching Extension NNVC (_KOMODO_STYLES)
     public static final String STYLE_DEFAULT = "Default";
@@ -144,14 +163,6 @@ public class StockfishSettings {
     private static final String KEY_KOMODO_STYLE = "komodo_style";
 
     private static final String KEY_AUTO_DEPTH = "auto_depth_enabled";
-
-    public static String getEngineChoice(Context context) {
-        return getPrefs(context).getString(KEY_ENGINE_CHOICE, ENGINE_KOMODO);
-    }
-
-    public static void setEngineChoice(Context context, String choice) {
-        getPrefs(context).edit().putString(KEY_ENGINE_CHOICE, choice).apply();
-    }
 
     public static String getKomodoStyle(Context context) {
         return getPrefs(context).getString(KEY_KOMODO_STYLE, STYLE_DEFAULT);

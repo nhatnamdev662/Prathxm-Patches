@@ -221,7 +221,33 @@ public class StockfishSettingsDialog {
         });
         headerBtns.addView(langBtn);
 
-        // Spacer between Lang button and Close button
+        // Spacer between Lang button and Log button
+        View hdrSpacer1 = new View(activity);
+        hdrSpacer1.setLayoutParams(new LinearLayout.LayoutParams((int) (8 * density), 1));
+        headerBtns.addView(hdrSpacer1);
+
+        // Debug Log Button (📜)
+        TextView logBtn = new TextView(activity);
+        logBtn.setText("📜");
+        logBtn.setTextColor(COLOR_TEXT_PRIMARY);
+        logBtn.setTextSize(12);
+        logBtn.setGravity(Gravity.CENTER);
+        int logPad = (int) (6 * density);
+        logBtn.setPadding(logPad, (int) (3 * density), logPad, (int) (3 * density));
+
+        GradientDrawable logBg = new GradientDrawable();
+        logBg.setColor(0x22FFFFFF);
+        logBg.setCornerRadius(8 * density);
+        logBg.setStroke((int) (1 * density), COLOR_CARD_BORDER);
+        logBtn.setBackground(logBg);
+
+        logBtn.setOnClickListener(v -> {
+            HapticHelper.pop(activity, v);
+            NnvcLogViewerDialog.show(activity);
+        });
+        headerBtns.addView(logBtn);
+
+        // Spacer between Log button and Close button
         View hdrSpacer = new View(activity);
         hdrSpacer.setLayoutParams(new LinearLayout.LayoutParams((int) (8 * density), 1));
         headerBtns.addView(hdrSpacer);
@@ -416,12 +442,17 @@ public class StockfishSettingsDialog {
         engineChoiceCard.addView(engineBtnRow);
 
         final String[] curEngine = { StockfishSettings.getEngineChoice(activity) };
+        final TextView btnNative = createTabButton(activity, I18n.get(activity, "engine_stockfish_native"), StockfishSettings.ENGINE_STOCKFISH_NATIVE.equals(curEngine[0]), density);
         final TextView btnKomodo = createTabButton(activity, I18n.get(activity, "engine_komodo"), StockfishSettings.ENGINE_KOMODO.equals(curEngine[0]), density);
         final TextView btnStockfish = createTabButton(activity, I18n.get(activity, "engine_stockfish"), StockfishSettings.ENGINE_STOCKFISH18.equals(curEngine[0]), density);
+        engineBtnRow.addView(btnNative);
+        View btnSpacing1 = new View(activity);
+        btnSpacing1.setLayoutParams(new LinearLayout.LayoutParams((int) (6 * density), 1));
+        engineBtnRow.addView(btnSpacing1);
         engineBtnRow.addView(btnKomodo);
-        View btnSpacing = new View(activity);
-        btnSpacing.setLayoutParams(new LinearLayout.LayoutParams((int) (8 * density), 1));
-        engineBtnRow.addView(btnSpacing);
+        View btnSpacing2 = new View(activity);
+        btnSpacing2.setLayoutParams(new LinearLayout.LayoutParams((int) (6 * density), 1));
+        engineBtnRow.addView(btnSpacing2);
         engineBtnRow.addView(btnStockfish);
 
         // Komodo Styles container
@@ -454,10 +485,24 @@ public class StockfishSettingsDialog {
         View sSp2 = new View(activity); sSp2.setLayoutParams(new LinearLayout.LayoutParams((int) (6 * density), 1)); styleBtnRow.addView(sSp2);
         styleBtnRow.addView(btnStyleDefens);
 
+        btnNative.setOnClickListener(v -> {
+            HapticHelper.tick(activity, v);
+            curEngine[0] = StockfishSettings.ENGINE_STOCKFISH_NATIVE;
+            StockfishSettings.setEngineChoice(activity, curEngine[0]);
+            updateTabStyle(btnNative, true, density);
+            updateTabStyle(btnKomodo, false, density);
+            updateTabStyle(btnStockfish, false, density);
+            komodoStyleLayout.setVisibility(View.GONE);
+            if (StockfishSettings.isEngineEnabled(activity)) {
+                StockfishExtension.triggerAnalysisForCurrentState();
+            }
+        });
+
         btnKomodo.setOnClickListener(v -> {
             HapticHelper.tick(activity, v);
             curEngine[0] = StockfishSettings.ENGINE_KOMODO;
             StockfishSettings.setEngineChoice(activity, curEngine[0]);
+            updateTabStyle(btnNative, false, density);
             updateTabStyle(btnKomodo, true, density);
             updateTabStyle(btnStockfish, false, density);
             komodoStyleLayout.setVisibility(View.VISIBLE);
@@ -470,6 +515,7 @@ public class StockfishSettingsDialog {
             HapticHelper.tick(activity, v);
             curEngine[0] = StockfishSettings.ENGINE_STOCKFISH18;
             StockfishSettings.setEngineChoice(activity, curEngine[0]);
+            updateTabStyle(btnNative, false, density);
             updateTabStyle(btnKomodo, false, density);
             updateTabStyle(btnStockfish, true, density);
             komodoStyleLayout.setVisibility(View.GONE);
@@ -510,6 +556,51 @@ public class StockfishSettingsDialog {
             if (StockfishSettings.isEngineEnabled(activity)) {
                 StockfishExtension.triggerAnalysisForCurrentState();
             }
+        });
+
+        // Card 1.5: Nhật Ký Hoạt Động (Debug Log) & Floating Pill
+        LinearLayout debugCard = createGlassCard(activity, density);
+        panelEngine.addView(debugCard);
+
+        TextView debugTitle = new TextView(activity);
+        debugTitle.setText("📜 " + I18n.get(activity, "debug_log"));
+        debugTitle.setTextColor(COLOR_TEXT_PRIMARY);
+        debugTitle.setTextSize(13f);
+        debugTitle.setTypeface(Typeface.create("sans-serif-medium", Typeface.BOLD));
+        debugCard.addView(debugTitle);
+
+        TextView debugHint = new TextView(activity);
+        debugHint.setText(I18n.get(activity, "debug_log_hint"));
+        debugHint.setTextColor(COLOR_TEXT_MUTED);
+        debugHint.setTextSize(9.5f);
+        debugHint.setTypeface(Typeface.MONOSPACE);
+        LinearLayout.LayoutParams dbhParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        dbhParams.setMargins(0, (int) (2 * density), 0, (int) (8 * density));
+        debugHint.setLayoutParams(dbhParams);
+        debugCard.addView(debugHint);
+
+        LinearLayout dbRow = new LinearLayout(activity);
+        dbRow.setOrientation(LinearLayout.HORIZONTAL);
+        dbRow.setGravity(Gravity.CENTER_VERTICAL);
+        debugCard.addView(dbRow);
+
+        TextView openLogBtn = createTabButton(activity, "📋 " + I18n.get(activity, "view_copy_log"), true, density);
+        openLogBtn.setOnClickListener(v -> {
+            HapticHelper.pop(activity, v);
+            NnvcLogViewerDialog.show(activity);
+        });
+        dbRow.addView(openLogBtn);
+
+        addCardSeparator(debugCard, density);
+
+        CyberSwitchView pillSwitch = addCyberSwitchRow(debugCard,
+                I18n.get(activity, "floating_log_pill"),
+                I18n.get(activity, "floating_log_pill_hint"),
+                StockfishSettings.isFloatingLogPillEnabled(activity),
+                density, activity);
+        pillSwitch.setOnCheckedChangeListener((view, isChecked) -> {
+            StockfishSettings.setFloatingLogPillEnabled(activity, isChecked);
+            FloatingLogPillView.updateVisibility(activity);
         });
 
         // Card 2: Sức mạnh & Độ sâu (Auto Depth, Elo 100-3500)

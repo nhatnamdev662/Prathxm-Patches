@@ -103,7 +103,24 @@ public class WasmEngineManager {
         return isClassifyReady;
     }
 
+    public boolean hasWasmFiles(String engineKey) {
+        if ("komodo".equals(engineKey)) {
+            File wasm = getKomodoWasm();
+            File js = getKomodoJs();
+            return wasm != null && wasm.exists() && js != null && js.exists();
+        } else if ("stockfish18".equals(engineKey)) {
+            File wasm = getStockfishWasm();
+            File js = getStockfishJs();
+            return wasm != null && wasm.exists() && js != null && js.exists();
+        }
+        return false;
+    }
+
     public boolean waitForPlayWorkerReady(long timeoutMs) {
+        if (!hasWasmFiles(currentPlayEngineKey)) {
+            NnvcLogger.d(TAG, "No WASM files for " + currentPlayEngineKey + "; skipping wait.");
+            return false;
+        }
         long deadline = System.currentTimeMillis() + timeoutMs;
         synchronized (playReadyLock) {
             while (!isPlayReady && System.currentTimeMillis() < deadline) {
@@ -120,6 +137,9 @@ public class WasmEngineManager {
     }
 
     public boolean waitForClassifyWorkerReady(long timeoutMs) {
+        if (!hasWasmFiles("stockfish18")) {
+            return false;
+        }
         long deadline = System.currentTimeMillis() + timeoutMs;
         synchronized (classifyReadyLock) {
             while (!isClassifyReady && System.currentTimeMillis() < deadline) {
@@ -319,7 +339,12 @@ public class WasmEngineManager {
             File kmJs = getKomodoJs();
             File kmBook = getKomodoBook();
 
-            TorchEngine.log("[WASM ENGINE INIT] Starting WebView... (SF=" + (sfWasm != null) + ", KM=" + (kmWasm != null) + ")");
+            if (sfWasm == null && kmWasm == null) {
+                NnvcLogger.i(TAG, "No WASM engine binaries found yet (SF=null, KM=null). WebView bootstrap deferred.");
+                return;
+            }
+
+            NnvcLogger.i(TAG, "Starting WebView... (SF=" + (sfWasm != null) + ", KM=" + (kmWasm != null) + ")");
 
             webView = new WebView(context);
             WebSettings settings = webView.getSettings();

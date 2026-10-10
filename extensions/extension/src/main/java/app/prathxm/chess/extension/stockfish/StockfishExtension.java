@@ -211,6 +211,9 @@ public class StockfishExtension {
                 return;
             }
 
+            NnvcLogger.init(ctx);
+            NnvcLogger.i(TAG, "ensureEngineReady triggered");
+
             Application app = (Application) ctx.getApplicationContext();
             if (!lifecycleCallbacksRegistered && app != null) {
                 registerLifecycleCallbacks(app);
@@ -225,13 +228,13 @@ public class StockfishExtension {
                         try {
                             TorchEngine.getInstance(ctx);
                         } catch (Throwable te) {
-                            Log.e(TAG, "Failed to start TorchEngine early: " + te.getMessage());
+                            NnvcLogger.e(TAG, "Failed to start TorchEngine early: " + te.getMessage(), te);
                         }
                         boolean ok = StockfishBridge.init(ctx);
                         engineReady = ok;
-                        Log.i(TAG, ok
-                            ? "Stockfish engine initialised asynchronously."
-                            : "Stockfish engine failed to initialise asynchronously.");
+                        NnvcLogger.i(TAG, ok
+                            ? "Stockfish engine initialised successfully."
+                            : "Stockfish engine failed to initialise.");
                         if (ok) {
                             new android.os.Handler(android.os.Looper.getMainLooper()).post(new Runnable() {
                                 @Override
