@@ -58,16 +58,6 @@ public class OverlayManager {
         int rawH = boardView.getHeight();
         if (rawW <= 0 || rawH <= 0) return null;
 
-        // Nếu Eval Bar đang hiển thị hoặc bật, và bàn cờ đã được dịch/scale
-        View evalBar = decorView.findViewWithTag("stockfish_eval_bar");
-        if (evalBar != null && evalBar.getVisibility() == View.VISIBLE && boardView.getTranslationX() > 0) {
-            float scale = boardView.getScaleX();
-            int adjX = (int) (rawX + boardView.getTranslationX());
-            int adjW = (int) (rawW * scale);
-            int adjH = (int) (rawH * scale);
-            return new BoardMetrics(adjX, rawY, adjW, adjH, boardView);
-        }
-
         return new BoardMetrics(rawX, rawY, rawW, rawH, boardView);
     }
 
@@ -276,148 +266,37 @@ public class OverlayManager {
                         return;
                     }
 
+                    // Reset any board transformation to prevent coordinate desync
+                    boardView.setTranslationX(0f);
+                    boardView.setScaleX(1.0f);
+                    boardView.setScaleY(1.0f);
+
                     float density = decorView.getContext().getResources().getDisplayMetrics().density;
                     int barWidth = (int) (12 * density);
 
-                    // Khi bàn cờ sát mép trái (boardX < barWidth), dịch nhẹ bàn cờ sang phải và co tỷ lệ
-                    // để chừa rãnh cho thanh Eval Bar, không bao giờ đè lên ô cờ hay quân cờ.
                     int evalBarX;
-                    int adjustedBoardX = boardX;
-                    int adjustedBoardW = boardW;
-                    int adjustedBoardH = boardH;
-
-                    if (boardX < barWidth) {
-                        float scale = (float) (boardW - barWidth) / (float) boardW;
-                        boardView.setPivotX(0f);
-                        boardView.setPivotY(boardH / 2f);
-                        boardView.setTranslationX(barWidth);
-                        boardView.setScaleX(scale);
-                        boardView.setScaleY(scale);
-
-                        evalBarX = boardX;
-                        adjustedBoardX = boardX + barWidth;
-                        adjustedBoardW = (int) (boardW * scale);
-                        adjustedBoardH = (int) (boardH * scale);
-                    } else {
+                    if (boardX >= barWidth) {
                         evalBarX = boardX - barWidth;
+                    } else {
+                        evalBarX = Math.max(0, boardX);
                     }
 
-                    View evalBar = decorView.findViewWithTag("stockfish_eval_bar");
                     boolean flipped = isBoardFlipped(boardView, stateImpl);
 
-                    // Ưu tiên sử dụng component thanh Eval Bar gốc của Chess.com (Native EvaluationBarView)
-                    boolean usedNative = false;
-                    try {
-                        Class<?> nativeEvalBarClass = Class.forName("com.chess.internal.views.EvaluationBarView");
-                        if (evalBar != null && !nativeEvalBarClass.isInstance(evalBar)) {
-                            decorView.removeView(evalBar);
-                            evalBar = null;
-                        }
-                        if (evalBar == null) {
-                            java.lang.reflect.Constructor<?> ctor = nativeEvalBarClass.getConstructor(android.content.Context.class, android.util.AttributeSet.class);
-                            evalBar = (View) ctor.newInstance(decorView.getContext(), (android.util.AttributeSet) null);
-                            evalBar.setTag("stockfish_eval_bar");
-
-                            // Ép Orientation thành VERTICAL (mặc định constructor không có AttributeSet sẽ là HORIZONTAL)
-                            try {
-                                Class<?> orientClass = Class.forName("com.chess.internal.views.EvaluationBarView$Orientation");
-                                Object verticalVal = Enum.valueOf((Class<Enum>) orientClass, "VERTICAL");
-                                for (java.lang.reflect.Field f : nativeEvalBarClass.getDeclaredFields()) {
-                                    if (f.getType().equals(orientClass)) {
-                                        f.setAccessible(true);
-                                        f.set(evalBar, verticalVal);
-                                        break;
-                                    }
-                                }
-                                // Đồng bộ TextPaint align sang CENTER theo logic constructor khi orientation = VERTICAL
-                                for (java.lang.reflect.Field f : nativeEvalBarClass.getDeclaredFields()) {
-                                    if (android.text.TextPaint.class.isAssignableFrom(f.getType()) || android.graphics.Paint.class.isAssignableFrom(f.getType())) {
-                                        f.setAccessible(true);
-                                        Object p = f.get(evalBar);
-                                        if (p instanceof android.graphics.Paint) {
-                                            ((android.graphics.Paint) p).setTextAlign(android.graphics.Paint.Align.CENTER);
-                                        }
-                                    }
-                                }
-                            } catch (Throwable tOrient) {
-                                Log.w(TAG, "Failed to force vertical orientation on EvaluationBarView: " + tOrient.getMessage());
-                            }
-
-                            decorView.addView(evalBar);
-                        }
-
-                        // Tạo đối tượng Score gốc của Chess.com (Score$Centipawns hoặc Score$MateIn)
-                        Object nativeScore = null;
-                        if (hasMate && mateIn != 0) {
-                            Class<?> mateClass = Class.forName("com.chess.entities.Score$MateIn");
-                            Class<?> colorClass = Class.forName("com.chess.entities.Color");
-                            Object winner = Enum.valueOf((Class<Enum>) colorClass, mateIn > 0 ? "WHITE" : "BLACK");
-                            java.lang.reflect.Constructor<?> mCtor = mateClass.getConstructor(int.class, colorClass);
-                            nativeScore = mCtor.newInstance(Math.abs(mateIn), winner);
-                        } else {
-                            Class<?> cpClass = Class.forName("com.chess.entities.Score$Centipawns");
-                            int cpVal = Math.round(score * 100f);
-                            java.lang.reflect.Constructor<?> cpCtor = cpClass.getConstructor(int.class);
-                            nativeScore = cpCtor.newInstance(cpVal);
-                        }
-
-                        Method setScoreMethod = nativeEvalBarClass.getMethod("setScore", Class.forName("com.chess.entities.Score"));
-                        setScoreMethod.invoke(evalBar, nativeScore);
-
-                        Method setFlippedMethod = nativeEvalBarClass.getMethod("setBoardFlipped", boolean.class);
-                        setFlippedMethod.invoke(evalBar, flipped);
-
-                        // Đảm bảo trường orientation luôn là VERTICAL ngay cả khi tái sử dụng view
-                        try {
-                            Class<?> orientClass = Class.forName("com.chess.internal.views.EvaluationBarView$Orientation");
-                            Object verticalVal = Enum.valueOf((Class<Enum>) orientClass, "VERTICAL");
-                            for (java.lang.reflect.Field f : nativeEvalBarClass.getDeclaredFields()) {
-                                if (f.getType().equals(orientClass)) {
-                                    f.setAccessible(true);
-                                    f.set(evalBar, verticalVal);
-                                    break;
-                                }
-                            }
-                        } catch (Throwable ignored) {}
-
-                        // Cập nhật LayoutParams và toạ độ
-                        ViewGroup.LayoutParams lp = evalBar.getLayoutParams();
-                        if (lp == null) {
-                            lp = new FrameLayout.LayoutParams(barWidth, adjustedBoardH);
-                        } else {
-                            lp.width = barWidth;
-                            lp.height = adjustedBoardH;
-                        }
-                        if (lp instanceof FrameLayout.LayoutParams) {
-                            ((FrameLayout.LayoutParams) lp).gravity = Gravity.TOP | Gravity.START;
-                        }
-                        evalBar.setLayoutParams(lp);
-                        evalBar.setTranslationX(evalBarX);
-                        evalBar.setTranslationY(boardY);
-                        evalBar.requestLayout();
-                        evalBar.invalidate();
-
-                        usedNative = true;
-                    } catch (Throwable tNative) {
-                        Log.d(TAG, "Native EvaluationBarView init/update skipped: " + tNative.getMessage());
+                    View evalBar = decorView.findViewWithTag("stockfish_eval_bar");
+                    EvalBarView evalBarView;
+                    if (evalBar instanceof EvalBarView) {
+                        evalBarView = (EvalBarView) evalBar;
+                    } else {
+                        if (evalBar != null) decorView.removeView(evalBar);
+                        evalBarView = new EvalBarView(decorView.getContext());
+                        evalBarView.setTag("stockfish_eval_bar");
+                        decorView.addView(evalBarView);
                     }
 
-                    if (!usedNative) {
-                        EvalBarView evalBarView;
-                        if (evalBar instanceof EvalBarView) {
-                            evalBarView = (EvalBarView) evalBar;
-                        } else {
-                            if (evalBar != null) decorView.removeView(evalBar);
-                            evalBarView = new EvalBarView(decorView.getContext());
-                            evalBarView.setTag("stockfish_eval_bar");
-                            decorView.addView(evalBarView);
-                        }
-                        evalBarView.update(evalBarX, boardY, barWidth, adjustedBoardH,
-                                           score, hasMate, mateIn, flipped);
-                        evalBar = evalBarView;
-                    }
-
-                    evalBar.setVisibility(View.VISIBLE);
+                    evalBarView.update(evalBarX, boardY, barWidth, boardH,
+                                       score, hasMate, mateIn, flipped);
+                    evalBarView.setVisibility(View.VISIBLE);
                     ensureZOrder(decorView);
                 } catch (Throwable t) {
                     Log.e(TAG, "updateEvalBar failed: " + t.getMessage());
@@ -425,6 +304,7 @@ public class OverlayManager {
             }
         });
     }
+
 
     public static void hideEvalBar() {
         new Handler(Looper.getMainLooper()).post(new Runnable() {

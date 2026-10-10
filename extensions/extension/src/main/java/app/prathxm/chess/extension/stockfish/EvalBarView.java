@@ -5,7 +5,9 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
+import android.graphics.Typeface;
 import android.view.Gravity;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
@@ -20,29 +22,41 @@ public class EvalBarView extends View {
     private int mateIn = 0;
     private boolean flipped = false;
 
-    private final Paint paintWhite = new Paint(Paint.ANTI_ALIAS_FLAG);
-    private final Paint paintBlack = new Paint(Paint.ANTI_ALIAS_FLAG);
-    private final Paint paintLine  = new Paint(Paint.ANTI_ALIAS_FLAG);
-    private final Paint paintText  = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint paintWhite  = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint paintBlack  = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint paintLine   = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint paintBorder = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint paintText   = new Paint(Paint.ANTI_ALIAS_FLAG);
 
     private final RectF rectWhite = new RectF();
     private final RectF rectBlack = new RectF();
 
     public EvalBarView(Context context) {
         super(context);
+        setClickable(false);
+        setFocusable(false);
         try {
             setElevation(10.0f);
         } catch (Throwable ignored) {}
-        paintWhite.setColor(0xF0E8E4E0); // off-white, premium feel
-        paintBlack.setColor(0xF0252220); // dark charcoal, premium feel
+        paintWhite.setColor(0xFFFFFFFF); // pure crisp white
+        paintBlack.setColor(0xFF312E2B); // Chess.com signature dark charcoal
 
-        paintLine.setColor(0xFF6B6966);
+        paintLine.setColor(0xFF797672);
         paintLine.setStrokeWidth(1.5f);
+
+        paintBorder.setColor(0x33000000);
+        paintBorder.setStrokeWidth(1.0f);
 
         float density = context.getResources().getDisplayMetrics().density;
         paintText.setTextSize(9.5f * density);
         paintText.setTextAlign(Paint.Align.CENTER);
-        paintText.setFakeBoldText(true);
+        paintText.setTypeface(Typeface.create("sans-serif-condensed", Typeface.BOLD));
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        // Never consume touches so user can tap/drag pieces on column 'a' without interference
+        return false;
     }
 
     /**
@@ -143,6 +157,9 @@ public class EvalBarView extends View {
         canvas.drawLine(0, mid, w * 0.25f, mid, paintLine);
         canvas.drawLine(w * 0.75f, mid, w, mid, paintLine);
 
+        // Right edge separator border
+        canvas.drawLine(w - 0.5f, 0, w - 0.5f, h, paintBorder);
+
         // Score label
         String label = hasMate ? (mateIn == 0 ? "#" : "M" + Math.abs(mateIn))
                                 : formatScore(score);
@@ -150,16 +167,19 @@ public class EvalBarView extends View {
         boolean whiteAhead = score >= 0;
         float textY;
         if (whiteAhead) {
-            paintText.setColor(Color.BLACK);
+            paintText.setColor(0xFF312E2B);
             textY = flipped ? divY / 2.0f : divY + (h - divY) / 2.0f;
         } else {
-            paintText.setColor(Color.WHITE);
+            paintText.setColor(0xFFFFFFFF);
             textY = flipped ? divY + (h - divY) / 2.0f : divY / 2.0f;
         }
 
+        Paint.FontMetrics fm = paintText.getFontMetrics();
+        float textOffset = (fm.descent + fm.ascent) / -2.0f;
+
         canvas.save();
         canvas.rotate(-90, w / 2.0f, textY);
-        canvas.drawText(label, w / 2.0f, textY + paintText.getTextSize() / 3.0f, paintText);
+        canvas.drawText(label, w / 2.0f, textY + textOffset, paintText);
         canvas.restore();
     }
 

