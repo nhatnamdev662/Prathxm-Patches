@@ -1,6 +1,6 @@
 # NHẬT KÝ DỰ ÁN & BỘ GHI NHỚ DẶN DÒ (PROJECT MEMORY)
 *Dự án: Chess Mobile - ReVanced Extension Patches cho Chess.com Android*
-*Phiên bản hiện tại: v2.0.62*
+*Phiên bản hiện tại: v2.0.63*
 *Cập nhật lần cuối: 2026-10-10*
 
 ---
@@ -287,20 +287,28 @@
     - Bổ sung viền ngoài thanh mảnh 1.5dp ôm sát 4 cạnh ô cờ.
     - Vẽ 4 mấu góc Cyber Corner Brackets chữ L sắc sảo (`bracketLen = 22%`, viền bo tròn `3.5%`) tại 4 góc với độ tương phản cao, mang lại hiệu ứng HUD công nghệ cao đẳng cấp chuẩn NNVC Extension.
     - Hiệu ứng phát sáng nhẹ nhàng (Glow) cho các nước cờ Brilliant và Great Move.
-  - **Bump phiên bản lên v2.0.62**: Đồng bộ `patches-bundle.json` và `patches-list.json`.
-  - **Biên dịch & Đóng gói**: Biên dịch thành công 40 file Java thành `extension.mpe`, đóng gói `patches-2.0.62.mpp` (189,674,389 bytes) và phát hành GitHub Release `v2.0.62`.
+- **v2.0.63 (Khắc Phục Triệt Để Lỗi Nhiễm Màu / Lem Màu Quân Cờ Khi Phân Loại Nước Đi)**:
+  - **Khắc phục dứt điểm lỗi quân cờ bị ám màu (Zero Tint Fill)**:
+    - Loại bỏ 100% lớp phủ nền (fill tint) trên ô đích (`toSquare`) nơi quân cờ đang đứng. Giữ nguyên 100% chi tiết và màu sắc gốc của quân cờ Chess.com, tuyệt đối không bị đè màu hay biến đổi màu sắc (quân trắng không còn bị ám hồng/đỏ khi Blunder hay ám xanh khi Best).
+  - **Khung Viền Kép Cao Cấp (Dual-Layer Ambient Halo & Crisp Focus Frame)**:
+    - **Ô đích (Target)**: Viền hào quang ngoài (Ambient Halo) dịu mắt (`sqSize * 0.055f`, alpha 80), kết hợp khung tiêu điểm trong sắc nét (`sqSize * 0.032f`, alpha 235) với 4 góc bo tròn mềm mại (`cornerRadius = 8%`). Hiệu ứng hào quang ngoài mở rộng cho nước cờ Brilliant / Great Move mà hoàn toàn không xâm lấn vào thân quân cờ.
+    - Triệt tiêu hoàn toàn sự che khuất / va chạm giữa mấu góc chữ L trước đây và huy hiệu badge ở góc trên-phải.
+    - **Ô xuất phát (Origin)**: Sử dụng viền nét đứt thanh nhã (`DashPathEffect`) và lớp phủ nền siêu nhẹ (alpha 18) vì ô này hoàn toàn trống.
+    - **Hiệu năng Canvas tối đa**: Tái sử dụng `RectF`, cache `DashPathEffect`, không tạo mới object trong `onDraw()`.
+  - **Bump phiên bản lên v2.0.63**: Đồng bộ `patches-bundle.json` và `patches-list.json`.
+  - **Biên dịch & Đóng gói**: Biên dịch thành công 40 file Java thành `extension.mpe`, đóng gói `patches-2.0.63.mpp` (189,674,525 bytes) và phát hành GitHub Release `v2.0.63`.
 
 ---
 
 ## 3. TRẠNG THÁI HIỆN TẠI & KẾ HOẠCH TIẾP THEO
 
 ### 3.1. Trạng thái hiện tại
-- **Phiên bản mới nhất**: **v2.0.62** (`patches-2.0.62.mpp`).
-- **Kho lưu trữ GitHub**: Đã phát hành Release `v2.0.62`.
+- **Phiên bản mới nhất**: **v2.0.63** (`patches-2.0.63.mpp`).
+- **Kho lưu trữ GitHub**: Đã phát hành Release `v2.0.63`.
 - **Trạng thái Repo**: 100% sạch, không commit file `.py`, root ngăn nắp.
 - **Tiến trình kỹ thuật**:
   1. Nguồn Morphe Manager chuẩn hoá tuyệt đối, không còn lỗi `(!)`.
-  2. Highlight ô cờ phân loại nước đi được nâng cấp lên Cyber Frame & Corner Brackets, quân cờ không còn bị lem màu/đè màu.
+  2. Highlight ô cờ phân loại nước đi đạt chuẩn Zero Tint Fill, quân cờ không còn bị lem màu/đè màu, khung viền kép sang trọng và không va chạm badge.
   3. Widget Accuracy/Elo Cyber Glass nhỏ gọn, huy hiệu `[BẠN]` sắc nét, kéo thả tự do ổn định.
   4. Bàn cờ và thanh Eval Bar giữ nguyên trạng thái hoàn hảo 1:1.
 

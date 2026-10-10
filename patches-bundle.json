@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-10-10T15:30:00",
-  "description": "## [2.0.62] (2026-10-10)\n\n### ⚡ NNVC v2.0.62 — Nâng Cấp Giao Diện Highlight Ô Cờ Phân Loại Nước Đi\n\n* **Loại Bỏ Hoàn Toàn Lem Màu / Đè Màu Quân Cờ:** Thay thế lớp phủ màu ô cờ đặc/nhiễm màu trước đây bằng phong cách Cyber Frame & Corner Brackets thanh lịch chuẩn HUD hiện đại. Giữ tâm ô cờ hoàn toàn trong trẻo, quân cờ Chess.com sắc nét 100% không bị nhiễm bẩn màu.\n* **Cyber Corner Brackets:** 4 góc ô cờ được đánh dấu bằng mấu góc chữ L sắc sảo (opacity 90%), viền bao quanh mỏng 1.5dp ôm trọn ô cờ và hiệu ứng phát sáng nhẹ nhàng cho nước cờ Brilliant / Great Move.\n* **Author:** NNVC (@nncutett)",
-  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.62/patches-2.0.62.mpp",
+  "created_at": "2026-10-10T18:30:00",
+  "description": "## [2.0.63] (2026-10-10)\n\n### ⚡ NNVC v2.0.63 — Khắc Phục Triệt Để Lỗi Nhiễm Màu / Lem Màu Quân Cờ Khi Phân Loại Nước Đi\n\n* **Quân Cờ Trong Sáng & Sắc Nét Tuyệt Đối (0% Tinting):** Loại bỏ hoàn toàn lớp phủ màu (fill tint) trên tâm ô đích nơi quân cờ đang đứng. Giữ nguyên 100% màu sắc và chi tiết gốc của quân cờ Chess.com, tuyệt đối không bị đè màu, ám màu hay lem nhem.\n* **Khung Viền Kép Cao Cấp (Dual-Layer Ambient Halo & Crisp Frame):**\n  - **Ô đích (Target):** Viền hào quang ngoài (Ambient Halo) dịu mắt bao quanh mép ô cờ, kết hợp khung tiêu điểm trong sắc nét (Crisp Focus Frame, opacity 92%) và vầng sáng rực rỡ cho nước cờ Brilliant / Great Move.\n  - **Ô xuất phát (Origin):** Viền nét đứt thanh nhã (Dashed Frame) kèm lớp nền mờ siêu nhẹ thể hiện điểm khởi hành của quân cờ.\n* **Author:** NNVC (@nncutett)",
+  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.63/patches-2.0.63.mpp",
   "signature_download_url": "",
-  "version": "2.0.62"
+  "version": "2.0.63"
 }

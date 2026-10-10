@@ -239,21 +239,32 @@
           2. **Viền ngoài ôm sát (Subtle border)**: Viền nét mảnh 1.5dp viền nhẹ theo 4 cạnh ô cờ.
           3. **Cyber Corner Brackets**: Vẽ 4 mấu góc chữ L sắc nét (`bracketLen = 22%`, viền bo góc tròn `3.5%`) tại 4 góc của ô cờ với độ tương phản cao, mang lại hiệu ứng HUD công nghệ tinh tế chuẩn NNVC Extension.
           4. **Glow phát sáng viền nhẹ nhàng**: Hiệu ứng phát sáng viền ngoài chỉ áp dụng cho Brilliant và Great Move, không làm chói mắt hay đè lên quân cờ.
+  31. **Bản Vá v2.0.63 — Khắc Phục Triệt Để Lỗi Nhiễm Màu / Lem Màu Quân Cờ Khi Phân Loại Nước Đi**:
+      - **Yêu cầu & Phân tích chuyên sâu**:
+        - Bản v2.0.62 trước đây dù đã giảm alpha nhưng vẫn vẽ `drawRect` phủ fill màu ~10% lên toàn bộ ô cờ, khiến quân cờ Trắng/Đen vẫn bị ám một lớp màu haze (quân trắng biến thành màu hồng nhạt khi Blunder hay ngả xanh nhạt khi Best), đồng thời các mấu góc L ở góc trên-phải bị va chạm, chèn đè lên huy hiệu badge tròn.
+      - **Giải pháp hoàn thiện triệt để**:
+        - **Zero Tint Fill ở ô đích**: Loại bỏ 100% lớp phủ nền trên ô đích (`toSquare`), tâm ô cờ hoàn toàn trong suốt 100%. Quân cờ Chess.com bên dưới hiển thị sắc nét, nguyên bản và trong trẻo tuyệt đối không dính 1 pixel màu đè nào.
+        - **Khung Viền Kép Cao Cấp (Dual-Layer Ambient Halo & Crisp Focus Frame)**:
+          1. **Viền hào quang ngoài (Ambient Halo)**: Ôm sát mép ô cờ (`sqSize * 0.055f`, alpha 80), tạo vầng sáng công nghệ nhận diện ô cờ từ xa.
+          2. **Khung tiêu điểm trong (Crisp Focus Frame)**: Viền sắc nét (`sqSize * 0.032f`, alpha 235), 4 góc bo tròn `8%` mềm mại ôm trọn ô cờ. Hòa quyện mượt mà với huy hiệu badge ở góc trên-phải mà không gây va chạm.
+          3. **Hiệu ứng rực rỡ cho Brilliant & Great Move**: Vầng hào quang ngoài mở rộng (`sqSize * 0.085f`, alpha 140) rực rỡ nhưng vẫn hoàn toàn nằm ngoài thân quân cờ.
+          4. **Ô xuất phát (Origin Square)**: Viền nét đứt thanh nhã (`DashPathEffect`) kèm nền mờ siêu nhẹ (alpha 18) vì ô này hoàn toàn trống.
+        - **Hiệu năng Canvas**: Tái sử dụng `RectF`, cache `DashPathEffect`, zero object allocation trong `onDraw()`.
       - **Biên dịch & Đóng gói**:
-        - Bump phiên bản lên `v2.0.62` (versionCode `20062`) trong `patches-bundle.json` và `patches-list.json`.
-        - Biên dịch sạch 40 file Java Extension thành `extension.mpe` (DEX `dex\035\0`), đóng gói thành công `patches-2.0.62.mpp` (189,674,389 bytes).
-        - Cập nhật GitHub Release `v2.0.62`.
+        - Bump phiên bản lên `v2.0.63` (versionCode `20063`) trong `patches-bundle.json` và `patches-list.json`.
+        - Biên dịch sạch 40 file Java Extension thành `extension.mpe` (DEX `dex\035\0`), đóng gói thành công `patches-2.0.63.mpp` (189,674,525 bytes).
+        - Cập nhật GitHub Release `v2.0.63`.
 
 ---
 
 ## 3. Trạng Thái Hiện Tại & Checklist Kiểm Thử
-- **Phiên bản mới nhất trên GitHub**: `v2.0.62` (tag `v2.0.62`).
-- **File tải bundle**: `https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.62/patches-2.0.62.mpp`
+- **Phiên bản mới nhất trên GitHub**: `v2.0.63` (tag `v2.0.63`).
+- **File tải bundle**: `https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.63/patches-2.0.63.mpp`
 - **Checklist Kiểm Thử**:
-  - [x] Đã biên dịch sạch 40 file Java và đóng gói thành công `patches-2.0.62.mpp` (189,674,389 bytes).
-  - [x] Loại bỏ hoàn toàn lỗi quân cờ bị nhiễm màu/đè màu khi phân loại nước đi.
-  - [x] Giao diện Cyber Frame & Corner Brackets hiển thị thanh lịch, sắc nét chuẩn công nghệ cao.
-  - [x] Cập nhật đồng bộ `patches-bundle.json` và `patches-list.json` sang version 2.0.62.
+  - [x] Đã biên dịch sạch 40 file Java và đóng gói thành công `patches-2.0.63.mpp` (189,674,525 bytes).
+  - [x] Loại bỏ hoàn toàn 100% lỗi quân cờ bị nhiễm màu/đè màu khi phân loại nước đi (Zero Tint Fill).
+  - [x] Khung viền kép (Ambient Halo & Crisp Frame) sắc sảo, thanh lịch và không va chạm badge.
+  - [x] Cập nhật đồng bộ `patches-bundle.json` và `patches-list.json` sang version 2.0.63.
   - [x] Cập nhật đầy đủ tài liệu: `GEMINI.md`, `PROJECT_MEMORY.md`, `SESSION_NOTES.md`.
 
 
