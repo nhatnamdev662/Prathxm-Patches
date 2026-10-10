@@ -116,6 +116,9 @@ public class ArrowOverlayView extends View {
 
     private final Paint squareHighlightPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint squareGlowPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint squareBorderPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint squareBracketPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Path cornerBracketPath = new Path();
 
     public ArrowOverlayView(Context context) {
         super(context);
@@ -150,6 +153,10 @@ public class ArrowOverlayView extends View {
 
         squareHighlightPaint.setStyle(Paint.Style.FILL);
         squareGlowPaint.setStyle(Paint.Style.STROKE);
+        squareBorderPaint.setStyle(Paint.Style.STROKE);
+        squareBracketPaint.setStyle(Paint.Style.STROKE);
+        squareBracketPaint.setStrokeCap(Paint.Cap.ROUND);
+        squareBracketPaint.setStrokeJoin(Paint.Join.ROUND);
     }
 
     public void setClassificationBadge(String square, String classificationName, boolean isWhite, boolean isMyMove) {
@@ -887,7 +894,7 @@ public class ArrowOverlayView extends View {
         }
     }
 
-    private void drawSquareHighlight(Canvas canvas, float sqSize, String sq, int themeColor, int alpha) {
+    private void drawSquareHighlight(Canvas canvas, float sqSize, String sq, int themeColor, boolean isTargetSquare, boolean isBrilliantOrGreat) {
         if (sq == null || sq.length() < 2) return;
         int file = sq.charAt(0) - 'a';
         int rank = sq.charAt(1) - '1';
@@ -898,10 +905,69 @@ public class ArrowOverlayView extends View {
 
         float left = col * sqSize;
         float top = row * sqSize;
+        float right = left + sqSize;
+        float bottom = top + sqSize;
 
+        // 1. Lớp nền cực kỳ trong suốt (Ultra-subtle tint): 
+        // Alpha chỉ ~10-12% (26 / 255) cho ô đích và 6% (16 / 255) cho ô xuất phát.
+        // Tuyệt đối không làm đè hay nhiễm màu quân cờ (pieces stay crystal clear and unblemished).
+        int bgAlpha = isTargetSquare ? 26 : 16;
         squareHighlightPaint.setColor(themeColor);
-        squareHighlightPaint.setAlpha(alpha);
-        canvas.drawRect(left, top, left + sqSize, top + sqSize, squareHighlightPaint);
+        squareHighlightPaint.setAlpha(bgAlpha);
+        canvas.drawRect(left, top, right, bottom, squareHighlightPaint);
+
+        // 2. Viền ngoài thanh mảnh (Subtle perimeter border):
+        // Viền 1.5dp ôm sát 4 cạnh ô cờ mang lại cảm giác ô cờ được đánh dấu rõ ràng mà không che quân.
+        float strokeInset = Math.max(1f, sqSize * 0.015f);
+        squareBorderPaint.setColor(themeColor);
+        squareBorderPaint.setAlpha(isTargetSquare ? 110 : 70);
+        squareBorderPaint.setStrokeWidth(strokeInset);
+        canvas.drawRect(left + strokeInset / 2f, top + strokeInset / 2f,
+                right - strokeInset / 2f, bottom - strokeInset / 2f, squareBorderPaint);
+
+        // 3. Cyber Corner Brackets (Góc vát công nghệ chuẩn HUD):
+        // 4 góc của ô cờ có 4 mấu góc L sắc nét, tạo điểm nhấn cao cấp mà tâm ô cờ (nơi quân cờ đứng) hoàn toàn thoáng đãng.
+        float bracketLen = sqSize * 0.22f; // Độ dài cạnh góc ~22% ô cờ
+        float bracketStroke = Math.max(2f, sqSize * 0.035f);
+        float bracketInset = bracketStroke / 2f + 1f;
+
+        squareBracketPaint.setColor(themeColor);
+        squareBracketPaint.setAlpha(isTargetSquare ? 230 : 150);
+        squareBracketPaint.setStrokeWidth(bracketStroke);
+
+        cornerBracketPath.reset();
+
+        // Góc trên-trái (Top-Left)
+        cornerBracketPath.moveTo(left + bracketInset, top + bracketInset + bracketLen);
+        cornerBracketPath.lineTo(left + bracketInset, top + bracketInset);
+        cornerBracketPath.lineTo(left + bracketInset + bracketLen, top + bracketInset);
+
+        // Góc trên-phải (Top-Right)
+        cornerBracketPath.moveTo(right - bracketInset - bracketLen, top + bracketInset);
+        cornerBracketPath.lineTo(right - bracketInset, top + bracketInset);
+        cornerBracketPath.lineTo(right - bracketInset, top + bracketInset + bracketLen);
+
+        // Góc dưới-phải (Bottom-Right)
+        cornerBracketPath.moveTo(right - bracketInset, bottom - bracketInset - bracketLen);
+        cornerBracketPath.lineTo(right - bracketInset, bottom - bracketInset);
+        cornerBracketPath.lineTo(right - bracketInset - bracketLen, bottom - bracketInset);
+
+        // Góc dưới-trái (Bottom-Left)
+        cornerBracketPath.moveTo(left + bracketInset + bracketLen, bottom - bracketInset);
+        cornerBracketPath.lineTo(left + bracketInset, bottom - bracketInset);
+        cornerBracketPath.lineTo(left + bracketInset, bottom - bracketInset - bracketLen);
+
+        canvas.drawPath(cornerBracketPath, squareBracketPaint);
+
+        // 4. Glow phát sáng viền nhẹ nhàng cho Brilliant & Great Move
+        if (isBrilliantOrGreat && isTargetSquare) {
+            squareGlowPaint.setColor(themeColor);
+            squareGlowPaint.setAlpha(160);
+            squareGlowPaint.setStrokeWidth(sqSize * 0.04f);
+            squareGlowPaint.setMaskFilter(new BlurMaskFilter(sqSize * 0.08f, BlurMaskFilter.Blur.NORMAL));
+            canvas.drawRect(left + 2f, top + 2f, right - 2f, bottom - 2f, squareGlowPaint);
+            squareGlowPaint.setMaskFilter(null);
+        }
     }
 
     private void drawSingleClassificationBadge(Canvas canvas, float sqSize, ClassificationBadgeData badge) {
@@ -923,16 +989,17 @@ public class ArrowOverlayView extends View {
         int themeColor = getClassificationThemeColor(badge.classificationName);
         String lower = badge.classificationName != null ? badge.classificationName.toLowerCase(java.util.Locale.US).replace(" ", "_") : "";
 
-        // 1. Tô màu ô cờ chuẩn 100% Extension (Square Highlights)
-        // Extension: Nếu Forced (color: "") -> không tô highlight ô cờ.
-        // Ngược lại: Cả ô xuất phát (fromSquare) và ô đích (toSquare) đều phủ cùng màu với opacity 0.5 (alpha = 128 / 0x80)
+        // 1. Highlight ô cờ thanh lịch (Cyber Frame & Corner Brackets)
+        // Thay vì phủ kín đè màu lên quân cờ (gây lem/nhiễm màu xấu xí),
+        // chỉ vẽ viền Cyber Frame và 4 góc Corner Brackets sắc nét, tâm ô cờ hoàn toàn trong suốt.
         boolean isForced = "forced".equals(lower);
+        boolean isBrilliantOrGreat = lower.contains("brilliant") || lower.contains("great");
+
         if (!isForced) {
-            int highlightAlpha = 128; // 50% opacity chuẩn Extension (opacity: .5)
             if (badge.fromSquare != null && badge.fromSquare.length() >= 2) {
-                drawSquareHighlight(canvas, sqSize, badge.fromSquare, themeColor, highlightAlpha);
+                drawSquareHighlight(canvas, sqSize, badge.fromSquare, themeColor, false, false);
             }
-            drawSquareHighlight(canvas, sqSize, toSq, themeColor, highlightAlpha);
+            drawSquareHighlight(canvas, sqSize, toSq, themeColor, true, isBrilliantOrGreat);
         }
 
         // 2. Tính toán Pop-in / Scale Animation (250ms)
@@ -947,16 +1014,6 @@ public class ArrowOverlayView extends View {
                 scale = 1.15f - (0.15f * ((progress - 0.6f) / 0.4f)); // 1.15 -> 1.0
             }
             postInvalidateOnAnimation();
-        }
-
-        // 3. Hiệu ứng Glow phát sáng đặc biệt cho Brilliant & Great Move
-        boolean isBrilliantOrGreat = lower.contains("brilliant") || lower.contains("great");
-        if (isBrilliantOrGreat) {
-            squareGlowPaint.setColor(themeColor);
-            squareGlowPaint.setStrokeWidth(sqSize * 0.05f);
-            squareGlowPaint.setMaskFilter(new BlurMaskFilter(sqSize * 0.12f, BlurMaskFilter.Blur.NORMAL));
-            canvas.drawRect(left + 2f, top + 2f, left + sqSize - 2f, top + sqSize - 2f, squareGlowPaint);
-            squareGlowPaint.setMaskFilter(null);
         }
 
         // 4. Kích thước & Vị trí huy hiệu Chess.com (góc trên bên phải ô đích, căn chỉnh an toàn không tràn viền)

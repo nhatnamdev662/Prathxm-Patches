@@ -229,18 +229,31 @@
         - Cập nhật ngưỡng chạm mở rộng / thu gọn `touchY <= 32dp` trong `onTouchEvent`.
         - Bump phiên bản lên `v2.0.61` trong `patches-bundle.json` và `patches-list.json`.
         - Biên dịch sạch 40 file Java, đóng gói thành công `patches-2.0.61.mpp` (189,673,974 bytes).
-        - Cập nhật GitHub Release `v2.0.61` chính thức đính kèm tệp bundle mới.
+        30. **Bản Vá v2.0.62 — Nâng Cấp Giao Diện Highlight Ô Cờ Phân Loại Nước Đi**:
+      - **Yêu cầu người dùng**: Màu ô cờ của phân loại nằm ở lớp trên của Chess.com nên gây mấy quân cờ bị nhiễm màu ô cờ trông xấu, cần xử lý cho đẹp và ok hơn.
+      - **Phân tích vấn đề cốt lõi**:
+        - Khi phân loại nước đi (Brilliant, Great, Best, Blunder,...), `ArrowOverlayView` trước đó vẽ `canvas.drawRect` phủ kín toàn bộ ô cờ bằng màu phân loại với alpha 128 (50% opacity). Vì `ArrowOverlayView` là lớp overlay nằm trên cùng bàn cờ (`decorView` hoặc trên `ChessBoardView`), lớp màu này đè trực tiếp lên sprite quân cờ của Chess.com, khiến quân cờ bị phủ màng màu lem nhem, bệt màu và mất chi tiết thẩm mỹ.
+      - **Giải pháp thiết kế Cyber Frame & Corner Brackets**:
+        - Chuyển đổi toàn diện sang phong cách **Cyber Frame & Corner Brackets**:
+          1. **Tâm ô cờ thông thoáng**: Giảm nền xuống mức tối thiểu (alpha 6% - 10%), hoàn toàn không che hay làm bẩn màu quân cờ bên dưới. Quân cờ trắng / đen hiển thị nguyên bản sắc nét 100%.
+          2. **Viền ngoài ôm sát (Subtle border)**: Viền nét mảnh 1.5dp viền nhẹ theo 4 cạnh ô cờ.
+          3. **Cyber Corner Brackets**: Vẽ 4 mấu góc chữ L sắc nét (`bracketLen = 22%`, viền bo góc tròn `3.5%`) tại 4 góc của ô cờ với độ tương phản cao, mang lại hiệu ứng HUD công nghệ tinh tế chuẩn NNVC Extension.
+          4. **Glow phát sáng viền nhẹ nhàng**: Hiệu ứng phát sáng viền ngoài chỉ áp dụng cho Brilliant và Great Move, không làm chói mắt hay đè lên quân cờ.
+      - **Biên dịch & Đóng gói**:
+        - Bump phiên bản lên `v2.0.62` (versionCode `20062`) trong `patches-bundle.json` và `patches-list.json`.
+        - Biên dịch sạch 40 file Java Extension thành `extension.mpe` (DEX `dex\035\0`), đóng gói thành công `patches-2.0.62.mpp` (189,674,389 bytes).
+        - Cập nhật GitHub Release `v2.0.62`.
 
 ---
 
 ## 3. Trạng Thái Hiện Tại & Checklist Kiểm Thử
-- **Phiên bản mới nhất trên GitHub**: `v2.0.61` (tag `v2.0.61`).
-- **File tải bundle**: `https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.61/patches-2.0.61.mpp`
+- **Phiên bản mới nhất trên GitHub**: `v2.0.62` (tag `v2.0.62`).
+- **File tải bundle**: `https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.62/patches-2.0.62.mpp`
 - **Checklist Kiểm Thử**:
-  - [x] Đã biên dịch sạch 40 file Java và đóng gói thành công `patches-2.0.61.mpp` (189,673,974 bytes).
-  - [x] Widget Accuracy / Elo nhỏ gọn hơn 12-15%, không che tầm nhìn bàn cờ.
-  - [x] Huy hiệu [BẠN] / [YOU] sắc nét tuyệt đối, loại bỏ hoàn toàn lỗi alpha leak, chữ trắng tinh trên nền Cyber Blue nổi bật.
-  - [x] Cập nhật đồng bộ `patches-bundle.json` và `patches-list.json` sang version 2.0.61.
+  - [x] Đã biên dịch sạch 40 file Java và đóng gói thành công `patches-2.0.62.mpp` (189,674,389 bytes).
+  - [x] Loại bỏ hoàn toàn lỗi quân cờ bị nhiễm màu/đè màu khi phân loại nước đi.
+  - [x] Giao diện Cyber Frame & Corner Brackets hiển thị thanh lịch, sắc nét chuẩn công nghệ cao.
+  - [x] Cập nhật đồng bộ `patches-bundle.json` và `patches-list.json` sang version 2.0.62.
   - [x] Cập nhật đầy đủ tài liệu: `GEMINI.md`, `PROJECT_MEMORY.md`, `SESSION_NOTES.md`.
 
 

@@ -1,6 +1,6 @@
 # NHẬT KÝ DỰ ÁN & BỘ GHI NHỚ DẶN DÒ (PROJECT MEMORY)
 *Dự án: Chess Mobile - ReVanced Extension Patches cho Chess.com Android*
-*Phiên bản hiện tại: v2.0.61*
+*Phiên bản hiện tại: v2.0.62*
 *Cập nhật lần cuối: 2026-10-10*
 
 ---
@@ -280,18 +280,27 @@
   - **Sửa triệt để lỗi mờ chữ huy hiệu [BẠN] / [YOU]**: Khắc phục tận gốc lỗi rò rỉ trạng thái alpha (`0x2EFFFFFF` từ thẻ đối thủ rò rỉ sang paint thẻ người chơi khiến độ mờ bị giảm còn 18%). Chuyển sang nền Cyber Blue nguyên khối `#0A84FF` đặc 100% opaque, bổ sung viền Cyber Cyan tương phản cao `#64D2FF`, chữ màu trắng tinh in đậm (`#FFFFFF`, bold) và áp dụng `setFakeBoldText(true)` giúp các dấu thanh tiếng Việt (như dấu nặng trong chữ `Ạ`) nổi bật và sắc nét tuyệt đối trên nền thẻ quân trắng.
   - **Cập nhật ngưỡng chạm mở rộng / thu gọn**: Điều chỉnh `touchY <= 32dp` khớp chính xác với chiều cao header mới.
   - **Bump phiên bản lên v2.0.61**: Cập nhật đồng bộ `patches-bundle.json` và `patches-list.json`.
-  - **Biên dịch sạch & Phát hành**: Biên dịch thành công 40 file Java thành `extension.mpe`, tạo `patches-2.0.61.mpp` (189,673,974 bytes) và cập nhật GitHub Release `v2.0.61`.
+- **v2.0.62 (Nâng Cấp Giao Diện Highlight Ô Cờ Phân Loại Nước Đi)**:
+  - **Khắc phục triệt để lỗi quân cờ bị lem màu / nhiễm màu**: Loại bỏ toàn bộ lớp màu bán trong suốt đặc (alpha 128 / 50%) từng phủ trùm lên ô cờ trong `ArrowOverlayView`, triệt tiêu hoàn toàn tình trạng quân cờ bị đè màu tint hay biến dạng màu sắc ban đầu.
+  - **Thiết kế Cyber Frame & Corner Brackets chuẩn HUD**: 
+    - Lớp nền bên trong ô cờ giảm xuống siêu mờ (6% cho ô xuất phát, 10-12% cho ô đích), giữ nguyên vẹn 100% độ sắc nét và màu sắc gốc của quân cờ Chess.com bên dưới.
+    - Bổ sung viền ngoài thanh mảnh 1.5dp ôm sát 4 cạnh ô cờ.
+    - Vẽ 4 mấu góc Cyber Corner Brackets chữ L sắc sảo (`bracketLen = 22%`, viền bo tròn `3.5%`) tại 4 góc với độ tương phản cao, mang lại hiệu ứng HUD công nghệ cao đẳng cấp chuẩn NNVC Extension.
+    - Hiệu ứng phát sáng nhẹ nhàng (Glow) cho các nước cờ Brilliant và Great Move.
+  - **Bump phiên bản lên v2.0.62**: Đồng bộ `patches-bundle.json` và `patches-list.json`.
+  - **Biên dịch & Đóng gói**: Biên dịch thành công 40 file Java thành `extension.mpe`, đóng gói `patches-2.0.62.mpp` (189,674,389 bytes) và phát hành GitHub Release `v2.0.62`.
 
 ---
 
 ## 3. TRẠNG THÁI HIỆN TẠI & KẾ HOẠCH TIẾP THEO
 
 ### 3.1. Trạng thái hiện tại
-- **Phiên bản mới nhất**: **v2.0.61** (`patches-2.0.61.mpp`).
-- **Kho lưu trữ GitHub**: Đã phát hành Release `v2.0.61`.
+- **Phiên bản mới nhất**: **v2.0.62** (`patches-2.0.62.mpp`).
+- **Kho lưu trữ GitHub**: Đã phát hành Release `v2.0.62`.
 - **Trạng thái Repo**: 100% sạch, không commit file `.py`, root ngăn nắp.
 - **Tiến trình kỹ thuật**:
-  1. Nguồn Morphe Manager đã được chuẩn hoá triệt để, nạp thành công 8 bản vá không còn lỗi `(!)`.
-  2. Widget Accuracy/Elo Cyber Glass nhỏ gọn hơn 12-15%, huy hiệu `[BẠN]` sắc nét tuyệt đối, kéo thả tự do hoạt động mượt mà, lưu toạ độ ổn định.
-  3. Bàn cờ và thanh Eval Bar giữ nguyên trạng thái hoàn hảo 1:1.
+  1. Nguồn Morphe Manager chuẩn hoá tuyệt đối, không còn lỗi `(!)`.
+  2. Highlight ô cờ phân loại nước đi được nâng cấp lên Cyber Frame & Corner Brackets, quân cờ không còn bị lem màu/đè màu.
+  3. Widget Accuracy/Elo Cyber Glass nhỏ gọn, huy hiệu `[BẠN]` sắc nét, kéo thả tự do ổn định.
+  4. Bàn cờ và thanh Eval Bar giữ nguyên trạng thái hoàn hảo 1:1.
 

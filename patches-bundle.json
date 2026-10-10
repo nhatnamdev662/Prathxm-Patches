@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-10-10T15:15:00",
-  "description": "## [2.0.61] (2026-10-10)\n\n### ⚡ NNVC v2.0.61 — Tinh Chỉnh Widget Accuracy / Elo: Nhỏ Gọn & Sắc Nét\n\n* **Widget Nhỏ Gọn (Compact Sizing):** Tinh chỉnh kích thước widget thu nhỏ ~12-15% (164x172dp), header mini 32dp khi thu gọn, tối ưu không gian hiển thị không che khuất nước cờ.\n* **Huy hiệu [BẠN] / [YOU] Siêu Sắc Nét:** Tăng cường độ tương phản cao với nền Cyber Blue rực rỡ, viền sắc nét, chữ màu trắng tinh in đậm, giải quyết triệt để tình trạng mờ chữ trên thẻ quân trắng.\n* **Author:** NNVC (@nncutett)",
-  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.61/patches-2.0.61.mpp",
+  "created_at": "2026-10-10T15:30:00",
+  "description": "## [2.0.62] (2026-10-10)\n\n### ⚡ NNVC v2.0.62 — Nâng Cấp Giao Diện Highlight Ô Cờ Phân Loại Nước Đi\n\n* **Loại Bỏ Hoàn Toàn Lem Màu / Đè Màu Quân Cờ:** Thay thế lớp phủ màu ô cờ đặc/nhiễm màu trước đây bằng phong cách Cyber Frame & Corner Brackets thanh lịch chuẩn HUD hiện đại. Giữ tâm ô cờ hoàn toàn trong trẻo, quân cờ Chess.com sắc nét 100% không bị nhiễm bẩn màu.\n* **Cyber Corner Brackets:** 4 góc ô cờ được đánh dấu bằng mấu góc chữ L sắc sảo (opacity 90%), viền bao quanh mỏng 1.5dp ôm trọn ô cờ và hiệu ứng phát sáng nhẹ nhàng cho nước cờ Brilliant / Great Move.\n* **Author:** NNVC (@nncutett)",
+  "download_url": "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.62/patches-2.0.62.mpp",
   "signature_download_url": "",
-  "version": "2.0.61"
+  "version": "2.0.62"
 }
