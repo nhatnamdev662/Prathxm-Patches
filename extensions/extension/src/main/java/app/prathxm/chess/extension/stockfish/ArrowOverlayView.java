@@ -120,8 +120,10 @@ public class ArrowOverlayView extends View {
     private final Paint squareGlowPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint squareBorderPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint squareDashedPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint brilliantCelebrationPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final RectF squareRectF = new RectF();
     private final RectF squareGlowRectF = new RectF();
+    private final RectF brilliantCelebrationRectF = new RectF();
     private float lastDashSqSize = -1f;
     private DashPathEffect cachedDashEffect = null;
 
@@ -169,6 +171,10 @@ public class ArrowOverlayView extends View {
         squareDashedPaint.setStyle(Paint.Style.STROKE);
         squareDashedPaint.setStrokeCap(Paint.Cap.ROUND);
         squareDashedPaint.setStrokeJoin(Paint.Join.ROUND);
+
+        brilliantCelebrationPaint.setStyle(Paint.Style.STROKE);
+        brilliantCelebrationPaint.setStrokeCap(Paint.Cap.ROUND);
+        brilliantCelebrationPaint.setStrokeJoin(Paint.Join.ROUND);
     }
 
     public void setClassificationBadge(String square, String classificationName, boolean isWhite, boolean isMyMove) {
@@ -1015,7 +1021,7 @@ public class ArrowOverlayView extends View {
             drawSquareHighlight(canvas, sqSize, toSq, themeColor, true, isBrilliantOrGreat);
         }
 
-        // 2. Tính toán Pop-in / Scale Animation (250ms)
+        // 2. Tính toán Pop-in / Scale Animation & Brilliant Celebration Effects (800ms)
         long elapsed = android.os.SystemClock.uptimeMillis() - badge.timestamp;
         float scale = 1.0f;
         if (elapsed < 250) {
@@ -1026,6 +1032,8 @@ public class ArrowOverlayView extends View {
             } else {
                 scale = 1.15f - (0.15f * ((progress - 0.6f) / 0.4f)); // 1.15 -> 1.0
             }
+            postInvalidateOnAnimation();
+        } else if (isBrilliantOrGreat && elapsed < 800) {
             postInvalidateOnAnimation();
         }
 
@@ -1048,6 +1056,11 @@ public class ArrowOverlayView extends View {
             badgeY = Math.max(2f, Math.min(bh - badgeSize - 2f, badgeY));
         }
 
+        // 5. Hiệu ứng đồ họa độc quyền khi có nước đi Brilliant / Great Move (Expanding Ripple & Sparkles)
+        if (isBrilliantOrGreat && elapsed < 800) {
+            drawBrilliantCelebrationEffects(canvas, sqSize, targetCenterX, targetCenterY, left, top, elapsed, lower.contains("brilliant"));
+        }
+
         // Thử lấy Drawable vector gốc từ APK Chess.com
         Drawable nativeDrawable = getClassificationDrawable(getContext(), badge.classificationName);
 
@@ -1062,6 +1075,75 @@ public class ArrowOverlayView extends View {
         } else {
             // Fallback đồ hoạ bo tròn glyph
             drawFallbackBadge(canvas, badgeX, badgeY, badgeSize, badge.classificationName);
+        }
+    }
+
+    private void drawBrilliantCelebrationEffects(Canvas canvas, float sqSize, float badgeCenterX, float badgeCenterY,
+                                                 float squareLeft, float squareTop, long elapsed, boolean isBrilliant) {
+        float animProgress = Math.min(1.0f, (float) elapsed / 800f);
+
+        // 1. Sóng năng lượng hào quang tỏa rộng (Expanding Radiant Ripples)
+        float maxRippleRadius = sqSize * (isBrilliant ? 0.65f : 0.50f);
+        float baseBadgeRadius = sqSize * 0.175f;
+
+        // Vòng sóng 1
+        float ripple1Radius = baseBadgeRadius + (maxRippleRadius - baseBadgeRadius) * animProgress;
+        int ripple1Alpha = (int) (220 * (1.0f - animProgress));
+        if (ripple1Alpha > 0) {
+            brilliantCelebrationPaint.setColor(isBrilliant ? 0xFF26C2A3 : 0xFF749BBF);
+            brilliantCelebrationPaint.setAlpha(ripple1Alpha);
+            brilliantCelebrationPaint.setStrokeWidth(Math.max(2.0f, sqSize * 0.035f * (1.0f - animProgress * 0.5f)));
+            canvas.drawCircle(badgeCenterX, badgeCenterY, ripple1Radius, brilliantCelebrationPaint);
+        }
+
+        // Vòng sóng 2 (trễ hơn 1 chút)
+        if (elapsed > 120) {
+            float progress2 = Math.min(1.0f, (float) (elapsed - 120) / 680f);
+            float ripple2Radius = baseBadgeRadius + (maxRippleRadius * 1.15f - baseBadgeRadius) * progress2;
+            int ripple2Alpha = (int) (160 * (1.0f - progress2));
+            if (ripple2Alpha > 0) {
+                brilliantCelebrationPaint.setColor(isBrilliant ? 0xFF64FFDA : 0xFFA5D8FF);
+                brilliantCelebrationPaint.setAlpha(ripple2Alpha);
+                brilliantCelebrationPaint.setStrokeWidth(Math.max(1.5f, sqSize * 0.025f * (1.0f - progress2 * 0.5f)));
+                canvas.drawCircle(badgeCenterX, badgeCenterY, ripple2Radius, brilliantCelebrationPaint);
+            }
+        }
+
+        // 2. Các hạt tia sáng lấp lánh (Celebratory Sparkle Rays & Starburst)
+        if (isBrilliant) {
+            float rayLength = sqSize * 0.18f * (1.0f - (float) Math.pow(animProgress - 0.5f, 2) * 4f); // nở rộ ở giữa animation
+            if (rayLength > 0.5f) {
+                float distFromCenter = baseBadgeRadius * 1.35f + (sqSize * 0.15f * animProgress);
+                int rayAlpha = (int) (240 * (1.0f - animProgress));
+                brilliantCelebrationPaint.setColor(0xFFFFFFFF);
+                brilliantCelebrationPaint.setAlpha(Math.max(0, rayAlpha));
+                brilliantCelebrationPaint.setStrokeWidth(Math.max(1.8f, sqSize * 0.02f));
+
+                // 6 tia sáng phát ra xung quanh huy hiệu theo các góc 30, 90, 150, 210, 270, 330 độ
+                for (int i = 0; i < 6; i++) {
+                    double angle = Math.toRadians(30.0 + i * 60.0);
+                    float startX = badgeCenterX + (float) (Math.cos(angle) * distFromCenter);
+                    float startY = badgeCenterY + (float) (Math.sin(angle) * distFromCenter);
+                    float endX = badgeCenterX + (float) (Math.cos(angle) * (distFromCenter + rayLength));
+                    float endY = badgeCenterY + (float) (Math.sin(angle) * (distFromCenter + rayLength));
+                    canvas.drawLine(startX, startY, endX, endY, brilliantCelebrationPaint);
+                }
+            }
+
+            // Hào quang vàng óng / kim cương siêu thực trên ô cờ (Corner Shimmer Accent)
+            float shimmerCornerInset = sqSize * 0.06f;
+            float shimmerCornerSize = sqSize * 0.14f * (1.0f - animProgress);
+            int shimmerAlpha = (int) (180 * (1.0f - animProgress));
+            if (shimmerAlpha > 0) {
+                brilliantCelebrationPaint.setColor(0xFFE0F7FA);
+                brilliantCelebrationPaint.setAlpha(shimmerAlpha);
+                brilliantCelebrationPaint.setStrokeWidth(Math.max(2.2f, sqSize * 0.028f));
+                // Góc trên trái ô cờ
+                canvas.drawLine(squareLeft + shimmerCornerInset, squareTop + shimmerCornerInset,
+                        squareLeft + shimmerCornerInset + shimmerCornerSize, squareTop + shimmerCornerInset, brilliantCelebrationPaint);
+                canvas.drawLine(squareLeft + shimmerCornerInset, squareTop + shimmerCornerInset,
+                        squareLeft + shimmerCornerInset, squareTop + shimmerCornerInset + shimmerCornerSize, brilliantCelebrationPaint);
+            }
         }
     }
 

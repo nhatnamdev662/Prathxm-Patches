@@ -640,6 +640,11 @@ public class MoveClassifier {
             targetSquare = uciMove.substring(2, 4);
             OverlayManager.setClassificationBadge(fromSquare, targetSquare, torchName, isWhite, isMyMove);
         }
+
+        // 2. Phát âm thanh Brilliant chính hãng khi có nước cờ thiên tài
+        if ("brilliant".equalsIgnoreCase(torchName)) {
+            SoundManager.getInstance(activity).playBrilliantSound();
+        }
     }
 }
 

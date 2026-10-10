@@ -657,17 +657,6 @@ public class StockfishSettingsDialog {
             }
         });
 
-        addCardSeparator(coachCard, density);
-
-        final CyberSwitchView blunderSwitch = addCyberSwitchRow(coachCard,
-                I18n.get(activity, "vibrate_blunder"),
-                I18n.get(activity, "vibrate_hint"),
-                StockfishSettings.isBlunderAlertsEnabled(activity),
-                density, activity);
-
-        blunderSwitch.setOnCheckedChangeListener((view, isChecked) -> {
-            StockfishSettings.setBlunderAlertsEnabled(activity, isChecked);
-        });
 
 
         // ─── TAB 4: VISUAL (Giao Diện & Lớp Phủ) ───
