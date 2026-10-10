@@ -255,16 +255,37 @@
         - Biên dịch sạch 40 file Java Extension thành `extension.mpe` (DEX `dex\035\0`), đóng gói thành công `patches-2.0.63.mpp` (189,674,525 bytes).
         - Cập nhật GitHub Release `v2.0.63`.
 
+  32. **Bản Vá v2.0.64 — Loại Bỏ Rung Khi Sai Lầm & Thêm Hiệu Ứng + Âm Thanh Nước Đi Brilliant / Great**:
+      - **Yêu cầu người dùng**:
+        1. Xóa bỏ chức năng rung khi mắc sai lầm (Blunder / Mistake / Inaccuracy).
+        2. Thêm hiệu ứng giao diện và âm thanh khi có nước đi Brilliant / Great.
+      - **Giải pháp kỹ thuật**:
+        - **Loại bỏ triệt để rung khi mắc sai lầm:**
+          - Xóa bỏ hoàn toàn haptic feedback trong phân hệ Coach (`MoveClassifier.java`).
+          - Dọn dẹp switch rung sai lầm trong hộp thoại cài đặt HLV (`StockfishSettingsDialog.java`), khoá vĩnh viễn cấu hình `isBlunderAlertsEnabled()` về `false`.
+        - **Hiệu ứng đồ họa vinh danh nước đi Brilliant (Cyber Radiance):**
+          - Sóng hào quang kép lan tỏa (Dual Expanding Ripples, màu `#26C2A3` và `#64FFDA`) phát ra từ tâm ô đích trong chu kỳ hoạt ảnh 800ms mượt mà (`postInvalidateOnAnimation()`).
+          - Ngôi sao tỏa tia 6 cánh sắc nét (6-point celebratory sparkle rayburst, màu `#FFFFFF`) và mấu góc lấp lánh (Corner Diamond Shimmer) bao quanh huy hiệu và khung tiêu điểm.
+          - Tuyệt đối bảo tồn nguyên tắc Zero-Tint: Không lem bất kỳ lớp màu nào vào tâm quân cờ.
+        - **Âm thanh nước cờ xuất sắc chuẩn Chess.com (Native Audio Delight):**
+          - Xây dựng `SoundManager` với bộ đệm `SoundPool` độ trễ cực thấp, fallback sang `MediaPlayer`. Tự động phát âm thanh reo vui `sounds/brilliant.mp3` nguyên bản của Chess.com ngay khi nước cờ Brilliant xuất hiện.
+      - **Biên dịch & Đóng gói**:
+        - Bump phiên bản lên `v2.0.64` (versionCode `20064`) trong `patches-bundle.json` và `patches-list.json`.
+        - Biên dịch sạch 41 file Java Extension thành `extension.mpe` (DEX `dex\035\0`), đóng gói thành công `patches-2.0.64.mpp` (189,676,741 bytes).
+        - Cập nhật GitHub Release `v2.0.64`.
+
 ---
 
 ## 3. Trạng Thái Hiện Tại & Checklist Kiểm Thử
-- **Phiên bản mới nhất trên GitHub**: `v2.0.63` (tag `v2.0.63`).
-- **File tải bundle**: `https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.63/patches-2.0.63.mpp`
+- **Phiên bản mới nhất trên GitHub**: `v2.0.64` (tag `v2.0.64`).
+- **File tải bundle**: `https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.64/patches-2.0.64.mpp`
 - **Checklist Kiểm Thử**:
-  - [x] Đã biên dịch sạch 40 file Java và đóng gói thành công `patches-2.0.63.mpp` (189,674,525 bytes).
-  - [x] Loại bỏ hoàn toàn 100% lỗi quân cờ bị nhiễm màu/đè màu khi phân loại nước đi (Zero Tint Fill).
-  - [x] Khung viền kép (Ambient Halo & Crisp Frame) sắc sảo, thanh lịch và không va chạm badge.
-  - [x] Cập nhật đồng bộ `patches-bundle.json` và `patches-list.json` sang version 2.0.63.
+  - [x] Đã biên dịch sạch 41 file Java và đóng gói thành công `patches-2.0.64.mpp` (189,676,741 bytes).
+  - [x] Loại bỏ hoàn toàn 100% rung haptic khi mắc sai lầm, khóa cấu hình vĩnh viễn.
+  - [x] Tích hợp hiệu ứng vinh danh Brilliant (Cyber Radiance: sóng lan tỏa, tia sao, mấu kim cương) mượt mà 800ms.
+  - [x] Tích hợp âm thanh ăn mừng bản địa `sounds/brilliant.mp3` của Chess.com qua `SoundManager`.
+  - [x] Cập nhật đồng bộ `patches-bundle.json` và `patches-list.json` sang version 2.0.64.
   - [x] Cập nhật đầy đủ tài liệu: `GEMINI.md`, `PROJECT_MEMORY.md`, `SESSION_NOTES.md`.
+
 
 

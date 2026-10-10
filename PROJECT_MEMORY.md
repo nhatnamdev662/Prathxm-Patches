@@ -1,6 +1,6 @@
 # NHẬT KÝ DỰ ÁN & BỘ GHI NHỚ DẶN DÒ (PROJECT MEMORY)
 *Dự án: Chess Mobile - ReVanced Extension Patches cho Chess.com Android*
-*Phiên bản hiện tại: v2.0.63*
+*Phiên bản hiện tại: v2.0.64*
 *Cập nhật lần cuối: 2026-10-10*
 
 ---
@@ -298,17 +298,31 @@
   - **Bump phiên bản lên v2.0.63**: Đồng bộ `patches-bundle.json` và `patches-list.json`.
   - **Biên dịch & Đóng gói**: Biên dịch thành công 40 file Java thành `extension.mpe`, đóng gói `patches-2.0.63.mpp` (189,674,525 bytes) và phát hành GitHub Release `v2.0.63`.
 
+- **v2.0.64 (Loại Bỏ Rung Khi Sai Lầm & Thêm Hiệu Ứng + Âm Thanh Nước Đi Brilliant / Great)**:
+  - **Loại bỏ triệt để rung khi mắc sai lầm:**
+    - Xóa bỏ 100% rung haptic khi mắc lỗi (Blunder / Mistake / Inaccuracy).
+    - Dọn dẹp switch rung sai lầm trong hộp thoại cài đặt HLV (`StockfishSettingsDialog.java`), khóa vĩnh viễn cấu hình `isBlunderAlertsEnabled()` về `false`.
+  - **Hiệu ứng đồ họa vinh danh nước đi Brilliant (Cyber Radiance):**
+    - Sóng hào quang kép lan tỏa (Dual Expanding Ripples, màu `#26C2A3` và `#64FFDA`) phát ra từ tâm ô đích trong chu kỳ hoạt ảnh 800ms mượt mà (`postInvalidateOnAnimation()`).
+    - Ngôi sao tỏa tia 6 cánh sắc nét (6-point celebratory sparkle rayburst, màu `#FFFFFF`) và mấu góc lấp lánh (Corner Diamond Shimmer) bao quanh huy hiệu và khung tiêu điểm.
+    - Tuyệt đối bảo tồn nguyên tắc Zero-Tint: Không lem bất kỳ lớp màu nào vào tâm quân cờ.
+  - **Âm thanh nước cờ xuất sắc chuẩn Chess.com (Native Audio Delight):**
+    - Xây dựng `SoundManager` với bộ đệm `SoundPool` độ trễ cực thấp, fallback sang `MediaPlayer`. Tự động phát âm thanh reo vui `sounds/brilliant.mp3` nguyên bản của Chess.com ngay khi nước cờ Brilliant xuất hiện.
+  - **Bump phiên bản lên v2.0.64**: Đồng bộ `patches-bundle.json` và `patches-list.json`.
+  - **Biên dịch & Đóng gói**: Biên dịch thành công 41 file Java thành `extension.mpe`, đóng gói `patches-2.0.64.mpp` (189,676,741 bytes) và phát hành GitHub Release `v2.0.64`.
+
 ---
 
 ## 3. TRẠNG THÁI HIỆN TẠI & KẾ HOẠCH TIẾP THEO
 
 ### 3.1. Trạng thái hiện tại
-- **Phiên bản mới nhất**: **v2.0.63** (`patches-2.0.63.mpp`).
-- **Kho lưu trữ GitHub**: Đã phát hành Release `v2.0.63`.
+- **Phiên bản mới nhất**: **v2.0.64** (`patches-2.0.64.mpp`).
+- **Kho lưu trữ GitHub**: Đã phát hành Release `v2.0.64`.
 - **Trạng thái Repo**: 100% sạch, không commit file `.py`, root ngăn nắp.
 - **Tiến trình kỹ thuật**:
   1. Nguồn Morphe Manager chuẩn hoá tuyệt đối, không còn lỗi `(!)`.
   2. Highlight ô cờ phân loại nước đi đạt chuẩn Zero Tint Fill, quân cờ không còn bị lem màu/đè màu, khung viền kép sang trọng và không va chạm badge.
   3. Widget Accuracy/Elo Cyber Glass nhỏ gọn, huy hiệu `[BẠN]` sắc nét, kéo thả tự do ổn định.
-  4. Bàn cờ và thanh Eval Bar giữ nguyên trạng thái hoàn hảo 1:1.
+  4. Hiệu ứng vinh danh Brilliant (Cyber Radiance) và âm thanh ăn mừng bản địa `sounds/brilliant.mp3` kích hoạt mượt mà, không lag.
+  5. Rung haptic khi sai lầm đã loại bỏ triệt để.
 
