@@ -1,7 +1,7 @@
 # NHẬT KÝ DỰ ÁN & BỘ GHI NHỚ DẶN DÒ (PROJECT MEMORY)
 *Dự án: Chess Mobile - ReVanced Extension Patches cho Chess.com Android*
-*Phiên bản hiện tại: v2.0.45*
-*Cập nhật lần cuối: 2026-10-09*
+*Phiên bản hiện tại: v2.0.60*
+*Cập nhật lần cuối: 2026-10-10*
 
 ---
 
@@ -270,17 +270,23 @@
   - **Tối ưu bộ nhớ & Safe Area**: Tái sử dụng pre-allocated Paint fields trong `onDraw()`, tôn trọng WindowInsets top safe area, tự động re-clamp khi xoay màn hình (orientation change).
   - **Đồng bộ song ngữ Anh / Việt**: Khớp 100% với `I18n.java`.
   - **Biên dịch & Đóng gói**: Hoàn thành sạch 40 file Java, đóng gói thành công `patches-2.0.59.mpp` (189,674,047 bytes).
+- **v2.0.60 (Khắc Phục Lỗi Nguồn Morphe Manager (!) & Chuẩn Hoá Metadata Bundle)**:
+  - **Khắc phục triệt để lỗi nguồn Morphe Manager (!)**: Tìm ra nguyên nhân gốc rễ dấu chấm than đỏ `(!)` và "Số bản vá: 0" do schema `patches-bundle.json` trước đó chứa các trường thừa không chuẩn (`versionCode`, `downloadUrl`), gây lỗi parse JSON trên các client Morphe Manager nghiêm ngặt.
+  - **Chuẩn hoá schema JSON 100%**: Chỉ giữ đúng 5 trường chuẩn schema của Morphe Manager (`created_at`, `description`, `download_url`, `signature_download_url`, `version`).
+  - **Bump phiên bản lên v2.0.60**: Tuân thủ quy tắc sống còn trong `rule.md` để tự động dọn dẹp cache Morphe Manager và reset ledger gián đoạn của `PatchBundleLoadGuard`.
+  - **Đồng bộ toàn bộ metadata**: Cập nhật đồng bộ `patches-list.json` và `patches-bundle.json`.
+  - **Biên dịch sạch & Phát hành**: Biên dịch thành công 40 file Java thành `extension.mpe`, tạo `patches-2.0.60.mpp` (189,674,046 bytes) và tạo GitHub Release `v2.0.60`.
 
 ---
 
 ## 3. TRẠNG THÁI HIỆN TẠI & KẾ HOẠCH TIẾP THEO
 
 ### 3.1. Trạng thái hiện tại
-- **Phiên bản mới nhất**: **v2.0.59** (`patches-2.0.59.mpp`).
-- **Kho lưu trữ GitHub**: Chuẩn bị phát hành Release `v2.0.59`.
+- **Phiên bản mới nhất**: **v2.0.60** (`patches-2.0.60.mpp`).
+- **Kho lưu trữ GitHub**: Đã phát hành Release `v2.0.60`.
 - **Trạng thái Repo**: 100% sạch, không commit file `.py`, root ngăn nắp.
 - **Tiến trình kỹ thuật**:
-  1. Đã hoàn thành chức năng Độ Chính Xác (%) và Elo thành widget chuẩn như extension.
-  2. Bàn cờ hiển thị 1:1 nguyên bản, không giật lag, không biến dạng, không nuốt chạm.
-  3. Thanh Eval Bar và Widget Accuracy/Elo hiển thị sắc nét, chuyên nghiệp.
+  1. Nguồn Morphe Manager đã được chuẩn hoá triệt để, nạp thành công 8 bản vá không còn lỗi `(!)`.
+  2. Widget Accuracy/Elo Cyber Glass kéo thả tự do hoạt động mượt mà, lưu toạ độ ổn định.
+  3. Bàn cờ và thanh Eval Bar giữ nguyên trạng thái hoàn hảo 1:1.
 

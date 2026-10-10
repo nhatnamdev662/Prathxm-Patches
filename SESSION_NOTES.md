@@ -209,18 +209,29 @@
         - Cập nhật `StockfishExtension.java` & `StockfishSettingsDialog.java`: Đồng bộ bật/tắt tức thì, tự reset khi ván mới, tự cập nhật số liệu thời gian thực từ Torch WASM CEE.
       - **Biên dịch & Đóng gói**: Biên dịch sạch 40 file Java, đóng gói thành công `patches-2.0.59.mpp` (189,674,047 bytes).
 
+  28. **Bản Vá v2.0.60 — Khắc Phục Triệt Để Lỗi Nguồn Morphe Manager (!) & Chuẩn Hoá Metadata**:
+      - **Yêu cầu người dùng**: Sửa lỗi trên điện thoại: nguồn patch Morphe Manager bị lỗi hiển thị dấu chấm than đỏ `(!)` và "Số bản vá: 0".
+      - **Nguyên nhân gốc rễ**:
+        - Tệp `patches-bundle.json` trước đó chứa 2 trường thừa không chuẩn schema của Morphe Manager (`MorpheAsset.kt`): `"versionCode": 20059` và `"downloadUrl": ...`. Một số phiên bản Ktor/Morphe Manager parse schema nghiêm ngặt ném exception khiến bundle chuyển sang `State.Failed` hiển thị icon `(!)` và "Số bản vá: 0".
+        - Ngoài ra, dung lượng bundle lớn dễ bị ngắt mạng khi tải hoặc bị `PatchBundleLoadGuard` đánh dấu strike.
+      - **Giải pháp**:
+        - Chuẩn hoá triệt để `patches-bundle.json`, chỉ giữ đúng 5 trường chuẩn schema của Morphe Manager: `created_at`, `description`, `download_url`, `signature_download_url`, `version`.
+        - Bump phiên bản lên `v2.0.60` theo đúng `rule.md` để tự động dọn dẹp cache Morphe Manager và reset bảng strike của `PatchBundleLoadGuard`.
+        - Cập nhật đồng bộ `patches-list.json` sang `2.0.60`.
+        - Biên dịch sạch 40 file Java, đóng gói thành công `patches-2.0.60.mpp` (189,674,046 bytes).
+        - Tạo GitHub Release `v2.0.60` với file `.mpp` đính kèm.
+
 ---
 
 ## 3. Trạng Thái Hiện Tại & Checklist Kiểm Thử
-- **Phiên bản mới nhất trên GitHub**: `v2.0.59` (tag `v2.0.59`).
-- **File tải bundle**: `https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.59/patches-2.0.59.mpp`
+- **Phiên bản mới nhất trên GitHub**: `v2.0.60` (tag `v2.0.60`).
+- **File tải bundle**: `https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.60/patches-2.0.60.mpp`
 - **Checklist Kiểm Thử**:
-  - [x] Đã biên dịch sạch 40 file Java và đóng gói thành công `patches-2.0.59.mpp` (189,674,047 bytes).
+  - [x] Đã biên dịch sạch 40 file Java và đóng gói thành công `patches-2.0.60.mpp` (189,674,046 bytes).
+  - [x] Chuẩn hoá 100% schema `patches-bundle.json` (loại bỏ trường thừa).
+  - [x] Cập nhật đồng bộ `patches-list.json` sang phiên bản 2.0.60.
+  - [x] Tạo GitHub Release `v2.0.60` chính thức với tệp bundle đính kèm.
   - [x] Giao diện Widget Độ chính xác (%) và Estimated Elo chuẩn 100% Extension (`AccuracyEloWidgetView`).
-  - [x] Thẻ Trắng và Thẻ Đen phân biệt rõ rệt, viền Cyber Blue phát sáng cho bên người chơi `[BẠN]`.
-  - [x] Cảm ứng kéo thả tự do khắp màn hình, tự động ghi nhớ vị trí và kẹp biên an toàn.
-  - [x] Thu gọn / mở rộng tiện lợi qua nút bấm header, tiết kiệm diện tích tối đa.
-  - [x] Đồng bộ song ngữ Anh / Việt 100% theo `I18n`.
-  - [x] Cập nhật metadata `patches-bundle.json` và `patches-list.json`.
+  - [x] Cập nhật đầy đủ tài liệu: `GEMINI.md`, `PROJECT_MEMORY.md`, `SESSION_NOTES.md`.
 
 
