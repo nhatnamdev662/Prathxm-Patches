@@ -343,6 +343,9 @@ public class StockfishSettings {
     }
 
     private static final String KEY_SHOW_ACCURACY_ELO = "show_accuracy_elo";
+    private static final String KEY_ACCURACY_WIDGET_X = "accuracy_widget_x";
+    private static final String KEY_ACCURACY_WIDGET_Y = "accuracy_widget_y";
+    private static final String KEY_ACCURACY_WIDGET_COLLAPSED = "accuracy_widget_collapsed";
 
     public static boolean isAccuracyEloEnabled(Context context) {
         return getPrefs(context).getBoolean(KEY_SHOW_ACCURACY_ELO, true);
@@ -350,6 +353,29 @@ public class StockfishSettings {
 
     public static void setAccuracyEloEnabled(Context context, boolean enabled) {
         getPrefs(context).edit().putBoolean(KEY_SHOW_ACCURACY_ELO, enabled).apply();
+    }
+
+    public static float getAccuracyWidgetX(Context context, float defValue) {
+        return getPrefs(context).getFloat(KEY_ACCURACY_WIDGET_X, defValue);
+    }
+
+    public static float getAccuracyWidgetY(Context context, float defValue) {
+        return getPrefs(context).getFloat(KEY_ACCURACY_WIDGET_Y, defValue);
+    }
+
+    public static void setAccuracyWidgetPosition(Context context, float x, float y) {
+        getPrefs(context).edit()
+                .putFloat(KEY_ACCURACY_WIDGET_X, x)
+                .putFloat(KEY_ACCURACY_WIDGET_Y, y)
+                .apply();
+    }
+
+    public static boolean isAccuracyWidgetCollapsed(Context context) {
+        return getPrefs(context).getBoolean(KEY_ACCURACY_WIDGET_COLLAPSED, false);
+    }
+
+    public static void setAccuracyWidgetCollapsed(Context context, boolean collapsed) {
+        getPrefs(context).edit().putBoolean(KEY_ACCURACY_WIDGET_COLLAPSED, collapsed).apply();
     }
 
     /** Restores every engine setting to its default (the tour flag is kept). */

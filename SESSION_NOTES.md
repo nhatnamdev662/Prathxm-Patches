@@ -189,18 +189,36 @@
         4. **Xuyên thấu cảm ứng toàn diện**: Cả `dispatchTouchEvent` và `onTouchEvent` đều trả về `false`, cho phép mọi thao tác chạm/kéo thả quân cờ ở cột a xuyên qua thanh Eval Bar xuống bàn cờ tự nhiên 100%.
         5. **Đồng bộ toạ độ toàn bộ Overlays**: `updateEvalBar` hợp nhất sử dụng trực tiếp `BoardMetrics`, đồng bộ 100% với `ArrowOverlayView`, `MoveClassifier`, `WdlBarView` và thẻ Elo/Accuracy.
 
+  27. **Bản Vá v2.0.59 — Widget Độ Chính Xác (%) & Elo Trực Tiếp Chuẩn 100% Extension**:
+      - **Yêu cầu người dùng**: "tôi muốn làm cái chức năng chính xác và elo thành widget giống như extension ấy bạn làm được không? /boost"
+      - **Phân tích thiết kế chuẩn NNVC Extension**:
+        - Trong Chrome Extension (`NNVC/nnvc_isolated_bundle.js`), Accuracy & Elo không phải 2 thanh pill dán mép mà là một **Widget nổi kéo thả độc lập (`#nnvc-accuracy-elo-widget`)**.
+        - Cấu trúc:
+          1. Shell Cyber Glass nền tối mờ `rgba(13, 17, 23, 0.94)`, viền mảnh `0x24FFFFFF`, bo góc 15dp.
+          2. Header: Biểu tượng cờ vua âm dương đen/trắng, tiêu đề `Accuracy / Elo`, nút chevron thu gọn/mở rộng.
+          3. Thẻ Trắng (`nnvc-ae-card-white`): Nền sáng `linear-gradient(#ffffff, #eaf0f6)`, icon quân trắng, nhãn Trắng/White, huy hiệu `[BẠN]` (Cyber Blue) hoặc `[ĐỐI THỦ]`, 2 ô chỉ số `CHÍNH XÁC` và `ELO ĐÁNH GIÁ`.
+          4. Thẻ Đen (`nnvc-ae-card-black`): Nền tối `linear-gradient(#202632, #12171f)`, icon quân đen, nhãn Đen/Black, huy hiệu `[BẠN]` (Cyber Blue) hoặc `[ĐỐI THỦ]`, 2 ô chỉ số `CHÍNH XÁC` và `ELO ĐÁNH GIÁ`.
+          5. Nhận diện người chơi: Bên người chơi `[BẠN]` / `[YOU]` được bao quanh bởi viền phát sáng Cyber Blue `#0A84FF` 1.6dp.
+      - **Hiện thực trên Android Mobile**:
+        - Tạo `AccuracyEloWidgetView.java` render 100% bằng Canvas tự do không phụ thuộc XML, tối ưu hiệu năng tuyệt đối.
+        - Xử lý cảm ứng kéo thả mượt mà trong `onTouchEvent`: tự động theo dõi toạ độ ngón tay, scale 1.02x / alpha 0.95x khi kéo, kẹp biên an toàn không bao giờ văng khỏi màn hình, lưu vị trí `(x, y)` vào SharedPreferences (`accuracy_widget_x`, `accuracy_widget_y`) qua `StockfishSettings`.
+        - Nút thu gọn / mở rộng: Bấm vào thanh header tự động thu gọn widget thành mini pill cao chỉ 36dp hoặc mở rộng đầy đủ 194dp, lưu trạng thái vào `accuracy_widget_collapsed`.
+        - Cập nhật `OverlayManager.java`: Tích hợp `updateAccuracyEloWidget`, `hideAccuracyEloWidget`, `resetAccuracyEloWidget`, tự động dọn dẹp các pill cũ còn sót lại và nâng elevation lên 25f.
+        - Cập nhật `StockfishExtension.java` & `StockfishSettingsDialog.java`: Đồng bộ bật/tắt tức thì, tự reset khi ván mới, tự cập nhật số liệu thời gian thực từ Torch WASM CEE.
+      - **Biên dịch & Đóng gói**: Biên dịch sạch 40 file Java, đóng gói thành công `patches-2.0.59.mpp` (189,673,273 bytes).
+
 ---
 
 ## 3. Trạng Thái Hiện Tại & Checklist Kiểm Thử
-- **Phiên bản mới nhất trên GitHub**: `v2.0.58` (tag `v2.0.58`).
-- **File tải bundle**: `https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.58/patches-2.0.58.mpp`
+- **Phiên bản mới nhất trên GitHub**: `v2.0.59` (tag `v2.0.59`).
+- **File tải bundle**: `https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.59/patches-2.0.59.mpp`
 - **Checklist Kiểm Thử**:
-  - [x] Đã biên dịch sạch 39 file Java và đóng gói thành công `patches-2.0.58.mpp` (189,667,067 bytes).
-  - [x] Chiều cao thanh Eval Bar khớp 100% tuyệt đối với chiều cao bàn cờ (`boardH = Math.min(rawW, rawH)`), đều cả đỉnh và đáy.
-  - [x] Triệt tiêu hoàn toàn biến dạng toạ độ, không can thiệp scale/translation vào `ChessBoardView`.
-  - [x] Nhãn điểm số Eval hiển thị dọc thanh thoát, ghim vững chãi tại home end, không bao giờ bị cắt chữ hay tràn viền ở cạnh màn hình.
-  - [x] Cảm ứng chạm kéo thả quân cờ ở cột a mượt mà qua cả `dispatchTouchEvent` và `onTouchEvent`.
-  - [x] Đã cập nhật metadata `patches-bundle.json` và `patches-list.json`.
-  - [x] Đã upload bản bundle hoàn thiện lên GitHub Release `v2.0.58`.
+  - [x] Đã biên dịch sạch 40 file Java và đóng gói thành công `patches-2.0.59.mpp` (189,673,273 bytes).
+  - [x] Giao diện Widget Độ chính xác (%) và Estimated Elo chuẩn 100% Extension (`AccuracyEloWidgetView`).
+  - [x] Thẻ Trắng và Thẻ Đen phân biệt rõ rệt, viền Cyber Blue phát sáng cho bên người chơi `[BẠN]`.
+  - [x] Cảm ứng kéo thả tự do khắp màn hình, tự động ghi nhớ vị trí và kẹp biên an toàn.
+  - [x] Thu gọn / mở rộng tiện lợi qua nút bấm header, tiết kiệm diện tích tối đa.
+  - [x] Đồng bộ song ngữ Anh / Việt 100% theo `I18n`.
+  - [x] Cập nhật metadata `patches-bundle.json` và `patches-list.json`.
 
 

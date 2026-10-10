@@ -262,17 +262,24 @@
   - Sử dụng `EvalBarView` render nhãn điểm số xoay dọc -90 độ, căn giữa trục ngang theo `FontMetrics`, loại trừ 100% hiện tượng bị cắt chữ hay tràn viền ngoài màn hình.
   - Cảm ứng xuyên thấu 100%: Cả `dispatchTouchEvent` và `onTouchEvent` trả về `false`, không cản trở thao tác trên ô cờ cột a.
   - Bổ sung đường phân cách mảnh 1px tách biệt mép phải thanh Eval Bar với ô cờ cột a.
+- **v2.0.59 (Widget Độ Chính Xác (%) & Elo Trực Tiếp Chuẩn 100% Extension)**:
+  - **Widget nổi kéo thả độc lập (`AccuracyEloWidgetView`)**: Chuyển đổi toàn diện tính năng Độ Chính Xác (%) và Estimated Elo thành Widget Cyber Glass floating cao cấp giống hệt Chrome Extension NNVC.
+  - **Phân chia 2 thẻ người chơi Trắng & Đen riêng biệt**: Nhận diện thông minh bên người chơi `[BẠN]` / `[YOU]` với viền phát sáng Cyber Blue `#0A84FF` và bên `[ĐỐI THỦ]` / `[OPPONENT]`.
+  - **Kéo thả tự do & Ghi nhớ vị trí**: Hỗ trợ cảm ứng kéo thả linh hoạt, hiệu ứng scale 1.02x và alpha 0.95x, tự động kẹp an toàn mép màn hình và ghi nhớ toạ độ `(x, y)` vào SharedPreferences qua `StockfishSettings`.
+  - **Nút thu gọn / mở rộng tiện ích**: Header tích hợp chevron thu gọn thành mini pill 36dp giúp tiết kiệm không gian màn hình tối đa khi cần.
+  - **Đồng bộ song ngữ Anh / Việt**: Khớp 100% với `I18n.java`.
+  - **Biên dịch & Đóng gói**: Hoàn thành sạch 40 file Java, đóng gói thành công `patches-2.0.59.mpp` (189,673,273 bytes).
 
 ---
 
 ## 3. TRẠNG THÁI HIỆN TẠI & KẾ HOẠCH TIẾP THEO
 
 ### 3.1. Trạng thái hiện tại
-- **Phiên bản mới nhất**: **v2.0.58** (`patches-2.0.58.mpp`).
-- **Kho lưu trữ GitHub**: Đã phát hành Release `v2.0.58`.
+- **Phiên bản mới nhất**: **v2.0.59** (`patches-2.0.59.mpp`).
+- **Kho lưu trữ GitHub**: Chuẩn bị phát hành Release `v2.0.59`.
 - **Trạng thái Repo**: 100% sạch, không commit file `.py`, root ngăn nắp.
 - **Tiến trình kỹ thuật**:
-  1. Đã giải quyết triệt để lỗi lệch toạ độ và không đều chiều dài của Eval Bar.
+  1. Đã hoàn thành chức năng Độ Chính Xác (%) và Elo thành widget chuẩn như extension.
   2. Bàn cờ hiển thị 1:1 nguyên bản, không giật lag, không biến dạng, không nuốt chạm.
-  3. Thanh Eval Bar hiển thị sắc nét, xoay dọc điểm số tại home end, không bao giờ cắt chữ.
+  3. Thanh Eval Bar và Widget Accuracy/Elo hiển thị sắc nét, chuyên nghiệp.
 

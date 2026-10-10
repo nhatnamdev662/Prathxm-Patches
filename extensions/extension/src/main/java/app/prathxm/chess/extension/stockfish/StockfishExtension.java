@@ -298,6 +298,7 @@ public class StockfishExtension {
         if (fen.startsWith("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR")) {
             OverlayManager.clearClassificationBadge();
             OverlayManager.hideArrowOverlay();
+            OverlayManager.resetAccuracyEloWidget();
             OverlayManager.hideAccuracyEloPills();
             ArrowInjector.clearEngineArrows(stateImplObject);
             TorchEngine.getInstance(getContext()).cancelPendingRequests();
@@ -515,6 +516,14 @@ public class StockfishExtension {
             OverlayManager.updateEngineInfo(result.depth, result.score, result.hasMate, result.mateIn);
         } else {
             OverlayManager.hideEngineInfo();
+        }
+
+        if (!disableOverlays && StockfishSettings.isAccuracyEloEnabled(context)) {
+            Boolean uWhite = isUserWhite(getStateImpl());
+            boolean finalUserIsWhite = (uWhite != null) ? uWhite.booleanValue() : true;
+            OverlayManager.updateAccuracyEloWidget(-1f, -1f, -1, -1, finalUserIsWhite);
+        } else {
+            OverlayManager.hideAccuracyEloWidget();
         }
 
         if (!isFinal) return;

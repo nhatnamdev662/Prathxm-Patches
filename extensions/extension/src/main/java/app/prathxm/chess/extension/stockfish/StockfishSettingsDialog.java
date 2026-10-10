@@ -650,8 +650,9 @@ public class StockfishSettingsDialog {
         accuracyEloSwitch.setOnCheckedChangeListener((view, isChecked) -> {
             StockfishSettings.setAccuracyEloEnabled(activity, isChecked);
             if (!isChecked) {
-                OverlayManager.hideAccuracyEloPills();
+                OverlayManager.hideAccuracyEloWidget();
             } else {
+                OverlayManager.updateAccuracyEloWidget(-1f, -1f, -1, -1, true);
                 OverlayManager.refreshOverlaysLanguage(activity);
             }
         });

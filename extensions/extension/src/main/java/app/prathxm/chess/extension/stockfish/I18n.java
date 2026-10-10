@@ -138,7 +138,11 @@ public class I18n {
             case "show_accuracy_elo":
                 return isVi ? "Độ Chính Xác & Elo Trực Tiếp" : "Live Accuracy & Estimated Elo";
             case "show_accuracy_elo_hint":
-                return isVi ? "Gắn bảng chỉ số Độ chính xác (%) và Elo ước tính trực tiếp vào thanh thông tin 2 bên bàn cờ." : "Display live Accuracy (%) and Estimated Elo pills directly on player info bars.";
+                return isVi ? "Hiển thị widget Độ chính xác (%) và Elo ước tính chuẩn Extension (kéo thả tự do)." : "Display live Accuracy (%) and Estimated Elo widget matching Extension (draggable).";
+            case "white":
+                return isVi ? "Trắng" : "White";
+            case "black":
+                return isVi ? "Đen" : "Black";
             case "coach_title":
                 return isVi ? "HUẤN LUYỆN VIÊN (TORCH WASM)" : "COACH (TORCH WASM)";
             case "coach_sub":
