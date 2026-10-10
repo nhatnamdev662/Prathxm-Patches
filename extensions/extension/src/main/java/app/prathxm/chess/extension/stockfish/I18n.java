@@ -114,13 +114,11 @@ public class I18n {
             case "engine_choice":
                 return isVi ? "Chọn Engine" : "Engine";
             case "engine_choice_hint":
-                return isVi ? "Chọn động cơ phân tích (Stockfish Native, Komodo 3.3 hoặc Stockfish 18)." : "Select engine (Stockfish Native, Komodo 3.3 or Stockfish 18).";
-            case "engine_stockfish_native":
-                return isVi ? "Stockfish Native (Ổn Định)" : "Stockfish Native (Stable)";
+                return isVi ? "Chọn động cơ phân tích WebAssembly (Komodo Dragon 3.3 hoặc Stockfish 18)." : "Select WebAssembly engine (Komodo Dragon 3.3 or Stockfish 18).";
             case "engine_komodo":
-                return "Komodo 3.3";
+                return "Komodo 3.3 (WASM)";
             case "engine_stockfish":
-                return "Stockfish 18";
+                return "Stockfish 18 (WASM)";
             case "debug_log":
                 return isVi ? "Nhật Ký Hoạt Động (Debug Log)" : "Activity Log (Debug Log)";
             case "debug_log_hint":

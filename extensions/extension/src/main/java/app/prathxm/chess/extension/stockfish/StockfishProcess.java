@@ -1,30 +1,20 @@
 package app.prathxm.chess.extension.stockfish;
 
-import android.app.ActivityManager;
 import android.content.Context;
-import android.util.Log;
 
-import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 /**
- * StockfishProcess – Hybrid Chess Engine Manager.
+ * StockfishProcess – 100% WebAssembly Chess Engine Manager.
  *
- * Supports both:
- *  1) Native Stockfish (libstockfish.so): Instant (<50ms), ultra-fast C++ binary, zero battery drain,
- *     100% offline, bundled in APK. Primary and bulletproof fallback.
- *  2) WebAssembly Engines (Stockfish 18 / Komodo Dragon 3.3): Runs in background headless WebView
- *     Web Workers via WasmEngineManager when WASM assets are present.
+ * Runs WebAssembly Engines (Komodo Dragon 3.3 WASM as default & Stockfish 18 WASM)
+ * in headless WebView Web Workers via WasmEngineManager with in-memory ArrayBuffer
+ * and transferable worker postMessage architecture.
  *
- * If WASM files are missing or worker is not ready, automatically and seamlessly falls back
- * to Native Stockfish so the app NEVER freezes or fails.
+ * 100% Parity with NNVC Extension. Zero Native Subprocess Fallback.
  */
 @SuppressWarnings("unused")
 public class StockfishProcess {
@@ -38,14 +28,8 @@ public class StockfishProcess {
     private static final int PROGRESS_MIN_DEPTH = 8;
     private static final long PROGRESS_INTERVAL_MS = 250;
 
-    // Active Engine Mode: "native" or "wasm"
-    private volatile String activeEngineMode = "native";
-
-    // Native Subprocess Fields
-    private Process nativeProcess;
-    private PrintWriter nativeStdin;
-    private BufferedReader nativeStdout;
-    private volatile boolean nativeReady = false;
+    // Active Engine Mode: strictly "wasm"
+    private volatile String activeEngineMode = "wasm";
 
     // WASM Engine Fields
     private WasmEngineManager wasmManager;
@@ -69,122 +53,50 @@ public class StockfishProcess {
 
         String engineChoice = StockfishSettings.getEngineChoice(context);
         curEngineChoice = engineChoice;
-        NnvcLogger.i(TAG, "Starting engine with requested choice: " + engineChoice);
+        NnvcLogger.i(TAG, "Starting WebAssembly engine with choice: " + engineChoice);
 
-        // 1. If user chose WASM (Stockfish 18 or Komodo 3.3)
-        if (StockfishSettings.ENGINE_KOMODO.equals(engineChoice) ||
-            StockfishSettings.ENGINE_STOCKFISH18.equals(engineChoice)) {
+        wasmManager = WasmEngineManager.getInstance(context);
 
-            wasmManager = WasmEngineManager.getInstance(context);
-            if (wasmManager.hasWasmFiles(engineChoice)) {
-                NnvcLogger.i(TAG, "WASM files found for " + engineChoice + ". Initializing WASM engine...");
-                EngineStatusHUD.show(context, "📦 Đang nạp " + engineChoice + " WASM...", false, 3000);
-                wasmManager.switchEngine(engineChoice);
+        // Pre-extract files from mpp bundle if not already extracted
+        wasmManager.extractEnginesFromMppIfAvailable();
 
-                if (wasmManager.waitForPlayWorkerReady(5000)) {
-                    sendUciCommand("uci");
-                    waitForLine("uciok", 5000);
-                    sendUciCommand("setoption name Threads value 1");
-                    sendUciCommand("setoption name Hash value 16");
-                    sendUciCommand("setoption name UCI_ShowWDL value true");
-                    sendUciCommand("isready");
-                    waitForLine("readyok", 5000);
+        if (wasmManager.hasWasmFiles(engineChoice)) {
+            NnvcLogger.i(TAG, "WASM files found for " + engineChoice + ". Initializing WASM worker...");
+            EngineStatusHUD.show(context, "📦 Đang nạp " + engineChoice.toUpperCase() + " WASM...", false, 3000);
+            wasmManager.switchEngine(engineChoice);
 
-                    activeEngineMode = "wasm";
-                    NnvcLogger.i(TAG, "✓ WASM engine " + engineChoice + " started successfully!");
-                    EngineStatusHUD.showReady(context, engineChoice.toUpperCase() + " WASM");
-                    return true;
-                } else {
-                    NnvcLogger.w(TAG, "WASM engine failed to respond in time; falling back to Native Stockfish.");
-                    EngineStatusHUD.show(context, "⚡ Chuyển sang Stockfish Native (WASM chưa sẵn sàng)", false, 3000);
-                }
+            if (wasmManager.waitForPlayWorkerReady(8000)) {
+                drainReady();
+                sendUciCommand("uci");
+                waitForLine("uciok", 5000);
+                sendUciCommand("setoption name Threads value 1");
+                sendUciCommand("setoption name Hash value 16");
+                sendUciCommand("setoption name UCI_ShowWDL value true");
+                sendUciCommand("isready");
+                waitForLine("readyok", 5000);
+
+                activeEngineMode = "wasm";
+                NnvcLogger.i(TAG, "✓ WASM engine " + engineChoice + " ready!");
+                EngineStatusHUD.showReady(context, engineChoice.toUpperCase() + " WASM");
+                return true;
             } else {
-                NnvcLogger.i(TAG, "WASM files for " + engineChoice + " not installed. Using Native Stockfish.");
-                EngineStatusHUD.show(context, "⚡ Chạy Stockfish Native (WASM chưa cài đặt)", false, 3000);
+                NnvcLogger.w(TAG, "WASM engine worker did not respond within timeout.");
+                EngineStatusHUD.show(context, "⚠️ Đang tải/nạp " + engineChoice.toUpperCase() + " WASM...", false, 4000);
             }
+        } else {
+            NnvcLogger.w(TAG, "WASM files for " + engineChoice + " not found; triggering background install/download.");
+            EngineStatusHUD.show(context, "📥 Đang tải engine " + engineChoice.toUpperCase() + " WASM...", false, 0);
+            wasmManager.ensureEngineFilesAvailable(engineChoice, () -> {
+                NnvcLogger.i(TAG, "Engine files downloaded, starting worker...");
+                start(context);
+            });
         }
 
-        // 2. Start Native Stockfish Process (Primary & Bulletproof Fallback)
-        boolean nativeOk = startNativeProcess(context);
-        if (nativeOk) {
-            activeEngineMode = "native";
-            NnvcLogger.i(TAG, "✓ Native Stockfish engine ready!");
-            EngineStatusHUD.showReady(context, "Stockfish Native");
-            return true;
-        }
-
-        // 3. Last-ditch: If native failed, try WASM if available
-        if (wasmManager != null && wasmManager.isReady()) {
-            activeEngineMode = "wasm";
-            NnvcLogger.i(TAG, "Falling back to WASM engine as backup.");
-            return true;
-        }
-
-        NnvcLogger.e(TAG, "All engine initializations failed!");
-        EngineStatusHUD.show(context, "⚠️ Lỗi khởi động Engine", true, 5000);
-        return false;
-    }
-
-    private boolean startNativeProcess(Context context) {
-        stopNativeProcess();
-        try {
-            File engineBin = extractBinary(context);
-            if (engineBin == null) {
-                NnvcLogger.e(TAG, "Could not find native libstockfish.so");
-                return false;
-            }
-
-            ProcessBuilder pb = new ProcessBuilder(engineBin.getAbsolutePath());
-            pb.redirectErrorStream(true);
-            nativeProcess = pb.start();
-
-            nativeStdin = new PrintWriter(new OutputStreamWriter(nativeProcess.getOutputStream()), true);
-            nativeStdout = new BufferedReader(new InputStreamReader(nativeProcess.getInputStream()), 1 << 16);
-
-            resetOptionCache();
-
-            sendNative("uci");
-            if (!waitForNativeLine("uciok", READY_TIMEOUT_MS)) {
-                NnvcLogger.e(TAG, "Native engine did not respond with 'uciok'");
-                stopNativeProcess();
-                return false;
-            }
-
-            applyThreads(StockfishSettings.getThreads(context));
-            applyHash(computeHashMb(context));
-            sendNative("setoption name UCI_ShowWDL value true");
-
-            sendNative("isready");
-            if (!waitForNativeLine("readyok", READY_TIMEOUT_MS)) {
-                NnvcLogger.e(TAG, "Native engine did not respond with 'readyok'");
-                stopNativeProcess();
-                return false;
-            }
-
-            nativeReady = true;
-            NnvcLogger.i(TAG, "Native Stockfish ready on " + android.os.Build.CPU_ABI
-                    + " (threads=" + curThreads + ", hash=" + curHash + "MB)");
-            return true;
-
-        } catch (Throwable e) {
-            NnvcLogger.e(TAG, "Failed to start native Stockfish: " + e.getMessage(), e);
-            stopNativeProcess();
-            return false;
-        }
+        return wasmManager.isReady();
     }
 
     public boolean isReady() {
-        if ("wasm".equals(activeEngineMode)) {
-            return wasmManager != null && wasmManager.isReady();
-        }
-        if (!nativeReady || nativeProcess == null) return false;
-        try {
-            nativeProcess.exitValue();
-            nativeReady = false;
-            return false;
-        } catch (IllegalThreadStateException e) {
-            return true;
-        }
+        return wasmManager != null && wasmManager.isReady();
     }
 
     public String getActiveEngineMode() {
@@ -264,7 +176,7 @@ public class StockfishProcess {
                                   int multiPV, int movetimeMs, boolean honorLimit,
                                   ProgressListener progress) {
         if (!isReady() && !start(context)) {
-            NnvcLogger.w(TAG, "analyze called but engine is not ready and failed to start.");
+            NnvcLogger.w(TAG, "analyze called but WASM engine is not ready and failed to start.");
             return AnalysisResult.empty();
         }
         if (fen == null) return AnalysisResult.empty();
@@ -300,20 +212,13 @@ public class StockfishProcess {
                 goCmd = movetimeMs > 0 ? ("go depth " + effectiveDepth + " movetime " + movetimeMs) : ("go depth " + effectiveDepth);
             }
             sendUciCommand(goCmd);
-            NnvcLogger.d(TAG, "Search started [" + activeEngineMode + "]: " + goCmd + " (Elo=" + elo + ")");
+            NnvcLogger.d(TAG, "Search started [wasm]: " + goCmd + " (Elo=" + elo + ")");
 
             return readSearchOutput(Math.max(3, multiPV), whiteToMove,
                     movetimeMs > 0 ? movetimeMs + BESTMOVE_GRACE_MS : DEFAULT_SEARCH_TIMEOUT_MS,
                     effectiveDepth, progress);
         } catch (Throwable e) {
-            NnvcLogger.e(TAG, "Search error in mode " + activeEngineMode + ": " + e.getMessage(), e);
-            if ("wasm".equals(activeEngineMode)) {
-                NnvcLogger.w(TAG, "WASM search failed; automatically switching to Native Stockfish.");
-                activeEngineMode = "native";
-                startNativeProcess(context);
-            } else {
-                nativeReady = false;
-            }
+            NnvcLogger.e(TAG, "Search error in mode wasm: " + e.getMessage(), e);
             return AnalysisResult.empty();
         }
     }
@@ -332,19 +237,9 @@ public class StockfishProcess {
     }
 
     public void stop() {
-        stopNativeProcess();
         if (wasmManager != null) {
             wasmManager.sendPlayCommand("quit");
         }
-    }
-
-    private void stopNativeProcess() {
-        nativeReady = false;
-        try { if (nativeStdin != null) nativeStdin.println("quit"); } catch (Throwable ignored) {}
-        try { if (nativeProcess != null) nativeProcess.destroy(); } catch (Throwable ignored) {}
-        nativeStdin = null;
-        nativeStdout = null;
-        nativeProcess = null;
     }
 
     // ── Output Parsing ────────────────────────────────────────────────────────
@@ -377,8 +272,8 @@ public class StockfishProcess {
                 stopSent = true;
                 deadline = System.currentTimeMillis() + READY_TIMEOUT_MS;
             } else if (stopSent && System.currentTimeMillis() > deadline) {
-                NnvcLogger.e(TAG, "Engine unresponsive after stop; restarting.");
-                stop();
+                NnvcLogger.e(TAG, "Engine unresponsive after stop; restarting search.");
+                stopSearch();
                 break;
             }
 
@@ -448,55 +343,50 @@ public class StockfishProcess {
 
             if (!haveScore || mpv < 1 || mpv > multiPV) continue;
             int idx = mpv - 1;
-            if (bound && haveExact[idx]) continue;
 
-            if (depth == 0 && pvStart < 0) {
-                terminal = true;
+            if (pvStart > 0 && pvStart < t.length) {
+                firstMoves[idx] = t[pvStart];
+                if (mpv == 1) {
+                    List<String> newPv = new ArrayList<>(t.length - pvStart);
+                    for (int j = pvStart; j < t.length; j++) newPv.add(t[j]);
+                    bestPv = newPv;
+                }
             }
 
-            float whiteScore;
-            int whiteMate = 0;
+            float currentScore;
             if (isMate) {
-                whiteMate = whiteToMove ? scoreVal : -scoreVal;
-                if (scoreVal == 0) {
-                    whiteScore = whiteToMove ? -MATE_SCORE : MATE_SCORE;
-                    whiteMate = 0;
-                } else {
-                    whiteScore = whiteMate > 0 ? (MATE_SCORE - whiteMate) : (-MATE_SCORE - whiteMate);
+                int curMateIn = whiteToMove ? scoreVal : -scoreVal;
+                currentScore = curMateIn > 0 ? (MATE_SCORE - curMateIn) : (-MATE_SCORE - curMateIn);
+                if (mpv == 1) {
+                    hasMate = true;
+                    mateIn = curMateIn;
                 }
             } else {
                 float pawns = scoreVal / 100.0f;
-                whiteScore = whiteToMove ? pawns : -pawns;
+                currentScore = whiteToMove ? pawns : -pawns;
+                if (mpv == 1) hasMate = false;
             }
 
-            scores[idx] = whiteScore;
-            haveExact[idx] = !bound;
-            haveAny[idx] = true;
-
-            if (idx == 0) {
-                hasMate = isMate;
-                mateIn = whiteMate;
-                if (w >= 0) {
-                    wdlW = whiteToMove ? w : l;
-                    wdlD = d;
-                    wdlL = whiteToMove ? l : w;
-                }
-                reachedDepth = depth;
+            if (!bound) {
+                scores[idx] = currentScore;
+                haveExact[idx] = true;
+                haveAny[idx] = true;
+            } else if (!haveExact[idx]) {
+                scores[idx] = currentScore;
+                haveAny[idx] = true;
             }
 
-            if (pvStart >= 0 && pvStart < t.length) {
-                firstMoves[idx] = t[pvStart];
-                if (idx == 0) {
-                    bestPv = new ArrayList<>(t.length - pvStart);
-                    for (int j = pvStart; j < t.length; j++) bestPv.add(t[j]);
-                }
+            if (w >= 0 && mpv == 1) {
+                wdlW = whiteToMove ? w : l;
+                wdlD = d;
+                wdlL = whiteToMove ? l : w;
             }
 
-            // Stream intermediate updates to listener & Eval Bar
-            if (progress != null && idx == 0 && !bound && !stopSent
-                    && depth >= PROGRESS_MIN_DEPTH && depth > reportedDepth && depth < targetDepth
-                    && firstMoves[0] != null) {
+            if (depth > reachedDepth) reachedDepth = depth;
+
+            if (progress != null && depth >= PROGRESS_MIN_DEPTH && mpv == 1 && firstMoves[0] != null) {
                 long now = System.currentTimeMillis();
+                float whiteScore = scores[0];
                 if (now - lastReport >= PROGRESS_INTERVAL_MS) {
                     lastReport = now;
                     reportedDepth = depth;
@@ -551,83 +441,28 @@ public class StockfishProcess {
     // ── Communication Helpers ──────────────────────────────────────────────────
 
     private void sendUciCommand(String cmd) {
-        if ("wasm".equals(activeEngineMode)) {
-            if (wasmManager != null) wasmManager.sendPlayCommand(cmd);
-        } else {
-            sendNative(cmd);
-        }
-    }
-
-    private void sendNative(String cmd) {
-        if (nativeStdin != null) {
-            nativeStdin.println(cmd);
+        if (wasmManager != null) {
+            wasmManager.sendPlayCommand(cmd);
         }
     }
 
     private String readLineFromActiveEngine() throws IOException {
-        if ("wasm".equals(activeEngineMode)) {
-            return wasmManager != null ? wasmManager.readPlayLine(500) : null;
-        } else {
-            return nativeStdout != null ? nativeStdout.readLine() : null;
-        }
+        return wasmManager != null ? wasmManager.readPlayLine(500) : null;
     }
 
     private boolean waitForLine(String token, long timeoutMs) {
-        if ("wasm".equals(activeEngineMode)) {
-            long deadline = System.currentTimeMillis() + timeoutMs;
-            while (System.currentTimeMillis() < deadline) {
-                String line = wasmManager != null ? wasmManager.readPlayLine(500) : null;
-                if (line != null && line.startsWith(token)) return true;
-            }
-            return false;
-        } else {
-            return waitForNativeLine(token, timeoutMs);
-        }
-    }
-
-    private boolean waitForNativeLine(String token, long timeoutMs) {
         long deadline = System.currentTimeMillis() + timeoutMs;
         while (System.currentTimeMillis() < deadline) {
-            try {
-                if (nativeStdout == null) return false;
-                String line = nativeStdout.readLine();
-                if (line == null) break;
-                if (line.startsWith(token)) return true;
-            } catch (Throwable ignored) {
-                break;
-            }
+            String line = wasmManager != null ? wasmManager.readPlayLine(500) : null;
+            if (line != null && line.startsWith(token)) return true;
         }
         return false;
     }
 
     private void drainReady() {
-        if ("wasm".equals(activeEngineMode)) {
-            if (wasmManager != null) wasmManager.clearPlayOutputQueue();
-        } else {
-            try {
-                while (nativeStdout != null && nativeStdout.ready()) {
-                    if (nativeStdout.readLine() == null) break;
-                }
-            } catch (Throwable ignored) {}
+        if (wasmManager != null) {
+            wasmManager.clearPlayOutputQueue();
         }
-    }
-
-    private File extractBinary(Context context) {
-        String nativeLibDir = context.getApplicationInfo().nativeLibraryDir;
-        File engineBin = new File(nativeLibDir, "libstockfish.so");
-
-        if (!engineBin.exists()) {
-            NnvcLogger.e(TAG, "Stockfish binary not found at: " + engineBin.getAbsolutePath());
-            return null;
-        }
-        if (!engineBin.canExecute()) {
-            engineBin.setExecutable(true);
-            if (!engineBin.canExecute()) {
-                NnvcLogger.e(TAG, "Stockfish binary is not executable: " + engineBin.getAbsolutePath());
-                return null;
-            }
-        }
-        return engineBin;
     }
 
     // ── Options ───────────────────────────────────────────────────────────────
@@ -651,18 +486,13 @@ public class StockfishProcess {
             curMultiPV = finalMpv;
         }
 
-        if ("wasm".equals(activeEngineMode)) {
-            if (curHash != 16) {
-                sendUciCommand("setoption name Hash value 16");
-                curHash = 16;
-            }
-            if (curThreads != 1) {
-                sendUciCommand("setoption name Threads value 1");
-                curThreads = 1;
-            }
-        } else {
-            applyThreads(StockfishSettings.getThreads(context));
-            applyHash(computeHashMb(context));
+        if (curHash != 16) {
+            sendUciCommand("setoption name Hash value 16");
+            curHash = 16;
+        }
+        if (curThreads != 1) {
+            sendUciCommand("setoption name Threads value 1");
+            curThreads = 1;
         }
 
         sendUciCommand("setoption name Ponder value false");
@@ -687,38 +517,6 @@ public class StockfishProcess {
                 curSkillLevel = skillFromElo;
             }
         }
-    }
-
-    private void applyThreads(int threads) {
-        threads = Math.max(1, threads);
-        if (threads != curThreads) {
-            sendUciCommand("setoption name Threads value " + threads);
-            curThreads = threads;
-        }
-    }
-
-    private void applyHash(int mb) {
-        if (mb != curHash) {
-            sendUciCommand("setoption name Hash value " + mb);
-            curHash = mb;
-        }
-    }
-
-    static int computeHashMb(Context context) {
-        long totalMb = 0;
-        try {
-            ActivityManager am = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
-            if (am != null) {
-                ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
-                am.getMemoryInfo(mi);
-                totalMb = mi.totalMem / (1024L * 1024L);
-            }
-        } catch (Throwable ignored) {}
-        if (totalMb >= 11_000) return 768;
-        if (totalMb >= 7_000) return 512;
-        if (totalMb >= 5_000) return 256;
-        if (totalMb >= 3_000) return 128;
-        return 32;
     }
 
     private static boolean isWhiteToMove(String fen, List<String> moves) {

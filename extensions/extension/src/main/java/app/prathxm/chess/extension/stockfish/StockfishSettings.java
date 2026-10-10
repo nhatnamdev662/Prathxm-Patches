@@ -132,14 +132,18 @@ public class StockfishSettings {
     public static final int DEFAULT_ELO = 2200;
     public static final int ELO_STEP = 10;
 
-    // Engine Choices matching Extension NNVC & Native Hybrid
-    public static final String ENGINE_STOCKFISH_NATIVE = "stockfish_native"; // Native Stockfish (instant, offline, zero battery drain)
-    public static final String ENGINE_KOMODO = "komodo"; // Komodo 3.3 WASM
-    public static final String ENGINE_STOCKFISH18 = "stockfish18"; // Stockfish 18 / 19 WASM
+    // Engine Choices matching Extension NNVC (100% WebAssembly)
+    public static final String ENGINE_KOMODO = "komodo"; // Komodo Dragon 3.3 WASM (default)
+    public static final String ENGINE_STOCKFISH18 = "stockfish18"; // Stockfish 18 WASM
     private static final String KEY_ENGINE_CHOICE = "engine_choice";
 
     public static String getEngineChoice(Context context) {
-        return getPrefs(context).getString(KEY_ENGINE_CHOICE, ENGINE_STOCKFISH_NATIVE);
+        String choice = getPrefs(context).getString(KEY_ENGINE_CHOICE, ENGINE_KOMODO);
+        if ("stockfish_native".equals(choice)) {
+            choice = ENGINE_KOMODO;
+            setEngineChoice(context, choice);
+        }
+        return choice;
     }
 
     public static void setEngineChoice(Context context, String choice) {

@@ -442,16 +442,11 @@ public class StockfishSettingsDialog {
         engineChoiceCard.addView(engineBtnRow);
 
         final String[] curEngine = { StockfishSettings.getEngineChoice(activity) };
-        final TextView btnNative = createTabButton(activity, I18n.get(activity, "engine_stockfish_native"), StockfishSettings.ENGINE_STOCKFISH_NATIVE.equals(curEngine[0]), density);
         final TextView btnKomodo = createTabButton(activity, I18n.get(activity, "engine_komodo"), StockfishSettings.ENGINE_KOMODO.equals(curEngine[0]), density);
         final TextView btnStockfish = createTabButton(activity, I18n.get(activity, "engine_stockfish"), StockfishSettings.ENGINE_STOCKFISH18.equals(curEngine[0]), density);
-        engineBtnRow.addView(btnNative);
-        View btnSpacing1 = new View(activity);
-        btnSpacing1.setLayoutParams(new LinearLayout.LayoutParams((int) (6 * density), 1));
-        engineBtnRow.addView(btnSpacing1);
         engineBtnRow.addView(btnKomodo);
         View btnSpacing2 = new View(activity);
-        btnSpacing2.setLayoutParams(new LinearLayout.LayoutParams((int) (6 * density), 1));
+        btnSpacing2.setLayoutParams(new LinearLayout.LayoutParams((int) (8 * density), 1));
         engineBtnRow.addView(btnSpacing2);
         engineBtnRow.addView(btnStockfish);
 
@@ -478,31 +473,16 @@ public class StockfishSettingsDialog {
         final TextView btnStyleDef = createTabButton(activity, I18n.get(activity, "style_default"), StockfishSettings.STYLE_DEFAULT.equals(curStyle[0]), density);
         final TextView btnStyleAgg = createTabButton(activity, I18n.get(activity, "style_aggressive"), StockfishSettings.STYLE_AGGRESSIVE.equals(curStyle[0]), density);
         final TextView btnStyleDefens = createTabButton(activity, I18n.get(activity, "style_defensive"), StockfishSettings.STYLE_DEFENSIVE.equals(curStyle[0]), density);
-
         styleBtnRow.addView(btnStyleDef);
         View sSp1 = new View(activity); sSp1.setLayoutParams(new LinearLayout.LayoutParams((int) (6 * density), 1)); styleBtnRow.addView(sSp1);
         styleBtnRow.addView(btnStyleAgg);
         View sSp2 = new View(activity); sSp2.setLayoutParams(new LinearLayout.LayoutParams((int) (6 * density), 1)); styleBtnRow.addView(sSp2);
         styleBtnRow.addView(btnStyleDefens);
 
-        btnNative.setOnClickListener(v -> {
-            HapticHelper.tick(activity, v);
-            curEngine[0] = StockfishSettings.ENGINE_STOCKFISH_NATIVE;
-            StockfishSettings.setEngineChoice(activity, curEngine[0]);
-            updateTabStyle(btnNative, true, density);
-            updateTabStyle(btnKomodo, false, density);
-            updateTabStyle(btnStockfish, false, density);
-            komodoStyleLayout.setVisibility(View.GONE);
-            if (StockfishSettings.isEngineEnabled(activity)) {
-                StockfishExtension.triggerAnalysisForCurrentState();
-            }
-        });
-
         btnKomodo.setOnClickListener(v -> {
             HapticHelper.tick(activity, v);
             curEngine[0] = StockfishSettings.ENGINE_KOMODO;
             StockfishSettings.setEngineChoice(activity, curEngine[0]);
-            updateTabStyle(btnNative, false, density);
             updateTabStyle(btnKomodo, true, density);
             updateTabStyle(btnStockfish, false, density);
             komodoStyleLayout.setVisibility(View.VISIBLE);
@@ -515,7 +495,6 @@ public class StockfishSettingsDialog {
             HapticHelper.tick(activity, v);
             curEngine[0] = StockfishSettings.ENGINE_STOCKFISH18;
             StockfishSettings.setEngineChoice(activity, curEngine[0]);
-            updateTabStyle(btnNative, false, density);
             updateTabStyle(btnKomodo, false, density);
             updateTabStyle(btnStockfish, true, density);
             komodoStyleLayout.setVisibility(View.GONE);

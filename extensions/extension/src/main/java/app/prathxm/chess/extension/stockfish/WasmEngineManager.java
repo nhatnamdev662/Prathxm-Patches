@@ -21,6 +21,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
@@ -28,6 +30,7 @@ import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -35,18 +38,17 @@ import java.util.zip.ZipFile;
  * WasmEngineManager – Manages Stockfish 18 WASM and Komodo Dragon 3.3 WASM
  * inside a headless background WebView running dedicated Web Workers.
  *
- * Architecture:
- *  - 2 Web Workers:
- *     1) 'playWorker': Runs the active play engine (Stockfish 18 or Komodo 3.3).
- *     2) 'classifyWorker': Dedicated Stockfish 18 engine for Eval Bar & Move Classification
- *        (Hash=64, Threads=1, MultiPV=3, Depth=10).
- *  - High-performance blocking UCI communication for StockfishProcess background worker threads.
- *  - Real-time UCI stream parsing from classifyWorker to drive EvalBarView directly.
+ * 100% WebAssembly Engine Parity with NNVC Extension.
+ * Zero Native Subprocess Fallbacks.
  */
 public class WasmEngineManager {
 
     private static final String TAG = "WasmEngineManager";
     private static final String HOST = "https://nnvc-engine.local/";
+
+    // Official release assets URL
+    public static final String BASE_RELEASE_URL =
+            "https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.67/";
 
     private static volatile WasmEngineManager instance;
 
@@ -61,6 +63,8 @@ public class WasmEngineManager {
     private volatile boolean isPlayReady = false;
     private volatile boolean isClassifyReady = false;
     private volatile String currentPlayEngineKey = StockfishSettings.ENGINE_KOMODO;
+
+    private final AtomicBoolean isDownloading = new AtomicBoolean(false);
 
     // UCI Line queues for synchronous readSearchOutput
     private final BlockingQueue<String> playUciOutputQueue = new LinkedBlockingQueue<>();
@@ -92,6 +96,10 @@ public class WasmEngineManager {
         this.context = context;
         this.mainHandler = new Handler(Looper.getMainLooper());
         this.currentPlayEngineKey = StockfishSettings.getEngineChoice(context);
+
+        // Pre-scan / extract engine files immediately
+        extractEnginesFromMppIfAvailable();
+
         mainHandler.post(this::initWebView);
     }
 
@@ -104,21 +112,26 @@ public class WasmEngineManager {
     }
 
     public boolean hasWasmFiles(String engineKey) {
-        if ("komodo".equals(engineKey)) {
+        if (StockfishSettings.ENGINE_KOMODO.equals(engineKey)) {
             File wasm = getKomodoWasm();
             File js = getKomodoJs();
-            return wasm != null && wasm.exists() && js != null && js.exists();
-        } else if ("stockfish18".equals(engineKey)) {
+            File book = getKomodoBook();
+            return wasm != null && wasm.exists() && wasm.length() > 1_000_000 &&
+                   js != null && js.exists() && js.length() > 50_000 &&
+                   book != null && book.exists() && book.length() > 500_000;
+        } else if (StockfishSettings.ENGINE_STOCKFISH18.equals(engineKey)) {
             File wasm = getStockfishWasm();
             File js = getStockfishJs();
-            return wasm != null && wasm.exists() && js != null && js.exists();
+            return wasm != null && wasm.exists() && wasm.length() > 1_000_000 &&
+                   js != null && js.exists() && js.length() > 10_000;
         }
         return false;
     }
 
     public boolean waitForPlayWorkerReady(long timeoutMs) {
         if (!hasWasmFiles(currentPlayEngineKey)) {
-            NnvcLogger.d(TAG, "No WASM files for " + currentPlayEngineKey + "; skipping wait.");
+            NnvcLogger.w(TAG, "Missing WASM files for " + currentPlayEngineKey + "; triggering download.");
+            ensureEngineFilesAvailable(currentPlayEngineKey, null);
             return false;
         }
         long deadline = System.currentTimeMillis() + timeoutMs;
@@ -137,7 +150,7 @@ public class WasmEngineManager {
     }
 
     public boolean waitForClassifyWorkerReady(long timeoutMs) {
-        if (!hasWasmFiles("stockfish18")) {
+        if (!hasWasmFiles(StockfishSettings.ENGINE_STOCKFISH18)) {
             return false;
         }
         long deadline = System.currentTimeMillis() + timeoutMs;
@@ -155,7 +168,7 @@ public class WasmEngineManager {
         }
     }
 
-    // ── Asset Resolution ───────────────────────────────────────────────────────
+    // ── Asset Resolution & Extraction ──────────────────────────────────────────
 
     private File getWasmDir() {
         File dir = new File(context.getFilesDir(), "wasm_engines");
@@ -163,7 +176,61 @@ public class WasmEngineManager {
         return dir;
     }
 
-    public File getAssetOrCopy(String assetSubpath, String targetFileName) {
+    /**
+     * Scans /sdcard/Download/ and external files for any patches-*.mpp bundle
+     * and extracts bundled wasm/js/book assets directly.
+     */
+    public void extractEnginesFromMppIfAvailable() {
+        try {
+            File downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+            File[] searchDirs = {
+                    downloadsDir,
+                    context.getExternalFilesDir(null),
+                    new File("/sdcard/Download"),
+                    new File("/sdcard/Android/data/com.chess/files")
+            };
+
+            for (File dir : searchDirs) {
+                if (dir == null || !dir.exists() || !dir.isDirectory()) continue;
+                File[] files = dir.listFiles((d, name) -> name != null && name.endsWith(".mpp"));
+                if (files == null) continue;
+
+                for (File mppFile : files) {
+                    if (mppFile.length() < 10_000_000) continue; // Must be full bundle
+                    try (ZipFile zip = new ZipFile(mppFile)) {
+                        extractEntryIfMissing(zip, "stockfish18/stockfish-18-lite-single.wasm", "stockfish-18-lite-single.wasm");
+                        extractEntryIfMissing(zip, "stockfish18/stockfish-18-lite-single.js", "stockfish-18-lite-single.js");
+                        extractEntryIfMissing(zip, "komodo/dragon3.3.wasm", "dragon3.3.wasm");
+                        extractEntryIfMissing(zip, "komodo/komodo.js", "komodo.js");
+                        extractEntryIfMissing(zip, "komodo/book.bin", "book.bin");
+                    } catch (Throwable t) {
+                        NnvcLogger.d(TAG, "Error inspecting mpp bundle " + mppFile.getName() + ": " + t.getMessage());
+                    }
+                }
+            }
+        } catch (Throwable t) {
+            NnvcLogger.w(TAG, "Failed scan for mpp bundle: " + t.getMessage());
+        }
+    }
+
+    private void extractEntryIfMissing(ZipFile zip, String entryPath, String targetFileName) {
+        File targetFile = new File(getWasmDir(), targetFileName);
+        if (targetFile.exists() && targetFile.length() > 0) return;
+
+        String[] candidates = { entryPath, "assets/" + entryPath, targetFileName };
+        for (String c : candidates) {
+            ZipEntry ze = zip.getEntry(c);
+            if (ze != null) {
+                try (InputStream is = zip.getInputStream(ze)) {
+                    copyStream(is, targetFile);
+                    NnvcLogger.i(TAG, "✓ Extracted " + targetFileName + " (" + targetFile.length() + " bytes) from " + zip.getName());
+                    return;
+                } catch (Throwable ignored) {}
+            }
+        }
+    }
+
+    public File getAssetOrExtract(String assetSubpath, String targetFileName) {
         File targetFile = new File(getWasmDir(), targetFileName);
         if (targetFile.exists() && targetFile.length() > 0) {
             return targetFile;
@@ -172,19 +239,20 @@ public class WasmEngineManager {
         // 1. Try extracting from app Assets
         String[] candidatePaths = {
                 assetSubpath,
-                "assets/" + assetSubpath
+                "assets/" + assetSubpath,
+                targetFileName
         };
         for (String p : candidatePaths) {
             try (InputStream is = context.getAssets().open(p)) {
                 copyStream(is, targetFile);
                 if (targetFile.exists() && targetFile.length() > 0) {
-                    Log.i(TAG, "Extracted from assets: " + p + " -> " + targetFile.getAbsolutePath() + " (" + targetFile.length() + " bytes)");
+                    NnvcLogger.i(TAG, "Extracted from assets: " + p + " -> " + targetFile.getAbsolutePath());
                     return targetFile;
                 }
             } catch (Throwable ignored) {}
         }
 
-        // 2. Try extracting directly from APK Zip (context.getPackageResourcePath())
+        // 2. Try extracting from APK Zip (context.getPackageResourcePath())
         try {
             String apkPath = context.getPackageResourcePath();
             if (apkPath != null) {
@@ -195,7 +263,7 @@ public class WasmEngineManager {
                             try (InputStream is = zip.getInputStream(entry)) {
                                 copyStream(is, targetFile);
                                 if (targetFile.exists() && targetFile.length() > 0) {
-                                    Log.i(TAG, "Extracted from APK zip: " + p + " -> " + targetFile.getAbsolutePath() + " (" + targetFile.length() + " bytes)");
+                                    NnvcLogger.i(TAG, "Extracted from APK zip: " + p + " -> " + targetFile.getAbsolutePath());
                                     return targetFile;
                                 }
                             }
@@ -209,12 +277,22 @@ public class WasmEngineManager {
         try {
             File dl = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), targetFileName);
             if (dl.exists() && dl.length() > 0) {
-                try (InputStream is = new FileInputStream(dl)) {
-                    copyStream(is, targetFile);
-                    if (targetFile.exists() && targetFile.length() > 0) {
-                        Log.i(TAG, "Copied from Downloads: " + dl.getAbsolutePath() + " -> " + targetFile.getAbsolutePath());
-                        return targetFile;
-                    }
+                copyFile(dl, targetFile);
+                if (targetFile.exists() && targetFile.length() > 0) {
+                    NnvcLogger.i(TAG, "Copied from Downloads: " + dl.getAbsolutePath() + " -> " + targetFile.getAbsolutePath());
+                    return targetFile;
+                }
+            }
+        } catch (Throwable ignored) {}
+
+        // 4. Try checking app external files dir
+        try {
+            File ext = new File(context.getExternalFilesDir(null), targetFileName);
+            if (ext.exists() && ext.length() > 0) {
+                copyFile(ext, targetFile);
+                if (targetFile.exists() && targetFile.length() > 0) {
+                    NnvcLogger.i(TAG, "Copied from external files: " + ext.getAbsolutePath() + " -> " + targetFile.getAbsolutePath());
+                    return targetFile;
                 }
             }
         } catch (Throwable ignored) {}
@@ -223,23 +301,125 @@ public class WasmEngineManager {
     }
 
     public File getStockfishWasm() {
-        return getAssetOrCopy("stockfish18/stockfish-18-lite-single.wasm", "stockfish-18-lite-single.wasm");
+        return getAssetOrExtract("stockfish18/stockfish-18-lite-single.wasm", "stockfish-18-lite-single.wasm");
     }
 
     public File getStockfishJs() {
-        return getAssetOrCopy("stockfish18/stockfish-18-lite-single.js", "stockfish-18-lite-single.js");
+        return getAssetOrExtract("stockfish18/stockfish-18-lite-single.js", "stockfish-18-lite-single.js");
     }
 
     public File getKomodoWasm() {
-        return getAssetOrCopy("komodo/dragon3.3.wasm", "dragon3.3.wasm");
+        return getAssetOrExtract("komodo/dragon3.3.wasm", "dragon3.3.wasm");
     }
 
     public File getKomodoJs() {
-        return getAssetOrCopy("komodo/komodo.js", "komodo.js");
+        return getAssetOrExtract("komodo/komodo.js", "komodo.js");
     }
 
     public File getKomodoBook() {
-        return getAssetOrCopy("komodo/book.bin", "book.bin");
+        return getAssetOrExtract("komodo/book.bin", "book.bin");
+    }
+
+    public void ensureEngineFilesAvailable(String engineKey, Runnable onReady) {
+        if (hasWasmFiles(engineKey)) {
+            if (onReady != null) onReady.run();
+            return;
+        }
+
+        if (isDownloading.compareAndSet(false, true)) {
+            NnvcLogger.i(TAG, "Starting background download of WASM files for " + engineKey);
+            EngineStatusHUD.show(context, "📥 Đang tải engine " + engineKey.toUpperCase() + " WASM...", false, 0);
+
+            new Thread(() -> {
+                try {
+                    Map<String, String> filesToDownload = new HashMap<>();
+                    if (StockfishSettings.ENGINE_KOMODO.equals(engineKey)) {
+                        filesToDownload.put("dragon3.3.wasm", BASE_RELEASE_URL + "dragon3.3.wasm");
+                        filesToDownload.put("komodo.js", BASE_RELEASE_URL + "komodo.js");
+                        filesToDownload.put("book.bin", BASE_RELEASE_URL + "book.bin");
+                    } else {
+                        filesToDownload.put("stockfish-18-lite-single.wasm", BASE_RELEASE_URL + "stockfish-18-lite-single.wasm");
+                        filesToDownload.put("stockfish-18-lite-single.js", BASE_RELEASE_URL + "stockfish-18-lite-single.js");
+                    }
+
+                    for (Map.Entry<String, String> entry : filesToDownload.entrySet()) {
+                        File dest = new File(getWasmDir(), entry.getKey());
+                        if (!dest.exists() || dest.length() < 1000) {
+                            NnvcLogger.i(TAG, "Downloading: " + entry.getValue());
+                            downloadToFile(entry.getValue(), dest);
+                            NnvcLogger.i(TAG, "✓ Downloaded: " + entry.getKey() + " (" + dest.length() + " bytes)");
+                        }
+                    }
+
+                    EngineStatusHUD.show(context, "✓ Tải xong " + engineKey.toUpperCase() + "! Đang khởi động...", false, 3000);
+                    mainHandler.post(() -> {
+                        initWebView();
+                        if (onReady != null) onReady.run();
+                    });
+
+                } catch (Throwable t) {
+                    NnvcLogger.e(TAG, "Failed downloading WASM engine files: " + t.getMessage(), t);
+                    EngineStatusHUD.show(context, "⚠️ Lỗi tải Engine: " + t.getMessage(), true, 6000);
+                } finally {
+                    isDownloading.set(false);
+                }
+            }, "wasm-engine-downloader").start();
+        }
+    }
+
+    private static void downloadToFile(String urlStr, File dest) throws Exception {
+        URL url = new URL(urlStr);
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setConnectTimeout(20_000);
+        conn.setReadTimeout(90_000);
+        conn.setInstanceFollowRedirects(true);
+        int code = conn.getResponseCode();
+        if (code >= 300 && code < 400) {
+            String redirectUrl = conn.getHeaderField("Location");
+            if (redirectUrl != null) {
+                conn.disconnect();
+                url = new URL(redirectUrl);
+                conn = (HttpURLConnection) url.openConnection();
+                conn.setConnectTimeout(20_000);
+                conn.setReadTimeout(90_000);
+            }
+        }
+        File temp = new File(dest.getParentFile(), dest.getName() + ".part");
+        try (InputStream in = conn.getInputStream(); FileOutputStream out = new FileOutputStream(temp)) {
+            byte[] buf = new byte[65536];
+            int read;
+            while ((read = in.read(buf)) != -1) {
+                out.write(buf, 0, read);
+            }
+        } finally {
+            conn.disconnect();
+        }
+        if (temp.exists() && temp.length() > 0) {
+            if (dest.exists()) dest.delete();
+            temp.renameTo(dest);
+        }
+    }
+
+    private static void copyFile(File src, File dst) {
+        try (FileInputStream in = new FileInputStream(src); FileOutputStream out = new FileOutputStream(dst)) {
+            copyStream(in, out);
+        } catch (Throwable ignored) {}
+    }
+
+    private static void copyStream(InputStream in, File dst) throws Exception {
+        try (FileOutputStream out = new FileOutputStream(dst)) {
+            copyStream(in, out);
+        } finally {
+            in.close();
+        }
+    }
+
+    private static void copyStream(InputStream in, FileOutputStream out) throws Exception {
+        byte[] buf = new byte[65536];
+        int read;
+        while ((read = in.read(buf)) != -1) {
+            out.write(buf, 0, read);
+        }
     }
 
     private String readStreamToString(InputStream is) throws Exception {
@@ -254,16 +434,6 @@ public class WasmEngineManager {
         return sb.toString();
     }
 
-    private static void copyStream(InputStream in, File dst) throws Exception {
-        try (FileOutputStream out = new FileOutputStream(dst)) {
-            byte[] buf = new byte[65536];
-            int read;
-            while ((read = in.read(buf)) != -1) {
-                out.write(buf, 0, read);
-            }
-        }
-    }
-
     // ── Headless WebView Initialization ───────────────────────────────────────
 
     private WebResourceResponse handleIntercept(String url) {
@@ -276,56 +446,50 @@ public class WasmEngineManager {
             try {
                 File f = getStockfishWasm();
                 if (f != null && f.exists()) {
-                    return new WebResourceResponse("application/wasm", "binary", 200, "OK", headers, new FileInputStream(f));
+                    return new WebResourceResponse("application/wasm", null, 200, "OK", headers, new FileInputStream(f));
                 }
             } catch (Throwable t) {
-                Log.e(TAG, "Error streaming stockfish wasm: " + t.getMessage());
+                NnvcLogger.e(TAG, "Error streaming stockfish wasm: " + t.getMessage());
             }
         } else if (url.contains("stockfish-18-lite-single.js")) {
             try {
                 File f = getStockfishJs();
                 if (f != null && f.exists()) {
                     String source = readStreamToString(new FileInputStream(f));
-                    // Replace stockfish wasm resolution with absolute URL
-                    source = source.replace("location.origin+location.pathname.replace(/\\.js$/i,\".wasm\")",
-                            "\"" + HOST + "stockfish-18-lite-single.wasm\"");
                     byte[] bytes = source.getBytes(StandardCharsets.UTF_8);
                     return new WebResourceResponse("application/javascript", "utf-8", 200, "OK", headers, new ByteArrayInputStream(bytes));
                 }
             } catch (Throwable t) {
-                Log.e(TAG, "Error streaming stockfish js: " + t.getMessage());
+                NnvcLogger.e(TAG, "Error streaming stockfish js: " + t.getMessage());
             }
         } else if (url.contains("dragon3.3.wasm")) {
             try {
                 File f = getKomodoWasm();
                 if (f != null && f.exists()) {
-                    return new WebResourceResponse("application/wasm", "binary", 200, "OK", headers, new FileInputStream(f));
+                    return new WebResourceResponse("application/wasm", null, 200, "OK", headers, new FileInputStream(f));
                 }
             } catch (Throwable t) {
-                Log.e(TAG, "Error streaming komodo wasm: " + t.getMessage());
+                NnvcLogger.e(TAG, "Error streaming komodo wasm: " + t.getMessage());
             }
         } else if (url.contains("komodo.js")) {
             try {
                 File f = getKomodoJs();
                 if (f != null && f.exists()) {
                     String source = readStreamToString(new FileInputStream(f));
-                    // NNVC Extension Komodo replacements
-                    source = source.replace("__NNCV_KOMODO_WASM_URL__", HOST + "dragon3.3.wasm")
-                                   .replace("__NNCV_KOMODO_BOOK_URL__", HOST + "book.bin");
                     byte[] bytes = source.getBytes(StandardCharsets.UTF_8);
                     return new WebResourceResponse("application/javascript", "utf-8", 200, "OK", headers, new ByteArrayInputStream(bytes));
                 }
             } catch (Throwable t) {
-                Log.e(TAG, "Error streaming komodo js: " + t.getMessage());
+                NnvcLogger.e(TAG, "Error streaming komodo js: " + t.getMessage());
             }
         } else if (url.contains("book.bin")) {
             try {
                 File f = getKomodoBook();
                 if (f != null && f.exists()) {
-                    return new WebResourceResponse("application/octet-stream", "binary", 200, "OK", headers, new FileInputStream(f));
+                    return new WebResourceResponse("application/octet-stream", null, 200, "OK", headers, new FileInputStream(f));
                 }
             } catch (Throwable t) {
-                Log.e(TAG, "Error streaming komodo book: " + t.getMessage());
+                NnvcLogger.e(TAG, "Error streaming komodo book: " + t.getMessage());
             }
         }
         return null;
@@ -334,17 +498,15 @@ public class WasmEngineManager {
     private void initWebView() {
         try {
             File sfWasm = getStockfishWasm();
-            File sfJs = getStockfishJs();
             File kmWasm = getKomodoWasm();
-            File kmJs = getKomodoJs();
-            File kmBook = getKomodoBook();
 
             if (sfWasm == null && kmWasm == null) {
-                NnvcLogger.i(TAG, "No WASM engine binaries found yet (SF=null, KM=null). WebView bootstrap deferred.");
+                NnvcLogger.w(TAG, "No WASM binaries present yet on disk. Triggering auto-download...");
+                ensureEngineFilesAvailable(currentPlayEngineKey, null);
                 return;
             }
 
-            NnvcLogger.i(TAG, "Starting WebView... (SF=" + (sfWasm != null) + ", KM=" + (kmWasm != null) + ")");
+            NnvcLogger.i(TAG, "Starting headless WebView with in-memory WebAssembly workers... (SF=" + (sfWasm != null) + ", KM=" + (kmWasm != null) + ")");
 
             webView = new WebView(context);
             WebSettings settings = webView.getSettings();
@@ -357,7 +519,7 @@ public class WasmEngineManager {
             webView.setWebChromeClient(new android.webkit.WebChromeClient() {
                 @Override
                 public boolean onConsoleMessage(android.webkit.ConsoleMessage cm) {
-                    TorchEngine.log("[WASM Console " + cm.messageLevel() + "] " + cm.message());
+                    NnvcLogger.d(TAG, "[WASM Console " + cm.messageLevel() + "] " + cm.message() + " (" + cm.sourceId() + ":" + cm.lineNumber() + ")");
                     return true;
                 }
             });
@@ -380,7 +542,7 @@ public class WasmEngineManager {
                 }
             });
 
-            // Register ServiceWorker interception on API 24+
+            // ServiceWorker interceptor for API 24+
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 try {
                     ServiceWorkerController swc = ServiceWorkerController.getInstance();
@@ -395,103 +557,337 @@ public class WasmEngineManager {
                 } catch (Throwable ignored) {}
             }
 
-            String html = "<!DOCTYPE html><html><head><meta charset='utf-8'></head><body><script>\n" +
-                    "(function() {\n" +
-                    "    window.AudioContext = undefined; window.webkitAudioContext = undefined; window.Audio = undefined;\n" +
-                    "    console.log('[WasmManager] Bootstrap starting...');\n" +
-                    "    window._playWorker = null;\n" +
-                    "    window._classifyWorker = null;\n" +
-                    "    window._playWorkerReady = false;\n" +
-                    "    window._classifyWorkerReady = false;\n" +
-                    "    window._playPendingCmds = [];\n" +
-                    "    window._classifyPendingCmds = [];\n" +
-                    "    window._playEngineKey = '" + currentPlayEngineKey + "';\n" +
-                    "\n" +
-                    "    function initWorker(kind, engineKey) {\n" +
-                    "        const jsUrl = (engineKey === 'komodo') ? '" + HOST + "komodo.js' : '" + HOST + "stockfish-18-lite-single.js';\n" +
-                    "        fetch(jsUrl).then(r => r.text()).then(sourceText => {\n" +
-                    "            let code = sourceText;\n" +
-                    "            if (engineKey === 'stockfish18') {\n" +
-                    "                code = code.split('location.origin+location.pathname.replace(/\\\\.js$/i,\".wasm\")').join(JSON.stringify('" + HOST + "stockfish-18-lite-single.wasm'));\n" +
-                    "            }\n" +
-                    "            const blob = new Blob([code], { type: 'application/javascript' });\n" +
-                    "            const hashTarget = (engineKey === 'komodo') ? '" + HOST + "dragon3.3.wasm' : '" + HOST + "stockfish-18-lite-single.wasm';\n" +
-                    "            const blobUrl = URL.createObjectURL(blob) + '#' + encodeURIComponent(hashTarget);\n" +
-                    "            const worker = new Worker(blobUrl);\n" +
-                    "            worker.onmessage = function(e) {\n" +
-                    "                const line = (typeof e.data === 'string') ? e.data : String(e.data || '');\n" +
-                    "                if (line === 'uciok' || line === 'readyok') {\n" +
-                    "                    if (kind === 'play') window._playWorkerReady = true;\n" +
-                    "                    else if (kind === 'classify') window._classifyWorkerReady = true;\n" +
-                    "                }\n" +
-                    "                if (window.WasmEngineBridge) window.WasmEngineBridge.onEngineOutput(kind, line);\n" +
-                    "            };\n" +
-                    "            worker.onerror = function(err) {\n" +
-                    "                console.error('[Worker Error ' + kind + '] ' + (err.message || err));\n" +
-                    "                if (window.WasmEngineBridge) window.WasmEngineBridge.onEngineError(kind, String(err.message || err));\n" +
-                    "            };\n" +
-                    "            if (kind === 'play') {\n" +
-                    "                if (window._playWorker) { try { window._playWorker.terminate(); } catch(e){} }\n" +
-                    "                window._playWorker = worker;\n" +
-                    "                window._playEngineKey = engineKey;\n" +
-                    "                window._playWorkerReady = true;\n" +
-                    "                while (window._playPendingCmds.length > 0) {\n" +
-                    "                    worker.postMessage(window._playPendingCmds.shift());\n" +
-                    "                }\n" +
-                    "            } else {\n" +
-                    "                if (window._classifyWorker) { try { window._classifyWorker.terminate(); } catch(e){} }\n" +
-                    "                window._classifyWorker = worker;\n" +
-                    "                window._classifyWorkerReady = true;\n" +
-                    "                // Exact NNVC Extension options for classify engine\n" +
-                    "                worker.postMessage('uci');\n" +
-                    "                worker.postMessage('setoption name Hash value 64');\n" +
-                    "                worker.postMessage('setoption name Threads value 1');\n" +
-                    "                worker.postMessage('setoption name MultiPV value 3');\n" +
-                    "                worker.postMessage('setoption name Ponder value false');\n" +
-                    "                worker.postMessage('isready');\n" +
-                    "                while (window._classifyPendingCmds.length > 0) {\n" +
-                    "                    worker.postMessage(window._classifyPendingCmds.shift());\n" +
-                    "                }\n" +
-                    "            }\n" +
-                    "            if (window.WasmEngineBridge) window.WasmEngineBridge.onEngineWorkerReady(kind, engineKey);\n" +
-                    "        }).catch(err => {\n" +
-                    "            console.error('[Worker Load Failed ' + kind + '] ' + err);\n" +
-                    "            if (window.WasmEngineBridge) window.WasmEngineBridge.onEngineError(kind, String(err));\n" +
-                    "        });\n" +
-                    "    }\n" +
-                    "\n" +
-                    "    window.startEngines = function(playKey) {\n" +
-                    "        initWorker('play', playKey || 'komodo');\n" +
-                    "        initWorker('classify', 'stockfish18');\n" +
-                    "    };\n" +
-                    "    window.switchPlayEngine = function(playKey) {\n" +
-                    "        window._playWorkerReady = false;\n" +
-                    "        initWorker('play', playKey);\n" +
-                    "    };\n" +
-                    "    window.sendPlayCmd = function(cmd) {\n" +
-                    "        if (window._playWorker && window._playWorkerReady) {\n" +
-                    "            window._playWorker.postMessage(cmd);\n" +
-                    "        } else {\n" +
-                    "            window._playPendingCmds.push(cmd);\n" +
-                    "        }\n" +
-                    "    };\n" +
-                    "    window.sendClassifyCmd = function(cmd) {\n" +
-                    "        if (window._classifyWorker && window._classifyWorkerReady) {\n" +
-                    "            window._classifyWorker.postMessage(cmd);\n" +
-                    "        } else {\n" +
-                    "            window._classifyPendingCmds.push(cmd);\n" +
-                    "        }\n" +
-                    "    };\n" +
-                    "    window.startEngines('" + currentPlayEngineKey + "');\n" +
-                    "})();\n" +
-                    "</script></body></html>";
-
+            String html = buildBootstrapHtml();
             webView.loadDataWithBaseURL(HOST, html, "text/html", "UTF-8", null);
 
         } catch (Throwable t) {
-            TorchEngine.log("[WASM ENGINE ERROR] " + t.getMessage());
-            Log.e(TAG, "Failed to initialize WasmEngineManager: " + t.getMessage(), t);
+            NnvcLogger.e(TAG, "Failed to initialize WasmEngineManager: " + t.getMessage(), t);
         }
+    }
+
+    private String buildBootstrapHtml() {
+        return "<!DOCTYPE html><html><head><meta charset='utf-8'></head><body><script>\n" +
+                "(function() {\n" +
+                "    window.AudioContext = undefined; window.webkitAudioContext = undefined; window.Audio = undefined;\n" +
+                "    console.log('[WasmManager] HTML Bootstrap starting...');\n" +
+                "    window._playWorker = null;\n" +
+                "    window._classifyWorker = null;\n" +
+                "    window._playWorkerReady = false;\n" +
+                "    window._classifyWorkerReady = false;\n" +
+                "    window._playPendingCmds = [];\n" +
+                "    window._classifyPendingCmds = [];\n" +
+                "    window._playEngineKey = '" + currentPlayEngineKey + "';\n" +
+                "\n" +
+                "    function createWorkerPreamble(engineKey, jsCode) {\n" +
+                "        if (engineKey === 'komodo') {\n" +
+                "            return `\n" +
+                "var _injectedWasm = null;\n" +
+                "var _injectedBook = null;\n" +
+                "var _engineKey = 'komodo';\n" +
+                "var _origFetch = self.fetch;\n" +
+                "\n" +
+                "self.importScripts = self.importScripts || function(){};\n" +
+                "\n" +
+                "self.fetch = function(url) {\n" +
+                "    var u = String(url || '').toLowerCase();\n" +
+                "    if (u.indexOf('.wasm') !== -1 || u.indexOf('dragon') !== -1 || u.indexOf('komodo_wasm') !== -1) {\n" +
+                "        if (_injectedWasm) {\n" +
+                "            return Promise.resolve(new Response(_injectedWasm.slice(0), {\n" +
+                "                headers: { 'Content-Type': 'application/wasm' }\n" +
+                "            }));\n" +
+                "        }\n" +
+                "    }\n" +
+                "    if (u.indexOf('book') !== -1 || u.indexOf('komodo_book') !== -1) {\n" +
+                "        if (_injectedBook) {\n" +
+                "            return Promise.resolve(new Response(_injectedBook.slice(0), {\n" +
+                "                headers: { 'Content-Type': 'application/octet-stream' }\n" +
+                "            }));\n" +
+                "        }\n" +
+                "    }\n" +
+                "    if (_origFetch) return _origFetch.apply(this, arguments);\n" +
+                "    return Promise.reject(new Error('Unknown url: ' + url));\n" +
+                "};\n" +
+                "\n" +
+                "var _NativeXHR = self.XMLHttpRequest;\n" +
+                "function WasmAwareXHR() {\n" +
+                "    this.readyState = 0; this.response = null; this.responseText = ''; this.responseType = '';\n" +
+                "    this.status = 0; this.statusText = ''; this._async = true; this._headers = {};\n" +
+                "    this._url = '';\n" +
+                "    this._native = _NativeXHR ? new _NativeXHR() : null;\n" +
+                "}\n" +
+                "WasmAwareXHR.prototype.open = function(method, url, async) {\n" +
+                "    this._url = String(url || ''); this._async = async !== false;\n" +
+                "    var u = this._url.toLowerCase();\n" +
+                "    if (u.indexOf('.wasm') !== -1 || u.indexOf('dragon') !== -1 || u.indexOf('book') !== -1 || u.indexOf('komodo_') !== -1) {\n" +
+                "        this.readyState = 1; return;\n" +
+                "    }\n" +
+                "    if (this._native) this._native.open(method, url, async);\n" +
+                "};\n" +
+                "WasmAwareXHR.prototype.send = function(body) {\n" +
+                "    var u = this._url.toLowerCase();\n" +
+                "    var isWasm = u.indexOf('.wasm') !== -1 || u.indexOf('dragon') !== -1 || u.indexOf('komodo_wasm') !== -1;\n" +
+                "    var isBook = u.indexOf('book') !== -1 || u.indexOf('komodo_book') !== -1;\n" +
+                "    if (!isWasm && !isBook && this._native) return this._native.send(body);\n" +
+                "    var targetBuf = isWasm ? _injectedWasm : _injectedBook;\n" +
+                "    this.status = 200; this.statusText = 'OK'; this.readyState = 4;\n" +
+                "    if (targetBuf) {\n" +
+                "        if (this.responseType === 'arraybuffer' || !this.responseType) {\n" +
+                "            this.response = targetBuf.slice(0);\n" +
+                "        } else if (this.responseType === 'blob' && typeof Blob === 'function') {\n" +
+                "            this.response = new Blob([targetBuf], { type: isWasm ? 'application/wasm' : 'application/octet-stream' });\n" +
+                "        } else {\n" +
+                "            var bytes = new Uint8Array(targetBuf);\n" +
+                "            var res = '';\n" +
+                "            for (var i = 0; i < bytes.length; i += 32768) {\n" +
+                "                res += String.fromCharCode.apply(null, bytes.subarray(i, i + 32768));\n" +
+                "            }\n" +
+                "            this.responseText = res;\n" +
+                "            this.response = res;\n" +
+                "        }\n" +
+                "    }\n" +
+                "    if (typeof this.onreadystatechange === 'function') this.onreadystatechange();\n" +
+                "    if (typeof this.onload === 'function') this.onload();\n" +
+                "};\n" +
+                "WasmAwareXHR.prototype.setRequestHeader = function(h, v) { if (this._native) this._native.setRequestHeader(h, v); };\n" +
+                "WasmAwareXHR.prototype.getResponseHeader = function(n) { return null; };\n" +
+                "WasmAwareXHR.prototype.getAllResponseHeaders = function() { return ''; };\n" +
+                "self.XMLHttpRequest = WasmAwareXHR;\n" +
+                "\n" +
+                "var _queuedCmds = [];\n" +
+                "var _engineReady = false;\n" +
+                "var _engineProcess = null;\n" +
+                "\n" +
+                "self.onmessage = function(e) {\n" +
+                "    if (e.data && e.data.__init__) {\n" +
+                "        _injectedWasm = e.data.wasm;\n" +
+                "        _injectedBook = e.data.book || null;\n" +
+                "        self.location = {\n" +
+                "            origin: 'https://nnvc-engine.local',\n" +
+                "            pathname: '/komodo.js',\n" +
+                "            hash: '#https://nnvc-engine.local/dragon3.3.wasm',\n" +
+                "            href: 'https://nnvc-engine.local/komodo.js#https://nnvc-engine.local/dragon3.3.wasm'\n" +
+                "        };\n" +
+                "        self.onmessage = null;\n" +
+                "        try {\n" +
+                "            ${jsCode}\n" +
+                "            _engineProcess = self.onmessage;\n" +
+                "            _engineReady = true;\n" +
+                "            self.onmessage = function(ev) {\n" +
+                "                if (_engineProcess) _engineProcess(ev);\n" +
+                "            };\n" +
+                "            while (_queuedCmds.length > 0) {\n" +
+                "                var cmd = _queuedCmds.shift();\n" +
+                "                if (_engineProcess) _engineProcess({ data: cmd });\n" +
+                "            }\n" +
+                "            postMessage('__WORKER_READY__');\n" +
+                "        } catch(err) {\n" +
+                "            postMessage('__ENGINE_ERROR__:' + err);\n" +
+                "        }\n" +
+                "    } else {\n" +
+                "        if (!_engineReady) {\n" +
+                "            _queuedCmds.push(e.data);\n" +
+                "        } else if (_engineProcess) {\n" +
+                "            _engineProcess(e);\n" +
+                "        }\n" +
+                "    }\n" +
+                "};\n" +
+                "`;\n" +
+                "        } else {\n" +
+                "            return `\n" +
+                "var _injectedWasm = null;\n" +
+                "var _engineKey = 'stockfish18';\n" +
+                "var _queuedCmds = [];\n" +
+                "var _engineReady = false;\n" +
+                "var _engineProcess = null;\n" +
+                "\n" +
+                "self.onmessage = function(e) {\n" +
+                "    if (e.data && e.data.__init__) {\n" +
+                "        _injectedWasm = e.data.wasm;\n" +
+                "        self.location = {\n" +
+                "            origin: 'https://nnvc-engine.local',\n" +
+                "            pathname: '/stockfish-18-lite-single.js',\n" +
+                "            hash: '#https://nnvc-engine.local/stockfish-18-lite-single.wasm',\n" +
+                "            href: 'https://nnvc-engine.local/stockfish-18-lite-single.js#https://nnvc-engine.local/stockfish-18-lite-single.wasm'\n" +
+                "        };\n" +
+                "        self.onmessage = null;\n" +
+                "        try {\n" +
+                "            var module = { exports: {} };\n" +
+                "            var exports = module.exports;\n" +
+                "            var global = undefined;\n" +
+                "            var process = undefined;\n" +
+                "\n" +
+                "            ${jsCode}\n" +
+                "\n" +
+                "            var _sfInit = module.exports;\n" +
+                "            var _sfInstance = _sfInit({\n" +
+                "                wasmBinary: _injectedWasm,\n" +
+                "                listener: function(line) {\n" +
+                "                    postMessage(line);\n" +
+                "                }\n" +
+                "            });\n" +
+                "            _sfInstance.then(function(eng) {\n" +
+                "                _engineProcess = function(ev) {\n" +
+                "                    var cmd = (typeof ev === 'object' && ev && ev.data) ? ev.data : String(ev || '');\n" +
+                "                    eng.ccall('command', null, ['string'], [cmd]);\n" +
+                "                };\n" +
+                "                _engineReady = true;\n" +
+                "                self.onmessage = function(ev) {\n" +
+                "                    if (_engineProcess) _engineProcess(ev);\n" +
+                "                };\n" +
+                "                while (_queuedCmds.length > 0) {\n" +
+                "                    var cmd = _queuedCmds.shift();\n" +
+                "                    _engineProcess({ data: cmd });\n" +
+                "                }\n" +
+                "                postMessage('__WORKER_READY__');\n" +
+                "            }).catch(function(err) {\n" +
+                "                postMessage('__ENGINE_ERROR__:' + err);\n" +
+                "            });\n" +
+                "        } catch(err) {\n" +
+                "            postMessage('__ENGINE_ERROR__:' + err);\n" +
+                "        }\n" +
+                "    } else {\n" +
+                "        if (!_engineReady) {\n" +
+                "            _queuedCmds.push(e.data);\n" +
+                "        } else if (_engineProcess) {\n" +
+                "            _engineProcess(e);\n" +
+                "        }\n" +
+                "    }\n" +
+                "};\n" +
+                "`;\n" +
+                "        }\n" +
+                "    }\n" +
+                "\n" +
+                "    function startWorker(kind, engineKey, jsCode, wasmBuf, bookBuf) {\n" +
+                "        console.log('[WasmManager] Starting worker: kind=' + kind + ', engine=' + engineKey);\n" +
+                "        const fullScript = createWorkerPreamble(engineKey, jsCode);\n" +
+                "        const blob = new Blob([fullScript], { type: 'application/javascript' });\n" +
+                "        const blobUrl = URL.createObjectURL(blob);\n" +
+                "        const worker = new Worker(blobUrl);\n" +
+                "\n" +
+                "        worker.onmessage = function(e) {\n" +
+                "            const line = (typeof e.data === 'string') ? e.data : String(e.data || '');\n" +
+                "            if (line === '__WORKER_READY__') {\n" +
+                "                if (kind === 'play') window._playWorkerReady = true;\n" +
+                "                else if (kind === 'classify') window._classifyWorkerReady = true;\n" +
+                "                if (window.WasmEngineBridge) window.WasmEngineBridge.onEngineWorkerReady(kind, engineKey);\n" +
+                "                return;\n" +
+                "            }\n" +
+                "            if (line.indexOf('__ENGINE_ERROR__:') === 0) {\n" +
+                "                if (window.WasmEngineBridge) window.WasmEngineBridge.onEngineError(kind, line.substring(17));\n" +
+                "                return;\n" +
+                "            }\n" +
+                "            if (line === 'uciok' || line === 'readyok') {\n" +
+                "                if (kind === 'play') window._playWorkerReady = true;\n" +
+                "                else if (kind === 'classify') window._classifyWorkerReady = true;\n" +
+                "            }\n" +
+                "            if (window.WasmEngineBridge) window.WasmEngineBridge.onEngineOutput(kind, line);\n" +
+                "        };\n" +
+                "        worker.onerror = function(err) {\n" +
+                "            console.error('[Worker Error ' + kind + '] ' + (err.message || err));\n" +
+                "            if (window.WasmEngineBridge) window.WasmEngineBridge.onEngineError(kind, String(err.message || err));\n" +
+                "        };\n" +
+                "\n" +
+                "        // Initialize worker with transferred ArrayBuffers\n" +
+                "        const transferList = [wasmBuf.slice(0)];\n" +
+                "        const initPayload = { __init__: true, wasm: transferList[0] };\n" +
+                "        if (bookBuf) {\n" +
+                "            const bookCopy = bookBuf.slice(0);\n" +
+                "            initPayload.book = bookCopy;\n" +
+                "            transferList.push(bookCopy);\n" +
+                "        }\n" +
+                "        worker.postMessage(initPayload, transferList);\n" +
+                "\n" +
+                "        if (kind === 'play') {\n" +
+                "            if (window._playWorker) { try { window._playWorker.terminate(); } catch(e){} }\n" +
+                "            window._playWorker = worker;\n" +
+                "            window._playEngineKey = engineKey;\n" +
+                "            while (window._playPendingCmds.length > 0) {\n" +
+                "                worker.postMessage(window._playPendingCmds.shift());\n" +
+                "            }\n" +
+                "        } else {\n" +
+                "            if (window._classifyWorker) { try { window._classifyWorker.terminate(); } catch(e){} }\n" +
+                "            window._classifyWorker = worker;\n" +
+                "            worker.postMessage('uci');\n" +
+                "            worker.postMessage('setoption name Hash value 64');\n" +
+                "            worker.postMessage('setoption name Threads value 1');\n" +
+                "            worker.postMessage('setoption name MultiPV value 3');\n" +
+                "            worker.postMessage('setoption name Ponder value false');\n" +
+                "            worker.postMessage('isready');\n" +
+                "            while (window._classifyPendingCmds.length > 0) {\n" +
+                "                worker.postMessage(window._classifyPendingCmds.shift());\n" +
+                "            }\n" +
+                "        }\n" +
+                "        setTimeout(function() {\n" +
+                "            if (window.WasmEngineBridge && !window['_' + kind + 'WorkerReady']) {\n" +
+                "                window.WasmEngineBridge.onEngineWorkerReady(kind, engineKey);\n" +
+                "            }\n" +
+                "        }, 4000);\n" +
+                "    }\n" +
+                "\n" +
+                "    window.startEngines = function(playKey) {\n" +
+                "        const activeKey = playKey || '" + currentPlayEngineKey + "';\n" +
+                "        console.log('[WasmManager] Loading assets for active play engine: ' + activeKey);\n" +
+                "\n" +
+                "        // 1. Play Engine Assets\n" +
+                "        if (activeKey === 'komodo') {\n" +
+                "            Promise.all([\n" +
+                "                fetch('" + HOST + "komodo.js').then(r => r.text()),\n" +
+                "                fetch('" + HOST + "dragon3.3.wasm').then(r => r.arrayBuffer()),\n" +
+                "                fetch('" + HOST + "book.bin').then(r => r.arrayBuffer())\n" +
+                "            ]).then(([kmJs, kmWasm, kmBook]) => {\n" +
+                "                startWorker('play', 'komodo', kmJs, kmWasm, kmBook);\n" +
+                "            }).catch(err => {\n" +
+                "                console.error('Failed to load Komodo assets:', err);\n" +
+                "                if (window.WasmEngineBridge) window.WasmEngineBridge.onEngineError('play', String(err));\n" +
+                "            });\n" +
+                "        } else {\n" +
+                "            Promise.all([\n" +
+                "                fetch('" + HOST + "stockfish-18-lite-single.js').then(r => r.text()),\n" +
+                "                fetch('" + HOST + "stockfish-18-lite-single.wasm').then(r => r.arrayBuffer())\n" +
+                "            ]).then(([sfJs, sfWasm]) => {\n" +
+                "                startWorker('play', 'stockfish18', sfJs, sfWasm, null);\n" +
+                "            }).catch(err => {\n" +
+                "                console.error('Failed to load Stockfish 18 assets:', err);\n" +
+                "                if (window.WasmEngineBridge) window.WasmEngineBridge.onEngineError('play', String(err));\n" +
+                "            });\n" +
+                "        }\n" +
+                "\n" +
+                "        // 2. Classify Engine Assets (Dedicated Stockfish 18 for Eval Bar)\n" +
+                "        Promise.all([\n" +
+                "            fetch('" + HOST + "stockfish-18-lite-single.js').then(r => r.text()),\n" +
+                "            fetch('" + HOST + "stockfish-18-lite-single.wasm').then(r => r.arrayBuffer())\n" +
+                "        ]).then(([sfJs, sfWasm]) => {\n" +
+                "            startWorker('classify', 'stockfish18', sfJs, sfWasm, null);\n" +
+                "        }).catch(err => {\n" +
+                "            console.error('Failed to load Classify Stockfish 18 assets:', err);\n" +
+                "            if (window.WasmEngineBridge) window.WasmEngineBridge.onEngineError('classify', String(err));\n" +
+                "        });\n" +
+                "    };\n" +
+                "\n" +
+                "    window.switchPlayEngine = function(playKey) {\n" +
+                "        window._playWorkerReady = false;\n" +
+                "        window.startEngines(playKey);\n" +
+                "    };\n" +
+                "\n" +
+                "    window.sendPlayCmd = function(cmd) {\n" +
+                "        if (window._playWorker && window._playWorkerReady) {\n" +
+                "            window._playWorker.postMessage(cmd);\n" +
+                "        } else {\n" +
+                "            window._playPendingCmds.push(cmd);\n" +
+                "        }\n" +
+                "    };\n" +
+                "\n" +
+                "    window.sendClassifyCmd = function(cmd) {\n" +
+                "        if (window._classifyWorker && window._classifyWorkerReady) {\n" +
+                "            window._classifyWorker.postMessage(cmd);\n" +
+                "        } else {\n" +
+                "            window._classifyPendingCmds.push(cmd);\n" +
+                "        }\n" +
+                "    };\n" +
+                "\n" +
+                "    window.startEngines('" + currentPlayEngineKey + "');\n" +
+                "})();\n" +
+                "</script></body></html>";
     }
 
     // ── Command Dispatch & Synchronous Output Stream ──────────────────────────
@@ -518,10 +914,6 @@ public class WasmEngineManager {
         });
     }
 
-    /**
-     * Dedicated Classify Engine evaluation (Stockfish 18 at locked Depth = 10, MultiPV = 3).
-     * Drives the Eval Bar independently from the play engine.
-     */
     public void evaluateClassifyPosition(String fen, List<String> moves) {
         if (fen == null) return;
         currentClassifyFen = fen;
@@ -536,7 +928,7 @@ public class WasmEngineManager {
         }
         sendClassifyCommand(pos.toString());
         sendClassifyCommand("go depth 10");
-        TorchEngine.log("[WASM CLASSIFY GO] depth 10 on FEN: " + fen);
+        NnvcLogger.d(TAG, "[CLASSIFY GO] depth 10 on FEN: " + fen);
     }
 
     private static boolean isWhiteTurnFromFen(String fen) {
@@ -600,13 +992,14 @@ public class WasmEngineManager {
     private class WasmEngineJsBridge {
         @JavascriptInterface
         public void onEngineWorkerReady(String kind, String engineKey) {
-            TorchEngine.log("[WASM BRIDGE] Worker READY: kind=" + kind + ", engine=" + engineKey);
+            NnvcLogger.i(TAG, "[WASM BRIDGE] Worker READY: kind=" + kind + ", engine=" + engineKey);
             if ("play".equals(kind)) {
                 synchronized (playReadyLock) {
                     isPlayReady = true;
                     isReady = true;
                     playReadyLock.notifyAll();
                 }
+                EngineStatusHUD.showReady(context, engineKey.toUpperCase() + " WASM");
             } else if ("classify".equals(kind)) {
                 synchronized (classifyReadyLock) {
                     isClassifyReady = true;
@@ -617,8 +1010,8 @@ public class WasmEngineManager {
 
         @JavascriptInterface
         public void onEngineError(String kind, String error) {
-            TorchEngine.log("[WASM BRIDGE ERROR] kind=" + kind + ", error=" + error);
-            Log.e(TAG, "WASM Engine Error [" + kind + "]: " + error);
+            NnvcLogger.e(TAG, "[WASM BRIDGE ERROR] kind=" + kind + ", error=" + error);
+            EngineStatusHUD.show(context, "⚠️ Lỗi Engine (" + kind + "): " + error, true, 5000);
         }
 
         @JavascriptInterface
@@ -632,7 +1025,6 @@ public class WasmEngineManager {
                 UciLineListener l = classifyLineListener;
                 if (l != null) l.onLine(line);
 
-                // Parse UCI output for real-time Eval Bar updates
                 handleClassifyUciLine(line);
             }
         }
