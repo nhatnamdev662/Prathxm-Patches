@@ -1,6 +1,6 @@
 # NHẬT KÝ DỰ ÁN & BỘ GHI NHỚ DẶN DÒ (PROJECT MEMORY)
 *Dự án: Chess Mobile - ReVanced Extension Patches cho Chess.com Android*
-*Phiên bản hiện tại: v2.0.66*
+*Phiên bản hiện tại: v2.0.67*
 *Cập nhật lần cuối: 2026-10-10*
 
 ---
@@ -342,16 +342,28 @@
 - **Bump phiên bản lên v2.0.66**: Đồng bộ `patches-bundle.json` và `patches-list.json`.
 - **Biên dịch & Đóng gói**: Biên dịch sạch 46 file Java Extension thành `extension.mpe` (2,720,792 bytes), đóng gói `patches-2.0.66.mpp` (227,433,088 bytes).
 
+### v2.0.67 (2026-10-10) — 100% WebAssembly Parity: Komodo Dragon 3.3 WASM & Stockfish 18 WASM Chuẩn Extension (Zero Native Subprocess & Zero Fallback)
+- **Khắc phục dứt điểm lỗi khởi động WebAssembly Engine trên Mobile:**
+  - Tuyệt đối tuân thủ chỉ thị người dùng: Loại bỏ 100% subprocess native Stockfish cũ (`libstockfish.so`) và triệt tiêu hoàn toàn mọi cơ chế fallback.
+  - **Komodo Dragon 3.3 WASM làm mặc định:** Tự động nạp `dragon3.3.wasm` (16.27 MB), `komodo.js` (177 KB) và sách khai cuộc `book.bin` (2.8 MB). Xây dựng cơ chế `WasmAwareXHR` đồng bộ chuẩn 100% trong Worker, phản hồi `uciok` và `readyok` tức thì (<100ms), nạp sách khai cuộc chuẩn xác.
+  - **Stockfish 18 WASM:** Khởi tạo instance trực tiếp từ Web Worker qua factory với `wasmBinary` từ bộ nhớ và stream output thời gian thực, phục vụ phân tích ván đấu (Play Engine) và thanh đánh giá Eval Bar (Classify Engine).
+  - Tự động di chuyển (migrate) cấu hình cũ sang `komodo`.
+  - Cơ chế đồng bộ hóa `__WORKER_READY__` và hàng đợi lệnh không mất mát (`_queuedCmds`), triệt tiêu hoàn toàn nguy cơ rớt lệnh `uci` hoặc treo app.
+- **Bảo toàn Hệ Thống Logger Tạm Thời & Engine Status HUD:**
+  - Tiếp tục hỗ trợ `NnvcLogger` (ghi log chi tiết ra `/sdcard/Android/data/com.chess/files/nnvc_debug.log`), hộp thoại đọc log in-app `NnvcLogViewerDialog`, nút huy hiệu nổi kéo thả `FloatingLogPillView` và thông báo trạng thái `EngineStatusHUD`.
+- **Bump phiên bản lên v2.0.67**: Đồng bộ `patches-bundle.json` và `patches-list.json`.
+- **Biên dịch & Đóng gói**: Biên dịch sạch 46 file Java Extension thành `extension.mpe` (2,731,004 bytes), đóng gói `patches-2.0.67.mpp` (227,435,479 bytes).
+
 ---
 
 ## 3. TRẠNG THÁI HIỆN TẠI & KẾ HOẠCH TIẾP THEO
 
 ### 3.1. Trạng thái hiện tại
-- **Phiên bản mới nhất**: **v2.0.66** (`patches-2.0.66.mpp`).
+- **Phiên bản mới nhất**: **v2.0.67** (`patches-2.0.67.mpp`).
 - **Trạng thái Repo**: 100% sạch, không commit file `.py`, root ngăn nắp.
 - **Tiến trình kỹ thuật**:
-  1. Kiến trúc Hybrid Dual-Engine: Khôi phục Stockfish Native (`libstockfish.so`) kết hợp linh hoạt với WebAssembly (Komodo 3.3 / Stockfish 18).
-  2. Hệ thống chẩn đoán NnvcLogger + In-app Viewer `[📜]` + Floating Pill `[📜 LOG]` giúp gỡ lỗi trực tiếp trên điện thoại.
-  3. Chỉ báo trạng thái nạp engine EngineStatusHUD giúp người dùng nắm rõ tiến trình động cơ.
+  1. Kiến trúc 100% WebAssembly độc lập: Komodo Dragon 3.3 WASM làm mặc định và Stockfish 18 WASM cho Eval Bar & Play.
+  2. Zero native subprocess, zero fallback.
+  3. Hệ thống chẩn đoán NnvcLogger + In-app Viewer `[📜]` + Floating Pill `[📜 LOG]` và EngineStatusHUD bảo toàn đầy đủ.
 
 

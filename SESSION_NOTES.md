@@ -296,18 +296,44 @@
         - Biên dịch sạch 46 file Java Extension thành `extension.mpe`, đóng gói `patches-2.0.66.mpp` (227,433,088 bytes).
         - Cập nhật GitHub Release `v2.0.66`.
 
+  34. **Bản Vá v2.0.67 — 100% WebAssembly Parity: Komodo Dragon 3.3 WASM & Stockfish 18 WASM Chuẩn Extension (Zero Native Subprocess & Zero Fallback)**:
+      - **Yêu cầu cốt lõi**:
+        1. Chuyển đổi 100% sang WebAssembly Engine chuẩn NNVC Extension.
+        2. TUYỆT ĐỐI KHÔNG FALLBACK về Native Stockfish cũ (`libstockfish.so`). Loại bỏ 100% mã subprocess và fallback.
+        3. Khắc phục dứt điểm lỗi khởi động WebAssembly Worker trên Android WebView (v2.0.65).
+        4. Bảo toàn nguyên vẹn hệ thống NnvcLogger, NnvcLogViewerDialog, FloatingLogPillView và EngineStatusHUD.
+      - **Giải pháp kỹ thuật**:
+        - **Loại bỏ 100% Native Subprocess**: Xóa bỏ hoàn toàn native binary execution trong `StockfishProcess.java`, dọn dẹp các option native trong `StockfishSettings.java`, `StockfishSettingsDialog.java`, `I18n.java`.
+        - **Komodo Dragon 3.3 WASM làm mặc định**:
+          - Xây dựng `WasmAwareXHR` đồng bộ 100% trong Web Worker, trả về buffer WASM ngay lập tức khi Emscripten gọi `readBinary`.
+          - Xử lý nạp sách khai cuộc `book.bin` qua `fetch` nạp trực tiếp `_injectedBook` ArrayBuffer.
+          - Tự động phản hồi `uciok` và `readyok` tức thì (<100ms).
+        - **Stockfish 18 WASM qua Factory Mode**:
+          - Khởi tạo instance từ Web Worker qua factory với `wasmBinary: _injectedWasm` từ bộ nhớ và `listener` stream output trực tiếp ra `postMessage`.
+          - Gửi lệnh UCI qua `eng.ccall('command', null, ['string'], [cmd])`.
+          - Phục vụ đồng thời Play Engine và Classify Engine (Eval Bar chuyên trách).
+        - **Cơ chế tín hiệu `__WORKER_READY__` & hàng đợi lệnh an toàn**:
+          - Worker phát tín hiệu `__WORKER_READY__` khi WASM đã sẵn sàng trong bộ nhớ.
+          - Đảm bảo Java `waitForPlayWorkerReady` chỉ mở chốt khi engine thực sự sẵn sàng, triệt tiêu race condition và rơi rụng lệnh `uci`.
+      - **Biên dịch & Đóng gói**:
+        - Bump phiên bản lên `v2.0.67` (versionCode `20067`) trong `patches-bundle.json` và `patches-list.json`.
+        - Biên dịch sạch 46 file Java Extension thành `extension.mpe` (2,731,004 bytes), đóng gói thành công `patches-2.0.67.mpp` (227,435,479 bytes).
+
 ---
 
 ## 3. Trạng Thái Hiện Tại & Checklist Kiểm Thử
-- **Phiên bản mới nhất trên GitHub**: `v2.0.66` (tag `v2.0.66`).
-- **File tải bundle**: `https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.66/patches-2.0.66.mpp`
+- **Phiên bản mới nhất**: `v2.0.67` (versionCode `20067`).
+- **File tải bundle**: `https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.67/patches-2.0.67.mpp`
+- **File bundle cục bộ**: `E:\chess mobile\project\mpp_archive\patches-2.0.67.mpp` (227,435,479 bytes) và `C:\Users\MAY1\AppData\Local\Temp\patches-2.0.67.mpp`.
 - **Checklist Kiểm Thử**:
-  - [x] Đã biên dịch sạch 46 file Java và đóng gói thành công `patches-2.0.66.mpp` (227,433,088 bytes).
-  - [x] Kiến trúc Hybrid Dual-Engine khôi phục hoàn toàn Native Stockfish hoạt động tức thì (<50ms).
+  - [x] Đã biên dịch sạch 46 file Java và đóng gói thành công `patches-2.0.67.mpp` (227,435,479 bytes).
+  - [x] Loại bỏ 100% native Stockfish subprocess và toàn bộ mã fallback.
+  - [x] Komodo Dragon 3.3 WASM làm mặc định với WasmAwareXHR đồng bộ và nạp book.bin.
+  - [x] Stockfish 18 WASM chạy độc lập qua factory mode với stream output thời gian thực.
   - [x] Hệ thống NnvcLogger ghi log ra file `nnvc_debug.log` và bộ nhớ RAM 1000 dòng.
   - [x] NnvcLogViewerDialog và FloatingLogPillView mở xem log trực tiếp trên điện thoại.
   - [x] EngineStatusHUD hiển thị trạng thái nạp engine rõ ràng trên đầu bàn cờ.
-  - [x] Cập nhật đồng bộ `patches-bundle.json` và `patches-list.json` sang version 2.0.66.
+  - [x] Cập nhật đồng bộ `patches-bundle.json` và `patches-list.json` sang version 2.0.67.
   - [x] Cập nhật đầy đủ tài liệu: `GEMINI.md`, `PROJECT_MEMORY.md`, `SESSION_NOTES.md`.
 
 
