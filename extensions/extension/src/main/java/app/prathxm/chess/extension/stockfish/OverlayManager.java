@@ -48,6 +48,12 @@ public class OverlayManager {
         View boardView = findChessBoardView(decorView);
         if (boardView == null) return null;
 
+        // Ensure board has no lingering translation or scaling from previous versions
+        if (boardView.getTranslationX() != 0f) boardView.setTranslationX(0f);
+        if (boardView.getTranslationY() != 0f) boardView.setTranslationY(0f);
+        if (boardView.getScaleX() != 1.0f) boardView.setScaleX(1.0f);
+        if (boardView.getScaleY() != 1.0f) boardView.setScaleY(1.0f);
+
         int[] boardLoc = new int[2];
         boardView.getLocationInWindow(boardLoc);
         int[] decorLoc = new int[2];
@@ -57,6 +63,16 @@ public class OverlayManager {
         int rawW = boardView.getWidth();
         int rawH = boardView.getHeight();
         if (rawW <= 0 || rawH <= 0) return null;
+
+        // Ensure exact 1:1 square chessboard geometry
+        int squareSize = Math.min(rawW, rawH);
+        if (rawH > squareSize) {
+            rawY += (rawH - squareSize) / 2;
+            rawH = squareSize;
+        } else if (rawW > squareSize) {
+            rawX += (rawW - squareSize) / 2;
+            rawW = squareSize;
+        }
 
         return new BoardMetrics(rawX, rawY, rawW, rawH, boardView);
     }
@@ -245,31 +261,25 @@ public class OverlayManager {
                     ViewGroup decorView = (ViewGroup) window.getDecorView();
                     if (decorView == null) return;
 
-                    final View boardView = findChessBoardView(decorView);
-                    if (boardView == null) return;
-
-                    int[] boardLoc = new int[2];
-                    boardView.getLocationInWindow(boardLoc);
-                    int[] decorLoc = new int[2];
-                    decorView.getLocationInWindow(decorLoc);
-                    int boardX = (boardLoc[0] - decorLoc[0]) - decorView.getPaddingLeft();
-                    int boardY = (boardLoc[1] - decorLoc[1]) - decorView.getPaddingTop();
-                    int boardW = boardView.getWidth();
-                    int boardH = boardView.getHeight();
-                    if (boardW <= 0 || boardH <= 0) {
-                        boardView.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                updateEvalBar(score, hasMate, mateIn, stateImpl);
-                            }
-                        });
+                    final BoardMetrics bm = getBoardMetrics(decorView);
+                    if (bm == null) {
+                        final View bv = findChessBoardView(decorView);
+                        if (bv != null) {
+                            bv.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    updateEvalBar(score, hasMate, mateIn, stateImpl);
+                                }
+                            });
+                        }
                         return;
                     }
 
-                    // Reset any board transformation to prevent coordinate desync
-                    boardView.setTranslationX(0f);
-                    boardView.setScaleX(1.0f);
-                    boardView.setScaleY(1.0f);
+                    int boardX = bm.boardX;
+                    int boardY = bm.boardY;
+                    int boardW = bm.boardW;
+                    int boardH = bm.boardH;
+                    View boardView = bm.boardView;
 
                     float density = decorView.getContext().getResources().getDisplayMetrics().density;
                     int barWidth = (int) (12 * density);
@@ -299,12 +309,11 @@ public class OverlayManager {
                     evalBarView.setVisibility(View.VISIBLE);
                     ensureZOrder(decorView);
                 } catch (Throwable t) {
-                    Log.e(TAG, "updateEvalBar failed: " + t.getMessage());
+                    Log.e(TAG, "updateEvalBar failed: " + t.getMessage(), t);
                 }
             }
         });
     }
-
 
     public static void hideEvalBar() {
         new Handler(Looper.getMainLooper()).post(new Runnable() {
@@ -327,6 +336,7 @@ public class OverlayManager {
                     View boardView = findChessBoardView(decorView);
                     if (boardView != null) {
                         boardView.setTranslationX(0f);
+                        boardView.setTranslationY(0f);
                         boardView.setScaleX(1.0f);
                         boardView.setScaleY(1.0f);
                     }

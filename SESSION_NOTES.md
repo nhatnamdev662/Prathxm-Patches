@@ -183,11 +183,11 @@
   26. **Bản Vá v2.0.58 — Sửa Triệt Để Lỗi Lệch Toạ Độ & Chuẩn Hoá Chiều Cao Thanh Eval Bar 100%**:
       - **Nguyên nhân cốt lõi trong v2.0.57**: Việc can thiệp `setScaleX`, `setScaleY` và `setTranslationX` trực tiếp vào `boardView` (ChessBoardView) làm lệch toạ độ `getLocationInWindow` giữa các frame, khiến bàn cờ bị co giật, mất cân đối với container, và làm chiều dài thanh Eval Bar lệch/không đều (dư/hụt so với chiều cao bàn cờ). Đồng thời, component `EvaluationBarView` native vẽ text ngang ở tâm `width / 2` khiến điểm số bị cắt/chìm ra ngoài mép màn hình khi đặt ở toạ độ x = 0.
       - **Khắc phục triệt để 100%**:
-        1. **Giữ nguyên trạng 100% bàn cờ gốc**: Tuyệt đối không can thiệp scale hay translate vào `ChessBoardView`. Bàn cờ giữ nguyên độ nét 1:1, toạ độ chuẩn tuyệt đối và cảm ứng kéo thả quân cờ ở cột a hoạt động mượt mà không bị nuốt chạm.
-        2. **Căn chỉnh chiều cao Eval Bar khớp 100%**: Thanh Eval Bar luôn lấy trực tiếp `boardH` và `boardY` của bàn cờ; chiều cao thanh luôn khớp 100% với cạnh dọc bàn cờ từ đỉnh đến đáy, không một pixel lệch lạc.
-        3. **Hiển thị điểm số xoay dọc chuẩn phong cách Extension (`EvalBarView`)**: Điểm đánh giá (ví dụ `0.2`, `1.5`, `#`, `M3`) được render xoay dọc -90 độ, căn giữa hoàn hảo theo bề rộng thanh, loại trừ 100% hiện tượng bị cắt chữ, tràn viền màn hình hay đè lên quân cờ.
-        4. **Đường phân cách sắc nét**: Bổ sung đường viền mảnh 1px tách biệt rõ ràng mép phải thanh Eval Bar với ô cờ cột a.
-        5. **Đồng bộ toạ độ toàn bộ Overlays**: `BoardMetrics` luôn trả về toạ độ thực tế không biến dạng, mũi tên Stockfish, huy hiệu phân loại, thẻ Accuracy và WDL bar luôn khớp hoàn hảo từng ô cờ.
+        1. **Giữ nguyên trạng 100% bàn cờ gốc & Chuẩn hoá hình học 1:1**: Tuyệt đối không can thiệp scale hay translate vào `ChessBoardView`. `BoardMetrics` tự động reset các biến dạng tồn đọng trước khi đo toạ độ và ép chuẩn hình học 1:1 (`Math.min(rawW, rawH)`), đảm bảo thanh Eval Bar luôn khớp 100% với chiều cao bàn cờ thực tế từ đỉnh đến đáy, không một pixel lệch lạc.
+        2. **Căn chỉnh nhãn điểm số tại đầu sân vững chãi (Home-end Anchoring)**: Nhãn điểm số (ví dụ `0.2`, `1.5`, `#`, `M3`) được ghim cố định ở đầu sân của bên dẫn điểm (đáy với Trắng, đỉnh với Đen khi bình thường, tự đảo khi lật bàn cờ) thay vì nhảy cóc ở tâm khối chữ nhật, loại bỏ hoàn toàn hiện tượng va chạm với vạch mốc 0.00 ở giữa thanh hay dịch chuyển đột ngột.
+        3. **Hiển thị điểm số xoay dọc chuẩn phong cách Extension (`EvalBarView`)**: Điểm đánh giá được render xoay dọc -90 độ, căn giữa trục ngang thanh dựa trên `FontMetrics` chính xác từng pixel, loại trừ 100% hiện tượng bị cắt chữ, tràn viền màn hình hay đè lên quân cờ.
+        4. **Xuyên thấu cảm ứng toàn diện**: Cả `dispatchTouchEvent` và `onTouchEvent` đều trả về `false`, cho phép mọi thao tác chạm/kéo thả quân cờ ở cột a xuyên qua thanh Eval Bar xuống bàn cờ tự nhiên 100%.
+        5. **Đồng bộ toạ độ toàn bộ Overlays**: `updateEvalBar` hợp nhất sử dụng trực tiếp `BoardMetrics`, đồng bộ 100% với `ArrowOverlayView`, `MoveClassifier`, `WdlBarView` và thẻ Elo/Accuracy.
 
 ---
 
@@ -195,12 +195,12 @@
 - **Phiên bản mới nhất trên GitHub**: `v2.0.58` (tag `v2.0.58`).
 - **File tải bundle**: `https://github.com/nhatnamdev662/Prathxm-Patches/releases/download/v2.0.58/patches-2.0.58.mpp`
 - **Checklist Kiểm Thử**:
-  - [x] Đã biên dịch sạch 39 file Java và đóng gói thành công `patches-2.0.58.mpp` (189,667,103 bytes).
-  - [x] Chiều cao thanh Eval Bar khớp 100% tuyệt đối với chiều cao bàn cờ (`boardH`), đều cả đỉnh và đáy.
+  - [x] Đã biên dịch sạch 39 file Java và đóng gói thành công `patches-2.0.58.mpp` (189,667,067 bytes).
+  - [x] Chiều cao thanh Eval Bar khớp 100% tuyệt đối với chiều cao bàn cờ (`boardH = Math.min(rawW, rawH)`), đều cả đỉnh và đáy.
   - [x] Triệt tiêu hoàn toàn biến dạng toạ độ, không can thiệp scale/translation vào `ChessBoardView`.
-  - [x] Nhãn điểm số Eval hiển thị dọc thanh thoát, không bao giờ bị cắt chữ hay tràn viền ở cạnh màn hình.
-  - [x] Cảm ứng chạm kéo thả quân cờ ở cột a mượt mà, không bị nuốt thao tác.
+  - [x] Nhãn điểm số Eval hiển thị dọc thanh thoát, ghim vững chãi tại home end, không bao giờ bị cắt chữ hay tràn viền ở cạnh màn hình.
+  - [x] Cảm ứng chạm kéo thả quân cờ ở cột a mượt mà qua cả `dispatchTouchEvent` và `onTouchEvent`.
   - [x] Đã cập nhật metadata `patches-bundle.json` và `patches-list.json`.
-  - [x] Đã dọn dẹp sạch sẽ repository, lưu trữ script vào `scripts_archive/` và mpp vào `mpp_archive/`.
+  - [x] Đã upload bản bundle hoàn thiện lên GitHub Release `v2.0.58`.
 
 

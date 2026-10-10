@@ -257,10 +257,11 @@
   - Thử nghiệm dịch bàn cờ và scale tỷ lệ khi Eval Bar hiển thị.
 - **v2.0.58 (Sửa Triệt Để Lệch Toạ Độ & Chuẩn Hoá Chiều Cao Thanh Eval Bar 100%)**:
   - Loại bỏ hoàn toàn can thiệp scale/translation vào `ChessBoardView`, khôi phục bàn cờ nguyên bản 1:1 sắc nét, toạ độ chuẩn tuyệt đối và cảm ứng kéo thả quân cờ ở cột a hoạt động hoàn hảo.
-  - Căn chỉnh chiều cao thanh Eval Bar khớp 100% với chiều cao bàn cờ (`boardH`), đồng bộ mép trên (`boardY`) và đáy (`boardY + boardH`) đều tăm tắp.
-  - Sử dụng `EvalBarView` render nhãn điểm số xoay dọc -90 độ, căn giữa thanh, loại trừ 100% hiện tượng bị cắt chữ hay tràn viền ngoài màn hình.
+  - Chuẩn hoá `BoardMetrics`: Reset mọi biến dạng tồn đọng trước khi đọc toạ độ, kẹp chuẩn hình học bàn cờ 1:1 (`Math.min(rawW, rawH)`), đồng bộ tuyệt đối chiều cao thanh Eval Bar khớp 100% cạnh dọc bàn cờ.
+  - Căn chỉnh điểm số tại đầu sân (Home-end Anchoring): Nhãn điểm số ghim cố định ở đầu sân của bên dẫn điểm thay vì nhảy cóc giữa thanh, triệt tiêu va chạm với vạch 0.00.
+  - Sử dụng `EvalBarView` render nhãn điểm số xoay dọc -90 độ, căn giữa trục ngang theo `FontMetrics`, loại trừ 100% hiện tượng bị cắt chữ hay tràn viền ngoài màn hình.
+  - Cảm ứng xuyên thấu 100%: Cả `dispatchTouchEvent` và `onTouchEvent` trả về `false`, không cản trở thao tác trên ô cờ cột a.
   - Bổ sung đường phân cách mảnh 1px tách biệt mép phải thanh Eval Bar với ô cờ cột a.
-  - Khôi phục `BoardMetrics` chuẩn hóa toạ độ cho toàn bộ overlays.
 
 ---
 
@@ -273,5 +274,5 @@
 - **Tiến trình kỹ thuật**:
   1. Đã giải quyết triệt để lỗi lệch toạ độ và không đều chiều dài của Eval Bar.
   2. Bàn cờ hiển thị 1:1 nguyên bản, không giật lag, không biến dạng, không nuốt chạm.
-  3. Thanh Eval Bar hiển thị sắc nét, xoay dọc điểm số, không bao giờ cắt chữ.
+  3. Thanh Eval Bar hiển thị sắc nét, xoay dọc điểm số tại home end, không bao giờ cắt chữ.
 

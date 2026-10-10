@@ -48,7 +48,7 @@ public class EvalBarView extends View {
         paintBorder.setStrokeWidth(1.0f);
 
         float density = context.getResources().getDisplayMetrics().density;
-        paintText.setTextSize(9.5f * density);
+        paintText.setTextSize(8.8f * density);
         paintText.setTextAlign(Paint.Align.CENTER);
         paintText.setTypeface(Typeface.create("sans-serif-condensed", Typeface.BOLD));
     }
@@ -57,6 +57,18 @@ public class EvalBarView extends View {
     public boolean onTouchEvent(MotionEvent event) {
         // Never consume touches so user can tap/drag pieces on column 'a' without interference
         return false;
+    }
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent event) {
+        return false;
+    }
+
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        int w = MeasureSpec.getSize(widthMeasureSpec);
+        int h = MeasureSpec.getSize(heightMeasureSpec);
+        setMeasuredDimension(w, h);
     }
 
     /**
@@ -109,6 +121,7 @@ public class EvalBarView extends View {
         if (animator != null) animator.cancel();
         if (immediate || getVisibility() != VISIBLE) {
             shownRatio = target;
+            invalidate();
             return;
         }
         animator = android.animation.ValueAnimator.ofFloat(shownRatio, target);
@@ -132,18 +145,18 @@ public class EvalBarView extends View {
         super.onDraw(canvas);
         int w = getWidth();
         int h = getHeight();
-        if (w == 0 || h == 0) return;
+        if (w <= 0 || h <= 0) return;
 
         float whiteRatio = shownRatio;
 
         float divY;
         if (flipped) {
-            // Board is flipped: black at top → white territory grows downward
+            // Board is flipped (Black bottom, White top): White territory starts at top (0..divY)
             divY = h * whiteRatio;
             rectWhite.set(0, 0,    w, divY);
             rectBlack.set(0, divY, w, h);
         } else {
-            // Normal: white at bottom → white territory at bottom
+            // Normal board (White bottom, Black top): Black territory is at top (0..divY), White at bottom (divY..h)
             divY = h * (1.0f - whiteRatio);
             rectBlack.set(0, 0,    w, divY);
             rectWhite.set(0, divY, w, h);
@@ -152,26 +165,37 @@ public class EvalBarView extends View {
         canvas.drawRect(rectBlack, paintBlack);
         canvas.drawRect(rectWhite, paintWhite);
         canvas.drawLine(0, divY, w, divY, paintLine);
-        // Tick at 0.00 (middle of the bar)
+
+        // Tick mark at 0.00 (exact middle of the bar)
         float mid = h / 2.0f;
-        canvas.drawLine(0, mid, w * 0.25f, mid, paintLine);
-        canvas.drawLine(w * 0.75f, mid, w, mid, paintLine);
+        canvas.drawLine(0, mid, w * 0.35f, mid, paintLine);
+        canvas.drawLine(w * 0.65f, mid, w, mid, paintLine);
 
         // Right edge separator border
-        canvas.drawLine(w - 0.5f, 0, w - 0.5f, h, paintBorder);
+        canvas.drawLine(w - 1f, 0, w - 1f, h, paintBorder);
 
         // Score label
         String label = hasMate ? (mateIn == 0 ? "#" : "M" + Math.abs(mateIn))
                                 : formatScore(score);
 
+        // Leading player side determines anchor & text color:
+        // White leading (score >= 0): text displayed at White's home end
+        // Black leading (score < 0):  text displayed at Black's home end
         boolean whiteAhead = score >= 0;
-        float textY;
+        boolean whiteHomeAtTop = flipped;
+        boolean anchorAtTop = whiteAhead ? whiteHomeAtTop : !whiteHomeAtTop;
+
+        float density = getContext().getResources().getDisplayMetrics().density;
+        float padding = 6.0f * density;
+        float textHalfLen = paintText.measureText(label) / 2.0f;
+        float textY = anchorAtTop ? (padding + textHalfLen) : (h - padding - textHalfLen);
+
         if (whiteAhead) {
+            // White's home end has pure white background -> dark text
             paintText.setColor(0xFF312E2B);
-            textY = flipped ? divY / 2.0f : divY + (h - divY) / 2.0f;
         } else {
+            // Black's home end has dark background -> white text
             paintText.setColor(0xFFFFFFFF);
-            textY = flipped ? divY + (h - divY) / 2.0f : divY / 2.0f;
         }
 
         Paint.FontMetrics fm = paintText.getFontMetrics();
