@@ -333,7 +333,10 @@ public class OverlayManager {
                     if (decorView == null) return;
                     
                     View evalBar = decorView.findViewWithTag("stockfish_eval_bar");
-                    if (evalBar != null) {
+                    if (evalBar instanceof EvalBarView) {
+                        ((EvalBarView) evalBar).resetStabilizer();
+                        evalBar.setVisibility(View.GONE);
+                    } else if (evalBar != null) {
                         evalBar.setVisibility(View.GONE);
                     }
 

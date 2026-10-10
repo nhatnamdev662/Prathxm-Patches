@@ -48,11 +48,11 @@ public class StockfishSettings {
         getPrefs(context).edit().putString(KEY_LANGUAGE, lang).apply();
     }
 
-    /** Max selectable live-analysis depth. */
-    public static final int MAX_DEPTH = 40;
+    /** Max selectable live-analysis depth (strictly locked to 12 as per NNVC Extension). */
+    public static final int MAX_DEPTH = 12;
 
     public static int getDepth(Context context) {
-        return Math.max(1, Math.min(MAX_DEPTH, getPrefs(context).getInt(KEY_DEPTH, 18)));
+        return Math.max(1, Math.min(MAX_DEPTH, getPrefs(context).getInt(KEY_DEPTH, 10)));
     }
 
     // ── Engine power ─────────────────────────────────────────────────────────

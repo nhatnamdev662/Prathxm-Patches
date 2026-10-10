@@ -136,7 +136,6 @@ public class StockfishBridge {
 
     private static boolean ensureRunning(Context ctx) {
         if (!initialised || !engine.isReady()) {
-            Log.w(TAG, "Engine not ready or died. Restarting...");
             initialised = engine.start(ctx);
         }
         return initialised;

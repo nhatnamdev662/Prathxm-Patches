@@ -1,6 +1,6 @@
 # NHẬT KÝ DỰ ÁN & BỘ GHI NHỚ DẶN DÒ (PROJECT MEMORY)
 *Dự án: Chess Mobile - ReVanced Extension Patches cho Chess.com Android*
-*Phiên bản hiện tại: v2.0.64*
+*Phiên bản hiện tại: v2.0.65*
 *Cập nhật lần cuối: 2026-10-10*
 
 ---
@@ -311,18 +311,32 @@
   - **Bump phiên bản lên v2.0.64**: Đồng bộ `patches-bundle.json` và `patches-list.json`.
   - **Biên dịch & Đóng gói**: Biên dịch thành công 41 file Java thành `extension.mpe`, đóng gói `patches-2.0.64.mpp` (189,676,741 bytes) và phát hành GitHub Release `v2.0.64`.
 
+### v2.0.65 (2026-10-10) — Chuyển Đổi 100% Stockfish & Komodo Sang WebAssembly Chuẩn Extension NNVC
+- **Stockfish 18 WebAssembly Engine:**
+  - Thay thế 100% binary native cũ `libstockfish.so` bằng `stockfish-18-lite-single.wasm` (7.29 MB) và `stockfish-18-lite-single.js` (20 KB) chạy trên headless WebView Web Worker độc lập.
+  - Sửa lỗi Regex syntax error trong JS bootstrap khi nạp `stockfish-18-lite-single.js`.
+  - Cơ chế hàng đợi lệnh khởi tạo (`_playPendingCmds`, `_classifyPendingCmds`) và đồng bộ `waitForPlayWorkerReady`, triệt tiêu hoàn toàn nguy cơ rớt lệnh `uci` và tình trạng đơ 60 giây khi khởi động.
+- **Eval Bar Engine Chuyên Trách (Classify Kind):**
+  - Chạy riêng instance `kind: "classify"` của Stockfish 18 WASM với options chuẩn Extension: `Hash = 64`, `Threads = 1`, `MultiPV = 3`, `Depth = 10`.
+  - Kết nối luồng đánh giá thời gian thực `evaluateClassifyPosition` cho từng FEN / nước đi, stream trực tiếp đến `OverlayManager.updateEvalBar`.
+  - Bộ lọc `_stabilizeWhiteEval` với buffer 5 mẫu median, ngưỡng delta 14, adaptive alpha 0.16..0.72 và dải cp chuẩn hóa `[-500, +500]`.
+  - Sửa lỗi tỷ lệ checkmate trên Eval Bar: khi có nước chiếu hết (`hasMate = true`), hiển thị trọn vẹn 100% (White) hoặc 0% (Black) thay vì bị kẹp sai lệch ở 86%.
+- **Komodo Dragon 3.3 WASM Engine:**
+  - Tích hợp 100% Komodo Dragon 3.3 WASM (`dragon3.3.wasm` 16.27 MB + `komodo.js` 177 KB + `book.bin` 2.8 MB) khi người dùng chọn Komodo 3.3 trong Cài đặt.
+- **Khóa Độ Sâu Tối Đa:**
+  - Khóa cứng `MAX_DEPTH = 12` (thang đo [1, 12], mặc định 10).
+- **Bump phiên bản lên v2.0.65**: Đồng bộ `patches-bundle.json` và `patches-list.json`.
+- **Biên dịch & Đóng gói**: Biên dịch thành công 42 file Java thành `extension.mpe`, đóng gói `patches-2.0.65.mpp` (227,420,883 bytes).
+
 ---
 
 ## 3. TRẠNG THÁI HIỆN TẠI & KẾ HOẠCH TIẾP THEO
 
 ### 3.1. Trạng thái hiện tại
-- **Phiên bản mới nhất**: **v2.0.64** (`patches-2.0.64.mpp`).
-- **Kho lưu trữ GitHub**: Đã phát hành Release `v2.0.64`.
+- **Phiên bản mới nhất**: **v2.0.65** (`patches-2.0.65.mpp`).
 - **Trạng thái Repo**: 100% sạch, không commit file `.py`, root ngăn nắp.
 - **Tiến trình kỹ thuật**:
-  1. Nguồn Morphe Manager chuẩn hoá tuyệt đối, không còn lỗi `(!)`.
-  2. Highlight ô cờ phân loại nước đi đạt chuẩn Zero Tint Fill, quân cờ không còn bị lem màu/đè màu, khung viền kép sang trọng và không va chạm badge.
-  3. Widget Accuracy/Elo Cyber Glass nhỏ gọn, huy hiệu `[BẠN]` sắc nét, kéo thả tự do ổn định.
-  4. Hiệu ứng vinh danh Brilliant (Cyber Radiance) và âm thanh ăn mừng bản địa `sounds/brilliant.mp3` kích hoạt mượt mà, không lag.
-  5. Rung haptic khi sai lầm đã loại bỏ triệt để.
+  1. Thay thế hoàn toàn binary native cũ bằng 100% WebAssembly chuẩn NNVC Extension (Stockfish 18 và Komodo 3.3).
+  2. Instance classify chuyên trách tính toán Eval Bar độc lập ở locked Depth = 10, MultiPV = 3, Hash = 64.
+  3. Eval Bar mượt mà với bộ ổn định `_stabilizeWhiteEval`, dải `[-500, +500]` cp và tỷ lệ mate chuẩn 100%.
 

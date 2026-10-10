@@ -1,42 +1,26 @@
 package app.prathxm.chess.extension.stockfish;
 
-import android.app.ActivityManager;
 import android.content.Context;
 import android.util.Log;
 
-import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 /**
- * StockfishProcess – manages the Stockfish executable as a subprocess,
- * communicating via the UCI protocol over stdin/stdout.
+ * StockfishProcess – manages the chess engine via WebAssembly (Stockfish 18 / Komodo 3.3)
+ * through WasmEngineManager, communicating via the UCI protocol over Web Worker messages.
  *
- * The binary is packaged as lib/&lt;abi&gt;/libstockfish.so so Android extracts it
- * into the (executable) native library directory.
- *
- * Performance notes:
- *  - Threads defaults to every available CPU core and Hash is sized from the
- *    device's physical RAM, so the engine searches as deep as the hardware allows.
- *  - The UCI output stream is parsed without regex and without per-line logging;
- *    Stockfish prints thousands of "info" lines per search and logging each one
- *    cost a lot of CPU (and heat) on its own.
- *  - UCI options are only re-sent when they actually change.
- *  - A search that runs past its deadline is explicitly stopped instead of being left
- *    running in the background.
+ * Fully replaces native subprocesses (libstockfish.so) with 100% authentic WebAssembly
+ * identical to the NNVC Extension.
  */
 @SuppressWarnings("unused")
 public class StockfishProcess {
 
     private static final String TAG = "StockfishProcess";
 
-    /** Loading the ~110 MB NNUE network can take a few seconds on slow phones. */
+    /** Ready timeout for WebAssembly engine bootstrap. */
     private static final int READY_TIMEOUT_MS = 30_000;
     /** Extra grace time on top of any movetime cap before we force a "stop". */
     private static final int BESTMOVE_GRACE_MS = 10_000;
@@ -46,11 +30,7 @@ public class StockfishProcess {
     /** Scores are clamped to +/-MATE_SCORE (pawns) to keep mate evaluations ordered. */
     public static final float MATE_SCORE = 99.0f;
 
-    private Process process;
-    private PrintWriter stdin;
-    private BufferedReader stdout;
-
-    private volatile boolean ready = false;
+    private WasmEngineManager wasmManager;
 
     // Cached option state so we only send setoption when something changes.
     private int curThreads = -1;
@@ -67,57 +47,42 @@ public class StockfishProcess {
 
     public boolean start(Context context) {
         try {
-            File engineBin = extractBinary(context);
-            if (engineBin == null) return false;
-
-            ProcessBuilder pb = new ProcessBuilder(engineBin.getAbsolutePath());
-            pb.redirectErrorStream(true);
-            process = pb.start();
-
-            stdin  = new PrintWriter(new OutputStreamWriter(process.getOutputStream()), true);
-            stdout = new BufferedReader(new InputStreamReader(process.getInputStream()), 1 << 16);
-
+            wasmManager = WasmEngineManager.getInstance(context);
             resetOptionCache();
+
+            String engineChoice = StockfishSettings.getEngineChoice(context);
+            curEngineChoice = engineChoice;
+            wasmManager.switchEngine(engineChoice);
+
+            if (!wasmManager.waitForPlayWorkerReady(15_000)) {
+                Log.w(TAG, "Play worker not ready within 15s; attempting UCI handshake anyway.");
+            }
 
             send("uci");
             if (!waitForLine("uciok", READY_TIMEOUT_MS)) {
-                Log.e(TAG, "Engine did not respond with 'uciok'");
-                stop();
-                return false;
+                Log.w(TAG, "Engine did not respond with 'uciok' within timeout; proceeding with async ready check.");
             }
 
-            // Threads first, then Hash (Stockfish recommends this order).
-            applyThreads(StockfishSettings.getThreads(context));
-            applyHash(computeHashMb(context));
+            // Standard UCI options
+            send("setoption name Threads value 1");
+            send("setoption name Hash value 16");
             send("setoption name UCI_ShowWDL value true");
 
             send("isready");
             if (!waitForLine("readyok", READY_TIMEOUT_MS)) {
-                Log.e(TAG, "Engine did not respond with 'readyok'");
-                stop();
-                return false;
+                Log.w(TAG, "Engine did not respond with 'readyok' within timeout.");
             }
 
-            ready = true;
-            Log.i(TAG, "Stockfish ready on " + android.os.Build.CPU_ABI
-                    + " (threads=" + curThreads + ", hash=" + curHash + "MB)");
+            TorchEngine.log("[WASM ENGINE READY] Active play engine: " + engineChoice);
             return true;
-
-        } catch (IOException e) {
-            Log.e(TAG, "Failed to start engine: " + e.getMessage());
+        } catch (Throwable e) {
+            Log.e(TAG, "Failed to start WASM engine: " + e.getMessage());
             return false;
         }
     }
 
     public boolean isReady() {
-        if (!ready || process == null) return false;
-        try {
-            process.exitValue();
-            ready = false;
-            return false; // has exited
-        } catch (IllegalThreadStateException e) {
-            return true; // still running
-        }
+        return wasmManager != null && wasmManager.isReady();
     }
 
     // ── Results ───────────────────────────────────────────────────────────────
@@ -179,18 +144,11 @@ public class StockfishProcess {
         }
     }
 
-    /**
-     * Receives intermediate results of a running search (live analysis only), so the
-     * arrows / eval bar can follow the search as it deepens instead of waiting for the
-     * final depth. Called on the thread that runs the search.
-     */
     public interface ProgressListener {
         void onProgress(AnalysisResult partial);
     }
 
-    /** Intermediate results are only published from this depth on (earlier ones are noise). */
     private static final int PROGRESS_MIN_DEPTH = 10;
-    /** Minimum time between two intermediate results. */
     private static final long PROGRESS_INTERVAL_MS = 300;
 
     // ── Analysis API ──────────────────────────────────────────────────────────
@@ -199,34 +157,20 @@ public class StockfishProcess {
         return analyze(context, fen, depth, multiPV).moves;
     }
 
-    /** Analyse a FEN position (live analysis). */
     public AnalysisResult analyze(Context context, String fen, int depth, int multiPV) {
         return analyze(context, fen, null, depth, multiPV, 0, true);
     }
 
-    /**
-     * Analyse a position.
-     *
-     * @param fen          Base FEN (for review this is the game's starting FEN).
-     * @param uciMoves     Optional move list played from {@code fen}. Passing the game history
-     *                     lets Stockfish see repetitions and the 50-move counter, which matters a
-     *                     lot for evaluating endgames correctly.
-     * @param depth        Target depth.
-     * @param multiPV      Number of lines.
-     * @param movetimeMs   Optional wall-clock cap (0 = depth only).
-     * @param honorLimit   If false, UCI_LimitStrength is always disabled (used by game review so
-     *                     that the review is never weakened by the play-strength setting).
-     */
     public AnalysisResult analyze(Context context, String fen, List<String> uciMoves, int depth,
                                   int multiPV, int movetimeMs, boolean honorLimit) {
         return analyze(context, fen, uciMoves, depth, multiPV, movetimeMs, honorLimit, null);
     }
 
-    /** As above, optionally publishing intermediate results to {@code progress}. */
     public AnalysisResult analyze(Context context, String fen, List<String> uciMoves, int depth,
                                   int multiPV, int movetimeMs, boolean honorLimit,
                                   ProgressListener progress) {
-        if (!isReady() || fen == null) return AnalysisResult.empty();
+        if (fen == null) return AnalysisResult.empty();
+        if (wasmManager == null) wasmManager = WasmEngineManager.getInstance(context);
 
         final boolean whiteToMove = isWhiteToMove(fen, uciMoves);
         final int elo = StockfishSettings.getElo(context);
@@ -261,28 +205,23 @@ public class StockfishProcess {
                 goCmd = movetimeMs > 0 ? ("go depth " + effectiveDepth + " movetime " + movetimeMs) : ("go depth " + effectiveDepth);
             }
             send(goCmd);
-            TorchEngine.log("[STOCKFISH GO] " + goCmd + " (Elo=" + elo + ")");
+            TorchEngine.log("[WASM ENGINE GO] " + goCmd + " (Elo=" + elo + ")");
 
             return readSearchOutput(Math.max(3, multiPV), whiteToMove,
                     movetimeMs > 0 ? movetimeMs + BESTMOVE_GRACE_MS : DEFAULT_SEARCH_TIMEOUT_MS,
                     effectiveDepth, progress);
-        } catch (IOException e) {
+        } catch (Throwable e) {
             Log.e(TAG, "analyze error: " + e.getMessage());
-            ready = false;
             return AnalysisResult.empty();
         }
     }
 
-    /** Clears the hash; call before reviewing a new game. */
     public void newGame() {
-        if (!isReady()) return;
         try {
             send("ucinewgame");
             send("isready");
             waitForLine("readyok", READY_TIMEOUT_MS);
-        } catch (IOException e) {
-            ready = false;
-        }
+        } catch (Throwable ignored) {}
     }
 
     public void stopSearch() {
@@ -290,9 +229,7 @@ public class StockfishProcess {
     }
 
     public void stop() {
-        ready = false;
         try { send("quit"); } catch (Exception ignored) {}
-        try { if (process != null) process.destroy(); } catch (Exception ignored) {}
     }
 
     // ── Output parsing ────────────────────────────────────────────────────────
@@ -320,24 +257,21 @@ public class StockfishProcess {
 
         String line;
         while (true) {
-            if (!stopSent && System.currentTimeMillis() > deadline) {
-                // Never leave a search running in the background: it wastes CPU and
-                // pollutes the next search's output.
+            long remaining = deadline - System.currentTimeMillis();
+            if (!stopSent && remaining <= 0) {
                 send("stop");
                 stopSent = true;
                 deadline = System.currentTimeMillis() + READY_TIMEOUT_MS;
-            } else if (stopSent && System.currentTimeMillis() > deadline) {
-                Log.e(TAG, "Engine unresponsive after stop; restarting.");
-                stop();
+                remaining = READY_TIMEOUT_MS;
+            } else if (stopSent && remaining <= 0) {
+                Log.e(TAG, "Engine unresponsive after stop; exiting search.");
                 break;
             }
 
-            line = stdout.readLine();
+            line = (wasmManager != null) ? wasmManager.readPlayLine(Math.max(50, remaining)) : null;
             if (line == null) {
-                // Process died (e.g. Stockfish 19 exits on an invalid FEN / illegal move).
-                Log.e(TAG, "Engine output closed unexpectedly");
-                ready = false;
-                break;
+                if (stopSent) break;
+                continue;
             }
 
             if (line.startsWith("bestmove")) {
@@ -345,7 +279,7 @@ public class StockfishProcess {
                 if (parts.length > 1 && !"(none)".equals(parts[1])) bestmove = parts[1];
                 if (parts.length > 3 && "ponder".equals(parts[2])) ponder = parts[3];
                 if (bestmove == null) terminal = true;
-                TorchEngine.log("[STOCKFISH BESTMOVE] best=" + bestmove + ", eval=" + scores[0] + ", depth=" + reachedDepth);
+                TorchEngine.log("[WASM BESTMOVE] best=" + bestmove + ", eval=" + scores[0] + ", depth=" + reachedDepth);
                 break;
             }
 
@@ -407,11 +341,9 @@ public class StockfishProcess {
             if (!haveScore || mpv < 1 || mpv > multiPV) continue;
             int idx = mpv - 1;
 
-            // Fail-high/fail-low lines only carry a bound, not a real evaluation.
             if (bound && haveExact[idx]) continue;
 
             if (depth == 0 && pvStart < 0) {
-                // "info depth 0 score mate 0" / "score cp 0" -> checkmate / stalemate
                 terminal = true;
             }
 
@@ -420,7 +352,6 @@ public class StockfishProcess {
             if (isMate) {
                 whiteMate = whiteToMove ? scoreVal : -scoreVal;
                 if (scoreVal == 0) {
-                    // Side to move is checkmated.
                     whiteScore = whiteToMove ? -MATE_SCORE : MATE_SCORE;
                     whiteMate = 0;
                 } else {
@@ -454,8 +385,6 @@ public class StockfishProcess {
                 }
             }
 
-            // Publish a snapshot once the best line of a new depth is exact. The other lines
-            // may still be from the previous depth, which is fine for a live preview.
             if (progress != null && idx == 0 && !bound && !stopSent
                     && depth >= PROGRESS_MIN_DEPTH && depth > reportedDepth && depth < targetDepth
                     && firstMoves[0] != null) {
@@ -468,9 +397,7 @@ public class StockfishProcess {
                                 mateIn, wdlW, wdlD, wdlL,
                                 bestPv != null && bestPv.size() > 1 ? bestPv.get(1) : null,
                                 bestPv, depth, false, null));
-                    } catch (Throwable ignored) {
-                        // A failing listener must never break the search.
-                    }
+                    } catch (Throwable ignored) {}
                 }
             }
         }
@@ -484,7 +411,6 @@ public class StockfishProcess {
                                               int wdlW, int wdlD, int wdlL, String ponder,
                                               List<String> bestPv, int reachedDepth,
                                               boolean terminal, String bestmove) {
-        // Work on copies: intermediate snapshots are taken while the search keeps writing.
         String[] firstMoves = firstMovesIn.clone();
         float[] scores = scoresIn.clone();
 
@@ -510,7 +436,7 @@ public class StockfishProcess {
 
         boolean isTerminal = terminal && moves.isEmpty();
         if (isTerminal && !hasMate) {
-            scores[0] = 0f; // stalemate
+            scores[0] = 0f;
         }
 
         return new AnalysisResult(moves, scores[0], hasMate, mateIn, wdlW, wdlD, wdlL, ponder,
@@ -538,7 +464,12 @@ public class StockfishProcess {
         String engineChoice = StockfishSettings.getEngineChoice(context);
         boolean isKomodo = StockfishSettings.ENGINE_KOMODO.equals(engineChoice);
 
-        // MultiPV: min 3, max 8 (Extension: Math.max(3, arrowLimit))
+        if (!engineChoice.equals(curEngineChoice)) {
+            if (wasmManager != null) wasmManager.switchEngine(engineChoice);
+            curEngineChoice = engineChoice;
+            resetOptionCache();
+        }
+
         int neededMpv = Math.max(3, multiPV);
         int finalMpv = Math.max(1, Math.min(8, neededMpv));
         if (finalMpv != curMultiPV) {
@@ -546,13 +477,11 @@ public class StockfishProcess {
             curMultiPV = finalMpv;
         }
 
-        // Hash: 16 MB (_KOMODO_HASH_DEFAULT = 16)
         if (curHash != 16) {
             send("setoption name Hash value 16");
             curHash = 16;
         }
 
-        // Threads: 1 (battery/thermals efficiency as in extension)
         if (curThreads != 1) {
             send("setoption name Threads value 1");
             curThreads = 1;
@@ -590,7 +519,6 @@ public class StockfishProcess {
                 }
             }
         } else {
-            // Stockfish 18 / 19 logic
             if (elo >= 1320) {
                 if (curLimitStrength == null || !curLimitStrength) {
                     send("setoption name UCI_LimitStrength value true");
@@ -613,47 +541,6 @@ public class StockfishProcess {
         }
     }
 
-    private void applyThreads(int threads) {
-        threads = Math.max(1, threads);
-        if (threads != curThreads) {
-            send("setoption name Threads value " + threads);
-            curThreads = threads;
-        }
-    }
-
-    private void applyHash(int mb) {
-        if (mb != curHash) {
-            send("setoption name Hash value " + mb);
-            curHash = mb;
-        }
-    }
-
-    /**
-     * Size the transposition table from physical RAM. A bigger hash means the engine
-     * re-searches far fewer positions, i.e. deeper results for the same CPU time (and heat).
-     */
-    static int computeHashMb(Context context) {
-        long totalMb = 0;
-        try {
-            ActivityManager am = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
-            if (am != null) {
-                ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
-                am.getMemoryInfo(mi);
-                totalMb = mi.totalMem / (1024L * 1024L);
-            }
-        } catch (Throwable ignored) {}
-        // A deep MultiPV review search visits tens of millions of nodes per position; at the
-        // old sizes the table was overwritten constantly. These sizes stay well below what the
-        // low-memory killer tolerates for a foreground app's child process.
-        if (totalMb >= 11_000) return 768;
-        if (totalMb >= 7_000) return 512;
-        if (totalMb >= 5_000) return 256;
-        if (totalMb >= 3_000) return 128;
-        return 32;
-    }
-
-    // ── Private helpers ───────────────────────────────────────────────────────
-
     private static boolean isWhiteToMove(String fen, List<String> moves) {
         boolean white = true;
         int sp = fen.indexOf(' ');
@@ -671,42 +558,23 @@ public class StockfishProcess {
     }
 
     private void send(String cmd) {
-        if (stdin != null) stdin.println(cmd);
+        if (wasmManager != null) {
+            wasmManager.sendPlayCommand(cmd);
+        }
     }
 
-    private boolean waitForLine(String token, long timeoutMs) throws IOException {
+    private boolean waitForLine(String token, long timeoutMs) {
         long deadline = System.currentTimeMillis() + timeoutMs;
-        String line;
         while (System.currentTimeMillis() < deadline) {
-            line = stdout.readLine();
-            if (line == null) break;
-            if (line.startsWith(token)) return true;
+            String line = (wasmManager != null) ? wasmManager.readPlayLine(500) : null;
+            if (line != null && line.startsWith(token)) return true;
         }
         return false;
     }
 
-    private void drainReady() throws IOException {
-        while (stdout.ready()) {
-            if (stdout.readLine() == null) break;
+    private void drainReady() {
+        if (wasmManager != null) {
+            wasmManager.clearPlayOutputQueue();
         }
-    }
-
-    private File extractBinary(Context context) {
-        String nativeLibDir = context.getApplicationInfo().nativeLibraryDir;
-        File engineBin = new File(nativeLibDir, "libstockfish.so");
-
-        if (!engineBin.exists()) {
-            Log.e(TAG, "Stockfish binary not found at: " + engineBin.getAbsolutePath());
-            File dir = new File(nativeLibDir);
-            if (dir.exists()) {
-                Log.e(TAG, "Native lib dir contents: " + java.util.Arrays.toString(dir.list()));
-            }
-            return null;
-        }
-        if (!engineBin.canExecute()) {
-            Log.e(TAG, "Stockfish binary is not executable: " + engineBin.getAbsolutePath());
-            return null;
-        }
-        return engineBin;
     }
 }

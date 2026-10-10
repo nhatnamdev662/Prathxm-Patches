@@ -374,6 +374,11 @@ public class StockfishExtension {
                 Context context = getContext();
                 if (context == null) return;
 
+                // Concurrent Eval Bar calculation with dedicated Stockfish 18 classify instance (Depth 10, MultiPV 3)
+                if (StockfishSettings.isEvalBarEnabled(context)) {
+                    WasmEngineManager.getInstance(context).evaluateClassifyPosition(fen, null);
+                }
+
                 int depth = StockfishSettings.isAutoDepthEnabled(context)
                         ? StockfishSettings.autoDepthForElo(StockfishSettings.getElo(context))
                         : StockfishSettings.getDepth(context);

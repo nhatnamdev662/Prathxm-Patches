@@ -71,17 +71,108 @@ public class EvalBarView extends View {
         setMeasuredDimension(w, h);
     }
 
+    // ── NNVC Extension Eval Stabilizer ──
+    private static final class EvalStabilizer {
+        boolean inited = false;
+        float whiteScore = 0f;
+        Integer whiteMate = null;
+        final java.util.List<Float> samples = new java.util.ArrayList<>();
+
+        void reset() {
+            inited = false;
+            whiteScore = 0f;
+            whiteMate = null;
+            samples.clear();
+        }
+
+        static float median(java.util.List<Float> list) {
+            if (list == null || list.isEmpty()) return 0f;
+            java.util.List<Float> copy = new java.util.ArrayList<>(list);
+            java.util.Collections.sort(copy);
+            int mid = copy.size() / 2;
+            return (copy.size() % 2 != 0) ? copy.get(mid) : (copy.get(mid - 1) + copy.get(mid)) / 2f;
+        }
+
+        static final class StabilizedResult {
+            final float score;
+            final Integer mate;
+            StabilizedResult(float score, Integer mate) {
+                this.score = score;
+                this.mate = mate;
+            }
+        }
+
+        StabilizedResult stabilize(float rawScorePawns, boolean hasMate, int mateIn) {
+            if (hasMate && mateIn != 0) {
+                inited = true;
+                whiteScore = mateIn > 0 ? 1200f : -1200f;
+                whiteMate = mateIn;
+                samples.clear();
+                return new StabilizedResult(whiteScore, mateIn);
+            }
+            float rawCp = rawScorePawns * 100f;
+            float clamped = Math.max(-1200f, Math.min(1200f, (float) Math.round(rawCp)));
+            samples.add(clamped);
+            if (samples.size() > 5) samples.remove(0);
+
+            float target = median(samples);
+            if (!inited || whiteMate != null) {
+                inited = true;
+                whiteScore = target;
+                whiteMate = null;
+                return new StabilizedResult((float) Math.round(target), null);
+            }
+
+            float prev = whiteScore;
+            float delta = target - prev;
+            if (Math.abs(delta) <= 14f) {
+                return new StabilizedResult((float) Math.round(prev), null);
+            }
+
+            float alpha = 0.16f;
+            if (Math.abs(delta) >= 300f) alpha = 0.72f;
+            else if (Math.abs(delta) >= 180f) alpha = 0.52f;
+            else if (Math.abs(delta) >= 100f) alpha = 0.34f;
+            else if (Math.abs(delta) >= 45f) alpha = 0.22f;
+
+            if (Math.signum(target) != Math.signum(prev) && Math.abs(target) < 90f && Math.abs(prev) < 90f) {
+                alpha *= 0.55f;
+            }
+
+            whiteScore = prev + delta * alpha;
+            if (Math.abs(target - whiteScore) < 6f) whiteScore = target;
+            whiteMate = null;
+            return new StabilizedResult((float) Math.round(whiteScore), null);
+        }
+    }
+
+    private final EvalStabilizer stabilizer = new EvalStabilizer();
+
+    public void resetStabilizer() {
+        stabilizer.reset();
+    }
+
     /**
      * Update the bar data and reposition it next to the chess board.
      * Call this from the main thread.
      */
     public void update(int x, int y, int width, int height,
                        float score, boolean hasMate, int mateIn, boolean flipped) {
-        float target = ratioFor(score);
+        EvalStabilizer.StabilizedResult sr = stabilizer.stabilize(score, hasMate, mateIn);
+        float stableScorePawns = (sr.mate != null) ? (sr.mate > 0 ? 12.0f : -12.0f) : (sr.score / 100.0f);
+        boolean stableHasMate = (sr.mate != null);
+        int stableMateIn = (sr.mate != null) ? sr.mate : 0;
+
+        float target;
+        if (stableHasMate) {
+            target = (stableMateIn > 0) ? 1.0f : 0.0f;
+        } else {
+            target = ratioFor(stableScorePawns);
+        }
         boolean firstShow = !hasValue || this.flipped != flipped;
-        this.score   = score;
-        this.hasMate = hasMate;
-        this.mateIn  = mateIn;
+        this.score   = stableScorePawns;
+        this.hasMate = stableHasMate;
+        this.mateIn  = stableMateIn;
         this.flipped = flipped;
         this.hasValue = true;
         animateTo(target, firstShow);
@@ -108,13 +199,13 @@ public class EvalBarView extends View {
     private boolean hasValue = false;
     private android.animation.ValueAnimator animator;
 
-    /** Evaluation (pawns, white POV) -> white share of the bar. Mates fill the bar. */
+    /** Evaluation (pawns, white POV) -> white share of the bar. Mates fill the bar. [-500, +500] cp range. */
     static float ratioFor(float score) {
         if (score >= ReviewMath.MATE_THRESHOLD) return 1f;
         if (score <= -ReviewMath.MATE_THRESHOLD) return 0f;
-        // Win-probability scale (same model as the review): +1 is clearly visible, +5 is
-        // nearly full, instead of a linear +/-10 scale where most real evals looked equal.
-        return Math.max(0.03f, Math.min(0.97f, ReviewMath.whiteWin(score)));
+        // Clamp to [-500, +500] centipawns for bar visualization
+        float clampedScore = Math.max(-5.0f, Math.min(5.0f, score));
+        return Math.max(0.03f, Math.min(0.97f, ReviewMath.whiteWin(clampedScore)));
     }
 
     private void animateTo(float target, boolean immediate) {
